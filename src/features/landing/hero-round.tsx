@@ -7,7 +7,7 @@ import { buildItem } from "@/domain/games/items";
 import { seededRng } from "@/domain/shared/random";
 import { useI18n } from "@/i18n";
 import { useSettings } from "@/lib/settings-store";
-import { useClientSeed, useReducedMotion } from "@/lib/use-hydrated";
+import { useClientSeed } from "@/lib/use-hydrated";
 
 /** Words chosen to show the typical traps for Arabic speakers. */
 const DEMO_IDS = ["w-receive", "w-separate", "w-necessary", "w-problem", "w-vegetable", "w-knowledge", "w-because", "w-accommodation"];
@@ -19,30 +19,26 @@ export function HeroRound() {
   const { t, lang } = useI18n();
   const [settings] = useSettings();
   const seed = useClientSeed();
-  const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [score, setScore] = useState({ right: 0, total: 0 });
-  const ref = useRef<HTMLDivElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const optionsRef = useRef<HTMLUListElement>(null);
+  const moved = useRef(false);
 
   const item = useMemo(() => {
     const id = DEMO_IDS[index % DEMO_IDS.length] ?? "w-receive";
     const word = spellingWordById.get(id);
     if (!word) return null;
-    return buildItem("choice", word, { accent: settings.accent, rng: seededRng(seed + index), bankSpellings }, `demo-${index}`);
+    // The first item uses a fixed seed, so its options do not reshuffle after hydration.
+    return buildItem("choice", word, { accent: settings.accent, rng: seededRng(index === 0 ? 0 : seed + index), bankSpellings }, `demo-${index}`);
   }, [index, seed, settings.accent]);
 
-  // One orchestrated reveal of the sheet on load (skipped with reduced motion).
+  // Keyboard users keep their place: Next after an answer, the first option after Next.
   useEffect(() => {
-    if (reduced || !ref.current) return;
-    let alive = true;
-    void import("gsap").then(({ gsap }) => {
-      if (alive && ref.current) gsap.fromTo(ref.current, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
-    });
-    return () => {
-      alive = false;
-    };
-  }, [reduced]);
+    if (picked !== null) nextRef.current?.focus();
+    else if (moved.current) optionsRef.current?.querySelector("button")?.focus();
+  }, [picked, index]);
 
   const word = item ? spellingWordById.get(item.wordId) : undefined;
   if (!item || !word) return null;
@@ -50,7 +46,7 @@ export function HeroRound() {
   const right = picked === item.answer;
 
   return (
-    <div ref={ref} className="sheet relative overflow-hidden p-6 sm:p-10">
+    <div className="hero-reveal sheet relative overflow-hidden p-6 sm:p-10">
       <div className="mb-6 flex items-baseline justify-between gap-4">
         <p className="font-semibold text-brass">{t.home.demoLabel}</p>
         <p className="text-sm text-ink-soft tabular" aria-live="polite">
@@ -61,7 +57,7 @@ export function HeroRound() {
       <p className="mt-1 text-hint">
         {t.game.meaning}: <span lang="ar">{word.ar}</span>
       </p>
-      <ul className="mt-6 grid gap-3 sm:grid-cols-2" dir="ltr" lang="en">
+      <ul ref={optionsRef} className="mt-6 grid gap-3 sm:grid-cols-2" dir="ltr" lang="en">
         {(item.options ?? []).map((o) => {
           const state = !answered ? "idle" : o === item.answer ? "right" : o === picked ? "wrong" : "dim";
           return (
@@ -102,8 +98,10 @@ export function HeroRound() {
             </p>
             <p className="text-hint">{CATEGORY_INFO[word.category].rule[lang]}</p>
             <button
+              ref={nextRef}
               type="button"
               onClick={() => {
+                moved.current = true;
                 setPicked(null);
                 setIndex((i) => i + 1);
               }}

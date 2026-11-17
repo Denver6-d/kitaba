@@ -38,3 +38,38 @@ describe("callbackProblem", () => {
     expect(callbackProblem(q("code=abc&next=%2Faccount"))).toBeNull();
   });
 });
+
+describe("callbackUrl edges", () => {
+  it("accepts an origin with a trailing slash", () => {
+    expect(callbackUrl("https://spell.example/")).toBe("https://spell.example/auth/callback?next=%2Faccount");
+  });
+  it("falls back to /account when next is null", () => {
+    expect(callbackUrl("https://spell.example", null)).toBe("https://spell.example/auth/callback?next=%2Faccount");
+  });
+  it("keeps a same-site next with its query and hash, fully encoded into one parameter", () => {
+    const url = callbackUrl("https://spell.example", "/play?mode=a&b=1#top");
+    expect(url).toBe("https://spell.example/auth/callback?next=%2Fplay%3Fmode%3Da%26b%3D1%23top");
+    expect(new URL(url ?? "").searchParams.get("next")).toBe("/play?mode=a&b=1#top");
+  });
+  it("rejects non-http schemes and strings that carry more than an origin", () => {
+    for (const origin of ["ftp://spell.example", "https://user:pw@spell.example", "https://spell.example?x=1", "https://spell.example#a", ""]) {
+      expect(callbackUrl(origin)).toBeNull();
+    }
+  });
+});
+
+describe("callbackProblem edges", () => {
+  const q = (s: string) => new URLSearchParams(s);
+  it("treats access_denied in either error or error_code as a cancel", () => {
+    expect(callbackProblem(q("error=server_error&error_code=access_denied"))).toBe("cancelled");
+    expect(callbackProblem(q("error=access_denied&error_code=otp_expired"))).toBe("cancelled");
+    expect(callbackProblem(q("error=server_error&error_code=otp_expired"))).toBe("failed");
+  });
+  it("treats error_code alone like error", () => {
+    expect(callbackProblem(q("error_code=access_denied"))).toBe("cancelled");
+    expect(callbackProblem(q("error_code=otp_expired"))).toBe("failed");
+  });
+  it("treats an empty error parameter as a failure, not as no error", () => {
+    expect(callbackProblem(q("error="))).toBe("failed");
+  });
+});

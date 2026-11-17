@@ -51,7 +51,7 @@ Without configuration the app runs in guest mode, and the account and leaderboar
 1. Create a Supabase project.
 2. In the SQL editor, run `supabase/migrations/20261117000001_progress.sql`, then `supabase/migrations/20261117000002_leaderboard.sql`.
 3. Run `supabase/tests/rls_tests.sql`. It rolls back and prints `ALL RLS TESTS PASSED`. Then go through `supabase/tests/rls_checklist.md`.
-4. Under **Authentication → URL Configuration**, set the Site URL and add `https://<your-site>/auth/callback` (and `http://localhost:3000/auth/callback` for development) to the Redirect URLs.
+4. Under **Authentication → URL Configuration**, set the Site URL and add `https://<your-site>/auth/callback**` (and `http://localhost:3000/auth/callback**` for development) to the Redirect URLs. The app adds `?next=…` to the callback, and Supabase matches the whole URL, so the trailing `**` is needed.
 5. Copy `.env.example` to `.env.local` and set only the two public values: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
 **Never put a `service_role` key, or any OAuth client secret, in this repo, in `.env` files or in the client.** Account deletion uses a `SECURITY DEFINER` function that can only delete the caller.
@@ -68,19 +68,20 @@ Without configuration the app runs in guest mode, and the account and leaderboar
 
 ### ثانيًا: أنشئ عميل OAuth في Google Cloud Console
 1. ادخل إلى <https://console.cloud.google.com/> وأنشئ مشروعًا جديدًا (أو اختر مشروعًا موجودًا).
-2. من القائمة: **APIs & Services ← OAuth consent screen**. اختر **External**، واكتب اسم التطبيق وبريد الدعم، وأضف في **Authorized domains** النطاق `supabase.co` ونطاق موقعك. احفظ.
-3. انتقل إلى **APIs & Services ← Credentials ← Create Credentials ← OAuth client ID**.
-4. في **Application type** اختر **Web application**.
-5. في **Authorized JavaScript origins** أضف عنوان موقعك، مثل `https://your-site.com` (و`http://localhost:3000` للتجربة).
-6. في **Authorized redirect URIs** الصق رابط Supabase الذي نسخته في الخطوة الأولى بالضبط:
+2. من القائمة: **Google Auth Platform** (كان اسمها سابقًا APIs & Services ← OAuth consent screen). في **Branding** اكتب اسم التطبيق وبريد الدعم، وأضف في **Authorized domains** النطاق `<معرّف-مشروعك>.supabase.co` ونطاق موقعك. وفي **Audience** اختر **External**. احفظ.
+3. **مهم:** التطبيق الجديد يكون في وضع **Testing**، فلا يستطيع الدخول إلا من تضيفهم في **Test users**. عندما تريد فتحه للجميع، اضغط **Publish app** في صفحة **Audience** ليصبح **In production**.
+4. انتقل إلى **Google Auth Platform ← Clients ← Create client** (أو **APIs & Services ← Credentials ← Create Credentials ← OAuth client ID**).
+5. في **Application type** اختر **Web application**.
+6. في **Authorized JavaScript origins** أضف عنوان موقعك، مثل `https://your-site.com` (و`http://localhost:3000` للتجربة).
+7. في **Authorized redirect URIs** الصق رابط Supabase الذي نسخته في الخطوة الأولى بالضبط:
    `https://<معرّف-مشروعك>.supabase.co/auth/v1/callback`
-7. اضغط **Create**، فيظهر لك **Client ID** و**Client Secret**.
+8. اضغط **Create**، فيظهر لك **Client ID** و**Client Secret**.
 
 ### ثالثًا: أدخل المعرّف والسرّ في Supabase
 1. ارجع إلى **Authentication ← Sign In / Providers ← Google** في Supabase.
 2. فعّل **Enable Sign in with Google**.
 3. الصق **Client ID** في حقل Client IDs، و**Client Secret** في حقل Client Secret، ثم اضغط **Save**.
-4. تأكّد أن **Authentication ← URL Configuration ← Redirect URLs** يحتوي على `https://your-site.com/auth/callback` (ورابط localhost للتجربة). التطبيق لا يعيد المستخدم إلا إلى هذا الرابط على موقعه نفسه.
+4. تأكّد أن **Authentication ← URL Configuration ← Redirect URLs** يحتوي على `https://your-site.com/auth/callback**` و`http://localhost:3000/auth/callback**` للتجربة (النجمتان في النهاية ضروريتان لأن التطبيق يضيف `?next=` إلى الرابط). التطبيق لا يعيد المستخدم إلا إلى هذا الرابط على موقعه نفسه.
 
 ### GitHub (اختياري)
 1. في GitHub: **Settings ← Developer settings ← OAuth Apps ← New OAuth App**.

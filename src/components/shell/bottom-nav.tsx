@@ -16,7 +16,11 @@ function subscribeViewport(cb: () => void) {
   return () => vv?.removeEventListener("resize", cb);
 }
 /** True when the on-screen keyboard (or anything else) takes a large part of the screen. */
-const keyboardOpen = () => (window.visualViewport ? window.visualViewport.height < window.innerHeight * 0.75 : false);
+const keyboardOpen = () => {
+  const vv = window.visualViewport;
+  // Pinch-zoom also shrinks the visual viewport; only an unzoomed shrink means a keyboard.
+  return vv ? vv.scale <= 1.01 && vv.height < window.innerHeight * 0.75 : false;
+};
 
 /**
  * Phones: the four core areas within thumb reach. Hidden on the game screen,

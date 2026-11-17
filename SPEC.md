@@ -37,7 +37,7 @@ The app answers one question for Arabic speakers: **"can I spell English words c
 
 ## 3. Tech stack (unchanged)
 
-Next.js 16 (App Router), React 19 and strict TypeScript, Tailwind CSS 4, shadcn/ui (Radix), Dexie 4, zod 4, GSAP and `motion` (always respecting reduced motion), lucide-react, and Supabase (`@supabase/supabase-js` and `@supabase/ssr`) when configured. Tests use Vitest with `fake-indexeddb`. **No new dependency without asking the owner.**
+Next.js 16 (App Router), React 19 and strict TypeScript, Tailwind CSS 4, shadcn/ui (Radix), Dexie 4, zod 4, `motion` (always respecting reduced motion; GSAP and Lenis were removed, DECISIONS N5), lucide-react, and Supabase (`@supabase/supabase-js` and `@supabase/ssr`) when configured. Tests use Vitest with `fake-indexeddb`. **No new dependency without asking the owner.**
 
 ## 4. Commands
 

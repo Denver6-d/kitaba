@@ -258,6 +258,20 @@ html[data-motion="reduce"] *::after {
 
 /* Game feedback (DESIGN.md "Game feel"): a short shake for a wrong answer and a
    brass underline sweep for a right one. Both collapse to nothing under reduced motion. */
+/* The landing round fades in once, from the first paint (no flash). */
+.hero-reveal {
+  animation: hero-reveal 600ms ease-out both;
+}
+@keyframes hero-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 .answer-shake {
   animation: answer-shake 320ms ease-out;
 }

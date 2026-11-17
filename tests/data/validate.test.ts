@@ -69,6 +69,14 @@ describe("validateContent", () => {
     expect(issuesOf([word({ confusables: ["receive"] })])).toContain("w-receive: confusable equals the word");
   });
 
+  it("accepts a uk spelling up to 4 letters away and rejects one 5 away", () => {
+    const color = (uk: string) => word({ id: "w-color", word: "color", uk, category: "british-american", example: "What color is it?" });
+    expect(issuesOf([color("colour")])).toEqual([]);
+    expect(issuesOf([word({ id: "w-airplane", word: "airplane", uk: "aeroplane", category: "british-american", example: "The airplane landed." })])).toEqual([]);
+    expect(issuesOf([color("colourxyz")])).toEqual([]);
+    expect(issuesOf([color("colourwxyz")])).toEqual(['w-color: uk spelling "colourwxyz" is not a variant of "color"']);
+  });
+
   it("reports every V1 word id that is missing (orphaned SRS cards)", () => {
     expect(issuesOf([word()], ["w-receive", "w-people"])).toEqual(["w-people: V1 word is missing (its SRS cards would be orphaned)"]);
   });

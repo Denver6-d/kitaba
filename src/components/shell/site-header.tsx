@@ -70,7 +70,7 @@ export function SiteHeader() {
             </SheetTrigger>
             <SheetContent side={dir === "rtl" ? "left" : "right"} closeLabel={t.common.close} className="w-[min(22rem,88vw)] gap-0 bg-sheet p-6">
               <SheetTitle className="mb-1 text-lg">{t.nav.menu}</SheetTitle>
-              <SheetDescription className="sr-only">{t.nav.menu}</SheetDescription>
+              <SheetDescription className="sr-only">{`${t.nav.leaderboard}، ${t.nav.account}، ${t.nav.settings}، ${t.nav.language}، ${t.nav.theme}`}</SheetDescription>
               {/* Phones also get the core areas here (the bottom bar hides while typing). */}
               <nav aria-label={t.nav.primary} className="mt-4 md:hidden">
                 <ul className="space-y-1 border-b border-rule pb-4">

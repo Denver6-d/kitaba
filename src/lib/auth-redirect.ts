@@ -36,7 +36,10 @@ export type CallbackProblem = "cancelled" | "failed" | null;
  * pressed "Cancel" on the provider's screen gets a calm message, not an error.
  */
 export function callbackProblem(params: { get(name: string): string | null }): CallbackProblem {
-  const code = params.get("error_code") ?? params.get("error");
-  if (code === null && params.get("error_description") === null) return null;
-  return code === "access_denied" ? "cancelled" : "failed";
+  const error = params.get("error");
+  const code = params.get("error_code");
+  if (error === null && code === null && params.get("error_description") === null) return null;
+  // Supabase may send its own error_code next to the provider's error: either one saying
+  // access_denied means the person pressed Cancel on the provider's screen.
+  return error === "access_denied" || code === "access_denied" ? "cancelled" : "failed";
 }

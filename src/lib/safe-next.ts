@@ -12,6 +12,9 @@ export function safeNext(raw: string | null | undefined, fallback = "/account"):
     const base = "https://kitaba.invalid";
     const u = new URL(raw, base);
     if (u.origin !== base) return fallback;
+    // Dot segments are resolved by the parser ("/.//evil.com" becomes "//evil.com"), so the
+    // normalised path is checked again: a leading "//" would be a protocol-relative URL.
+    if (u.pathname.startsWith("//") || u.pathname.includes("\\")) return fallback;
     return `${u.pathname}${u.search}${u.hash}`;
   } catch {
     return fallback;

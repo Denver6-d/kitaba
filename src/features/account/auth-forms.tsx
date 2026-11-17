@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { z } from "zod";
 import type { AuthError } from "@supabase/supabase-js";
 import { useI18n } from "@/i18n";
@@ -46,17 +46,27 @@ function OAuthButtons() {
   const { client } = useAccount();
   const [busy, setBusy] = useState<OAuthProvider | null>(null);
   const [failed, setFailed] = useState(false);
+  // Coming back with the browser's Back button can restore this page from the
+  // back/forward cache with the buttons still disabled: re-enable them.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setBusy(null);
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
   if (!client) return null;
   const go = async (provider: OAuthProvider) => {
     setBusy(provider);
     setFailed(false);
-    const to = redirectTo("/account");
-    const { error } = await client.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: to },
-    });
-    // On success the browser leaves for the provider; we only get here on an error.
-    if (error) {
+    try {
+      const { error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo: redirectTo("/account") } });
+      // On success the browser leaves for the provider; we only stay here on an error.
+      if (error) {
+        setFailed(true);
+        setBusy(null);
+      }
+    } catch {
       setFailed(true);
       setBusy(null);
     }
