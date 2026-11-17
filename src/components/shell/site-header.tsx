@@ -8,7 +8,7 @@ import { useI18n } from "@/i18n";
 import { useResolvedTheme, useSettings } from "@/lib/settings-store";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "./logo";
-import { PRIMARY_NAV, SECONDARY_NAV } from "./nav-items";
+import { PRIMARY_NAV, MENU_NAV } from "./nav-items";
 import { SyncIndicator } from "@/features/account/sync-indicator";
 
 const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -99,7 +99,7 @@ export function SiteHeader() {
               </SheetTitle>
               <nav aria-label={t.nav.primary}>
                 <ul className="space-y-1">
-                  {[...PRIMARY_NAV, ...SECONDARY_NAV].map((item, i) => {
+                  {[...PRIMARY_NAV, ...MENU_NAV].map((item, i) => {
                     const active = isActive(pathname, item.href);
                     return (
                       <li key={item.href} className={i === PRIMARY_NAV.length ? "mt-4 border-t border-rule pt-4" : ""}>

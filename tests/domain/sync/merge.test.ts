@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mergeRecord, mergeTable } from "@/domain/sync/merge";
 import { enqueue, nextRetryDelay, removeAcked, type OutboxItem } from "@/domain/sync/outbox";
-import type { AchievementRecord, GhostRecord, MasteryRecord } from "@/domain/model";
+import type { AchievementRecord, MasteryRecord, StageRecord } from "@/domain/model";
 
 const m = (id: string, updatedAt: number, mastery: number, deletedAt?: number): MasteryRecord =>
   deletedAt === undefined ? { id, updatedAt, mastery } : { id, updatedAt, mastery, deletedAt };
@@ -23,21 +23,18 @@ describe("mergeRecord (last-write-wins per record)", () => {
     expect(mergeRecord("mastery", m("a", 3, 4), m("a", 2, 1, 2))?.deletedAt).toBeUndefined();
   });
 
-  it("keeps the faster ghost regardless of time", () => {
-    const g = (updatedAt: number, wpm: number): GhostRecord => ({
-      id: "words:30",
-      updatedAt,
-      modeKey: "words:30",
-      wpm,
-      target: "x",
-      ghost: [],
-    });
-    expect(mergeRecord("ghosts", g(1, 50), g(9, 40))?.wpm).toBe(50);
-    expect(mergeRecord("ghosts", g(9, 40), g(1, 50))?.wpm).toBe(50);
+  it("keeps the better stage result regardless of time, with the earliest clear", () => {
+    const st = (updatedAt: number, stars: number, bestPoints: number, clearedAt: number): StageRecord => ({ id: "w1-s1", updatedAt, stars, bestPoints, clearedAt });
+    expect(mergeRecord("stages", st(1, 3, 50, 100), st(9, 2, 400, 50))).toEqual({ id: "w1-s1", updatedAt: 1, stars: 3, bestPoints: 50, clearedAt: 50 });
+    expect(mergeRecord("stages", st(9, 2, 400, 50), st(1, 3, 50, 100))).toEqual({ id: "w1-s1", updatedAt: 1, stars: 3, bestPoints: 50, clearedAt: 50 });
+    // Same stars: more points wins.
+    expect(mergeRecord("stages", st(1, 2, 300, 10), st(9, 2, 100, 10))?.bestPoints).toBe(300);
+    // A first clear on another device is kept even if this side has no clear yet.
+    expect(mergeRecord("stages", st(1, 0, 20, 0), st(2, 1, 10, 70))?.clearedAt).toBe(70);
   });
 
   it("keeps the earliest unlock time for achievements", () => {
-    const a = (updatedAt: number, unlockedAt: number): AchievementRecord => ({ id: "first-test", updatedAt, unlockedAt });
+    const a = (updatedAt: number, unlockedAt: number): AchievementRecord => ({ id: "first-game", updatedAt, unlockedAt });
     expect(mergeRecord("achievements", a(5, 5), a(3, 3))?.unlockedAt).toBe(3);
   });
 });

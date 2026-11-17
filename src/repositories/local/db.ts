@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import { TABLE_NAMES, type TableMap, type TableName } from "@/domain/model";
 import type { OutboxItem } from "@/domain/sync/outbox";
+import { migrateV1Row, V1_DROPPED_TABLES } from "@/domain/sync/migrate-v1";
 import type { RecordStore } from "../store";
 
 export interface MetaRow {
@@ -16,7 +17,10 @@ export type KitabaDb = Dexie &
     meta: EntityTable<MetaRow, "key">;
   };
 
+/** Kept as "kitaba" so existing learners' data is found after the pivot (the product name lives in config/brand.ts). */
 export const DB_NAME = "kitaba";
+
+const MIGRATED_TABLES = ["srs", "mastery", "activity", "achievements", "profile"] as const;
 
 /**
  * Versioned schema. Never edit a published version: add db.version(n + 1)
@@ -24,6 +28,7 @@ export const DB_NAME = "kitaba";
  */
 export function openDb(options?: ConstructorParameters<typeof Dexie>[1], name = DB_NAME): KitabaDb {
   const db = new Dexie(name, options) as KitabaDb;
+  // v1: typing, spelling, sentences and professional writing (V1 product).
   db.version(1).stores({
     results: "id, at, modeKey, updatedAt",
     keystats: "id, updatedAt",
@@ -38,8 +43,39 @@ export function openDb(options?: ConstructorParameters<typeof Dexie>[1], name = 
     outbox: "key",
     meta: "key",
   });
+  // v2: spelling only (DECISIONS V3). Drops the V1-only stores and reshapes the rest
+  // with the same pure rules used to import v1 export files.
+  db.version(2)
+    .stores({
+      ...Object.fromEntries(V1_DROPPED_TABLES.map((t) => [t, null])),
+      sessions: "id, at, mode, updatedAt",
+      stages: "id, updatedAt",
+    })
+    .upgrade(async (tx) => {
+      for (const table of MIGRATED_TABLES) {
+        await tx
+          .table(table)
+          .toCollection()
+          .modify((row: Record<string, unknown>, ref: { value?: unknown }) => {
+            const next = migrateV1Row(table, row);
+            if (next === null) delete ref.value;
+            else ref.value = next;
+          });
+      }
+      // Pending cloud writes: drop those for removed tables, migrate the rest.
+      await tx
+        .table("outbox")
+        .toCollection()
+        .modify((item: OutboxItem, ref: { value?: unknown }) => {
+          const next = migrateV1Row(item.table, item.record as unknown as Record<string, unknown>);
+          if (next === null) delete ref.value;
+          else ref.value = { ...item, record: next };
+        });
+    });
   return db;
 }
+
+const ALL_STORES = [...TABLE_NAMES, "outbox", "meta"];
 
 export function createDexieStore(db: KitabaDb): RecordStore {
   const t = <T extends TableName>(name: T) => db.table<TableMap[T], string>(name);
@@ -53,10 +89,10 @@ export function createDexieStore(db: KitabaDb): RecordStore {
       await t(name).bulkPut([...records]);
     },
     async clear() {
-      await db.transaction("rw", [...TABLE_NAMES, "outbox", "meta"], async () => {
-        await Promise.all([...TABLE_NAMES, "outbox", "meta"].map((n) => db.table(n).clear()));
+      await db.transaction("rw", ALL_STORES, async () => {
+        await Promise.all(ALL_STORES.map((n) => db.table(n).clear()));
       });
     },
-    atomic: (work) => db.transaction("rw", [...TABLE_NAMES, "outbox", "meta"], work),
+    atomic: (work) => db.transaction("rw", ALL_STORES, work),
   };
 }

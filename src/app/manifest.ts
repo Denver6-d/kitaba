@@ -1,13 +1,15 @@
 import type { MetadataRoute } from "next";
+import { PRODUCT_NAME } from "@/config/brand";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Kitaba كتابة",
-    short_name: "Kitaba",
-    description: "English writing practice for Arabic speakers: typing, spelling, sentences and professional writing.",
+    name: `${PRODUCT_NAME}: English spelling`,
+    short_name: PRODUCT_NAME,
+    description: "Master English spelling: short spelling games for Arabic speakers, with spaced review of your own mistakes.",
     start_url: "/",
     scope: "/",
     display: "standalone",
+    orientation: "any",
     dir: "rtl",
     lang: "ar",
     background_color: "#eef1ec",

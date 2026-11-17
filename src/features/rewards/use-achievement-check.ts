@@ -2,46 +2,38 @@
 
 import { useCallback } from "react";
 import { earnedAchievements, type AchievementStats } from "@/domain/progress/achievements";
-import { levelInfo, xpFor } from "@/domain/progress/levels";
+import { levelInfo } from "@/domain/progress/levels";
 import { longestStreak } from "@/domain/progress/streak";
-import { lessons } from "@/data/lessons";
-import { scenarios } from "@/data/scenarios";
+import { isBossStage, WORLD_COUNT } from "@/domain/games/campaign";
 import { useRepos } from "@/repositories/provider";
 import type { Repositories } from "@/repositories/types";
 
-export const ACHIEVEMENT_EVENT = "kitaba:achievements";
+export const ACHIEVEMENT_EVENT = "spelling:achievements";
 
-const CORRECT_SPELLING_XP = xpFor({ kind: "spelling", correct: true });
+/** V1 dictation logged 3 XP for a correct word and 1 for a miss. */
+const V1_CORRECT_XP = 3;
 
 /** Summarises stored progress for the achievement rules. */
 export async function buildAchievementStats(repos: Repositories): Promise<AchievementStats> {
-  const [results, activity, attempts, scenarioAttempts, mastery, profile] = await Promise.all([
-    repos.progress.listResults(),
-    repos.activity.list(),
-    repos.sentences.attempts(),
-    repos.scenarios.attempts(),
-    repos.sentences.allMastery(),
-    repos.profile.get(),
-  ]);
-  const timed = results.filter((r) => r.duration > 0);
+  const [activity, sessions, stages] = await Promise.all([repos.activity.list(), repos.games.sessions(), repos.games.stages()]);
+  const stageList = Object.values(stages);
   return {
-    tests: timed.length,
-    bestWpm: Math.max(0, ...timed.filter((r) => r.accuracy >= 80).map((r) => r.wpm)),
-    bestMinuteAccuracy: Math.max(0, ...timed.filter((r) => r.duration >= 60 && r.wpm >= 10).map((r) => r.accuracy)),
+    games: sessions.length,
+    correctWords:
+      sessions.reduce((n, s) => n + s.correct, 0) + activity.filter((a) => a.kind === "spelling" && a.xp >= V1_CORRECT_XP).length,
     longestStreak: longestStreak(activity.map((a) => a.day)),
-    // Activity records do not store the verdict; a correct dictation earns the higher XP.
-    spellingCorrect: activity.filter((a) => a.kind === "spelling" && a.xp >= CORRECT_SPELLING_XP).length,
-    sentencesCorrect: attempts.filter((a) => a.score === 1).length,
-    scenariosCompleted: new Set(scenarioAttempts.filter((a) => a.total > 0 && a.passed === a.total).map((a) => a.scenarioId)).size,
-    scenariosTotal: scenarios.length,
-    lessonsDone: lessons.filter((l) => (mastery[`lesson:${l.id}`] ?? 0) > 0).length,
-    lessonsTotal: lessons.length,
-    diagnosticDone: profile.diagnosticAt !== null,
+    totalStars: stageList.filter((s) => !s.id.startsWith("daily:")).reduce((n, s) => n + s.stars, 0),
+    perfectStages: stageList.filter((s) => s.stars === 3 && !s.id.startsWith("daily:")).length,
+    bossesCleared: stageList.filter((s) => isBossStage(s.id) && s.stars > 0).length,
+    worldsTotal: WORLD_COUNT,
+    bestCombo: Math.max(0, ...sessions.map((s) => s.maxCombo)),
+    dailyDone: stageList.filter((s) => s.id.startsWith("daily:") && s.stars > 0).length,
+    reviewsDone: sessions.filter((s) => s.mode === "review").reduce((n, s) => n + s.items, 0),
     practiceLevel: levelInfo(activity.reduce((s, a) => s + a.xp, 0)).level,
   };
 }
 
-/** Checks the rules after an activity, stores new unlocks and announces them (see AchievementToast). */
+/** Checks the rules after a game, stores new unlocks and announces them (see AchievementToast). */
 export function useAchievementCheck(): () => Promise<string[]> {
   const repos = useRepos();
   return useCallback(async () => {

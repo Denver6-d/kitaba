@@ -1,4 +1,4 @@
-import { charDistance } from "../sentences/classify";
+import { charDistance } from "./diff";
 
 /**
  * SM-2 spaced repetition (Wozniak, 1987), the classic SuperMemo-2 rules:

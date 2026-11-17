@@ -1,0 +1,28 @@
+import type { WordRow } from "./row";
+
+export const shortVowels: readonly WordRow[] = [
+  ["chocolate", "شوكولاتة", "A1", "I like dark chocolate."],
+  ["restaurant", "مطعم", "A1", "Let's eat at a restaurant."],
+  ["interest", "اهتمام / فائدة", "B1", "Thank you for your interest."],
+  ["family", "عائلة", "A1", "I love my family."],
+  ["memory", "ذاكرة", "A2", "He has a good memory."],
+  ["history", "التاريخ", "A2", "I study history."],
+  ["factory", "مصنع", "A2", "My uncle works in a factory."],
+  ["camera", "كاميرا", "A1", "I bought a new camera."],
+  ["temperature", "درجة الحرارة", "B1", "The temperature is high today."],
+  ["average", "متوسط", "B1", "The average age is thirty."],
+  ["several", "عدة", "B1", "I called several times."],
+  ["general", "عام", "B1", "This is a general question."],
+  ["natural", "طبيعي", "B1", "It is natural to feel nervous."],
+  ["animal", "حيوان", "A1", "The lion is a wild animal."],
+  ["dollar", "دولار", "A1", "It costs one dollar."],
+  ["doctor", "طبيب", "A1", "I need to see a doctor."],
+  ["teacher", "معلّم", "A1", "My teacher is kind."],
+  ["color", "لون", "A1", "What color is your car?"],
+  ["calendar", "تقويم", "A2", "Check the calendar."],
+  ["grammar", "القواعد", "A2", "English grammar is not easy."],
+  ["sugar", "سكر", "A1", "No sugar, please."],
+  ["center", "مركز", "A2", "The shop is in the city center."],
+  ["minute", "دقيقة", "A1", "Wait a minute."],
+  ["parent", "والد / والدة", "A2", "Each parent got a letter."],
+];

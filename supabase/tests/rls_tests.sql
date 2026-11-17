@@ -1,4 +1,4 @@
--- Kitaba RLS tests. Paste into the Supabase SQL editor and run.
+-- RLS tests (v2, spelling). Paste into the Supabase SQL editor and run.
 -- Everything happens inside one transaction that is ROLLED BACK at the end:
 -- the two test users and all their rows disappear afterwards.
 -- Every check raises an exception on failure; success prints "ALL RLS TESTS PASSED".
@@ -108,21 +108,23 @@ do $$ begin
 
   perform pg_temp.act_as('00000000-0000-4000-8000-00000000000a');
 
-  -- Not opted in yet: submissions are rejected.
-  if (public.submit_score(60, 97, 60, 300)) ->> 'status' <> 'not_opted_in' then raise exception 'score accepted without opt-in'; end if;
+  -- Not opted in yet: submissions are rejected. Arguments: points, correct, total, duration_s.
+  if (public.submit_score(120, 9, 10, 90)) ->> 'status' <> 'not_opted_in' then raise exception 'score accepted without opt-in'; end if;
 
   perform public.set_leaderboard_nickname('Test_A');
-  if (public.submit_score(60, 97, 60, 300)) ->> 'status' <> 'ok' then raise exception 'valid score rejected'; end if;
+  if (public.submit_score(120, 9, 10, 90)) ->> 'status' <> 'ok' then raise exception 'valid score rejected'; end if;
 
-  -- Plausibility and rate limits.
-  if (public.submit_score(61, 97, 60, 305)) ->> 'status' <> 'rate_limited' then raise exception 'rate limit missing'; end if;
-  if (public.submit_score(300, 99, 60, 1500)) ->> 'status' not in ('implausible', 'rate_limited') then raise exception 'implausible wpm accepted'; end if;
-  if (public.submit_score(60, 50, 60, 300)) ->> 'status' not in ('low_accuracy', 'rate_limited') then raise exception 'low accuracy accepted'; end if;
-  if (public.submit_score(60, 97, 10, 50)) ->> 'status' not in ('too_short', 'rate_limited') then raise exception 'short test accepted'; end if;
+  -- Rate limit, then plausibility (each check returns before the rate limit when it fails first).
+  if (public.submit_score(120, 9, 10, 90)) ->> 'status' <> 'rate_limited' then raise exception 'rate limit missing'; end if;
+  if (public.submit_score(1000, 9, 10, 90)) ->> 'status' <> 'implausible' then raise exception 'too many points accepted'; end if;
+  if (public.submit_score(120, 11, 10, 90)) ->> 'status' <> 'implausible' then raise exception 'correct > total accepted'; end if;
+  if (public.submit_score(120, 9, 10, 3)) ->> 'status' <> 'implausible' then raise exception 'impossibly fast game accepted'; end if;
+  if (public.submit_score(40, 4, 10, 90)) ->> 'status' <> 'low_accuracy' then raise exception 'low accuracy accepted'; end if;
+  if (public.submit_score(40, 4, 4, 30)) ->> 'status' <> 'too_short' then raise exception 'short game accepted'; end if;
 
   -- No direct writes to scores.
   begin
-    insert into public.leaderboard_scores (user_id, wpm, accuracy, duration_s) values (auth.uid(), 200, 100, 60);
+    insert into public.leaderboard_scores (user_id, points, correct, total, duration_s) values (auth.uid(), 2000, 60, 60, 60);
     raise exception 'direct insert into leaderboard_scores allowed';
   exception when insufficient_privilege then null;
   end;
@@ -146,7 +148,7 @@ do $$ begin
   -- Anonymous callers cannot submit, join or leave.
   perform pg_temp.act_as(null);
   begin
-    perform public.submit_score(60, 97, 60, 300);
+    perform public.submit_score(120, 9, 10, 90);
     raise exception 'anon can call submit_score';
   exception when insufficient_privilege then null;
   end;
@@ -156,21 +158,22 @@ do $$ begin
   exception when insufficient_privilege then null;
   end;
 
-  -- Public views expose nickname/score/date only.
+  -- The public view exposes nickname and weekly score only.
   if exists (
     select 1 from information_schema.columns
-    where table_schema = 'public' and table_name in ('leaderboard_weekly', 'leaderboard_all_time')
-      and column_name not in ('rank', 'nickname', 'wpm', 'accuracy', 'achieved_at')
+    where table_schema = 'public' and table_name = 'leaderboard_weekly'
+      and column_name not in ('rank', 'nickname', 'points', 'words', 'last_at')
   ) then
-    raise exception 'leaderboard views expose extra columns';
+    raise exception 'leaderboard view exposes extra columns';
   end if;
-  if (select count(*) from public.leaderboard_all_time where nickname = 'Test_A') <> 1 then raise exception 'opted-in score not public'; end if;
+  if to_regclass('public.leaderboard_all_time') is not null then raise exception 'old all-time view still exists'; end if;
+  if (select points from public.leaderboard_weekly where nickname = 'Test_A') <> 120 then raise exception 'opted-in weekly score not public'; end if;
 
   -- Leaving removes the scores and hides the nickname.
   perform pg_temp.act_as('00000000-0000-4000-8000-00000000000a');
   perform public.leave_leaderboard();
   perform pg_temp.act_as(null);
-  if (select count(*) from public.leaderboard_all_time where nickname = 'Test_A') <> 0 then raise exception 'left user still public'; end if;
+  if (select count(*) from public.leaderboard_weekly where nickname = 'Test_A') <> 0 then raise exception 'left user still public'; end if;
 end $$;
 
 select 'ALL RLS TESTS PASSED' as result;

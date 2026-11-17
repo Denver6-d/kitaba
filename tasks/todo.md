@@ -1,45 +1,25 @@
-# Kitaba V1 — Task list
+# V2 task list
 
-Each task: verify with `npm run typecheck && npm test` (domain) and `npm run build` at checkpoints.
+## Phase A: docs, scope cut, bug fix
+- [x] SPEC.md rewritten (pivot), DECISIONS.md pivot section, DESIGN.md V2
+- [x] Removed typing, layout detector, heatmap, lessons, drills, custom text, sentences, professional writing, diagnostic, certificate (code, routes, data, i18n, tests)
+- [x] Dexie v2 migration + v1 export import (shared pure migration, tested on fake-indexeddb)
+- [x] Supabase SQL: v2 table names, weekly spelling leaderboard, RLS tests and checklist
+- [x] Product name constant; single-name logo
+- [x] First-character bug: root cause recorded (B1), persistent SpellingInput, regression tests
+- [x] Game engine, item builders, misspelling generator, shuffle-bag, answer checking (US/UK)
 
-## Phase 1 — Typing core
-- [x] 1 Scaffold + tooling + git — Acceptance: dev server runs, vitest runs, strict TS
-- [x] 2 Design system + i18n + shell — Acceptance: DESIGN.md, ar/en toggle, RTL, themes, settings persist
-- [x] 3 Content schemas + typing data + validator test
-- [x] 4 Typing engine/metrics/layout detector (tests first)
-- [x] 5 Key stats/adaptive/ghost (tests first)
-- [x] 6 Repositories (interfaces, Dexie, contract tests, export/import)
-- [x] 7 Typing test UI + results + PB + ghost + layout hint
-- [x] 8 Heatmap, adaptive drill, lessons, custom text
-- [x] 9 Diagnostic → level + plan
-- [x] 10 Stats page + landing page
-- [x] 11 PWA
-- [x] CHECKPOINT P1: all gates green, code review, commit
+## Phase B: content
+- [ ] ≥ 1,500 words over 15 categories and A1–C1, Arabic hints, unique example sentences
+- [ ] ≥ 800 dictation sentences
+- [ ] Volume thresholds in the content test; validate:content script
 
-## Phase 2 — Spelling
-- [x] 12 Word bank ≥ 200
-- [x] 13 SM-2 + WordRepository
-- [x] 14 Dictation + review UI
-- [x] CHECKPOINT P2
+## Phase C: games
+- [ ] Campaign map, daily challenge, free play filters, Arabic hint fading, celebration, leaderboard flow
 
-## Phase 3 — Sentences and professional writing
-- [x] 15 Grader + classifier (≥ 60 tests)
-- [x] 16 150+ sentences + practice UI
-- [x] 17 Scenarios + checklist + UI
-- [x] 18 Achievements + certificate + share image
-- [x] CHECKPOINT P3
-
-## Phase 4 — Accounts and sync
-- [x] 19 Migrations + RLS + RPCs
-- [x] 20 Supabase client + auth UI
-- [x] 21 Merge + outbox + sync + indicator + merge dialog
-- [x] 22 Privacy, export, delete
-- [x] CHECKPOINT P4 (+ security review)
-
-## Phase 5 — Leaderboard
-- [x] 23 Leaderboard SQL + RLS tests
-- [x] 24 Nickname + plausibility + UI
-- [x] CHECKPOINT P5 (+ security + performance review)
-
-## Finish
-- [x] 25 README, DECISIONS, Lighthouse attempt, final report
+## Phase D: navigation, responsive, login, design, copy
+- [ ] Hamburger menu (focus trap, Esc, outside click, RTL/LTR), bottom bar, footer
+- [ ] Responsive at 360/390/768/1280/1920, both themes and directions; mobile inputs above the keyboard
+- [ ] Google + GitHub OAuth, safe redirects, tests; README OAuth steps in Arabic
+- [ ] Bigger body text, lighter secondary text, opaque header, wide landing, empty states, copy
+- [ ] Final report + Arabic manual test checklist

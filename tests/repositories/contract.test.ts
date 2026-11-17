@@ -1,10 +1,11 @@
+import Dexie from "dexie";
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { describe, expect, it } from "vitest";
 import { createDexieStore, openDb } from "@/repositories/local/db";
 import { createMemoryStore, type RecordStore } from "@/repositories/store";
 import { createRepositories } from "@/repositories/create";
-import { parseExportFile } from "@/repositories/export";
-import type { NewTestResult } from "@/repositories/types";
+import { EXPORT_VERSION, parseExportFile } from "@/repositories/export";
+import type { NewSession } from "@/repositories/types";
 
 /**
  * Repository contract: every backend must pass the same suite.
@@ -19,7 +20,7 @@ const backends: Array<[string, () => RecordStore]> = [
     "dexie (fake-indexeddb)",
     () => {
       dbCounter += 1;
-      return createDexieStore(openDb({ indexedDB: new IDBFactory(), IDBKeyRange }, `kitaba-test-${dbCounter}`));
+      return createDexieStore(openDb({ indexedDB: new IDBFactory(), IDBKeyRange }, `contract-test-${dbCounter}`));
     },
   ],
 ];
@@ -36,55 +37,54 @@ function setup(makeStore: () => RecordStore, prefix = "id") {
   return { repos, store };
 }
 
-const result = (wpm: number, accuracy = 95, modeKey = "words:30"): NewTestResult => ({
-  modeKey,
-  source: "words",
-  duration: 30,
-  wpm,
-  rawWpm: wpm + 2,
-  accuracy,
-  consistency: 80,
-  chars: Math.round(wpm * 2.5),
-  errors: 1,
-  layoutMismatches: 0,
-  samples: [wpm],
-  at: wpm,
+const session = (over: Partial<NewSession> = {}): NewSession => ({
+  mode: "listen",
+  stageId: "w1-s1",
+  items: 10,
+  correct: 8,
+  points: 120,
+  maxCombo: 4,
+  seconds: 95,
+  at: 5_000,
+  missed: ["w-people", "w-because"],
+  ...over,
 });
 
 describe.each(backends)("repository contract: %s", (_name, makeStore) => {
-  it("saves results, reports new personal bests and stores the ghost", async () => {
+  it("saves sessions and keeps the best result per stage (stars, then points)", async () => {
     const { repos } = setup(makeStore);
-    const extras = { keyStats: { a: { hits: 3, misses: 1 } }, target: "abc", ghost: [[0, 1]] as const };
+    const first = await repos.games.saveSession(session(), 2);
+    expect(first.previous).toBeNull();
+    expect(first.best).toMatchObject({ id: "w1-s1", stars: 2, bestPoints: 120, clearedAt: 5_000 });
 
-    const first = await repos.progress.saveTestResult(result(30), { ...extras, ghost: [[0, 1]] });
-    expect(first.isNewBest).toBe(true);
-    expect(first.previousBest).toBeNull();
+    const worse = await repos.games.saveSession(session({ points: 300, at: 9_000 }), 1);
+    expect(worse.best).toMatchObject({ stars: 2, bestPoints: 120, clearedAt: 5_000 });
 
-    const slower = await repos.progress.saveTestResult(result(25), { ...extras, ghost: [[0, 1]] });
-    expect(slower.isNewBest).toBe(false);
-    expect(slower.previousBest).toBe(30);
+    const morePoints = await repos.games.saveSession(session({ points: 200, at: 10_000 }), 2);
+    expect(morePoints.best).toMatchObject({ stars: 2, bestPoints: 200, clearedAt: 5_000 });
 
-    const faster = await repos.progress.saveTestResult(result(40), { ...extras, ghost: [[0, 2]] });
-    expect(faster.isNewBest).toBe(true);
+    const better = await repos.games.saveSession(session({ points: 90, at: 11_000 }), 3);
+    expect(better.best).toMatchObject({ stars: 3, bestPoints: 90, clearedAt: 5_000 });
 
-    expect((await repos.progress.personalBests())["words:30"]?.wpm).toBe(40);
-    expect((await repos.progress.ghost("words:30"))?.wpm).toBe(40);
-    expect(await repos.progress.listResults()).toHaveLength(3);
-    expect((await repos.progress.keyStats())["a"]).toEqual({ hits: 9, misses: 3 });
+    expect(await repos.games.sessions()).toHaveLength(4);
+    expect((await repos.games.stages())["w1-s1"]?.stars).toBe(3);
   });
 
-  it("does not create a ghost or best for low-accuracy runs", async () => {
+  it("does not record a stage for free play, and a zero-star attempt is not a clear", async () => {
     const { repos } = setup(makeStore);
-    const r = await repos.progress.saveTestResult(result(90, 50), { keyStats: {}, target: "x", ghost: [[0, 1]] });
-    expect(r.isNewBest).toBe(false);
-    expect(await repos.progress.ghost("words:30")).toBeUndefined();
+    const free = await repos.games.saveSession(session({ stageId: null }), 0);
+    expect(free.best).toBeNull();
+    const failed = await repos.games.saveSession(session({ stageId: "w1-s2" }), 0);
+    expect(failed.best).toMatchObject({ stars: 0, clearedAt: 0 });
+    const cleared = await repos.games.saveSession(session({ stageId: "w1-s2", at: 7_000 }), 1);
+    expect(cleared.best).toMatchObject({ stars: 1, clearedAt: 7_000 });
   });
 
   it("logs activity with a day key", async () => {
     const { repos } = setup(makeStore);
-    await repos.activity.log("typing", 30.4, 12.6);
+    await repos.activity.log("game", 30.4, 12.6);
     const [a] = await repos.activity.list();
-    expect(a).toMatchObject({ kind: "typing", seconds: 30, xp: 13 });
+    expect(a).toMatchObject({ kind: "game", seconds: 30, xp: 13 });
     expect(a?.day).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
@@ -100,14 +100,12 @@ describe.each(backends)("repository contract: %s", (_name, makeStore) => {
     expect(await repos.words.allCards()).toHaveLength(3);
   });
 
-  it("tracks sentence attempts and mastery", async () => {
+  it("tracks mastery", async () => {
     const { repos } = setup(makeStore);
-    await repos.sentences.saveAttempt({ sentenceId: "s1", input: "x", score: 0.5, errors: ["spelling"], at: 1 });
-    expect(await repos.sentences.attempts()).toHaveLength(1);
-    expect(await repos.sentences.mastery("sentence:s1")).toBe(0);
-    await repos.sentences.setMastery("sentence:s1", 2);
-    expect(await repos.sentences.mastery("sentence:s1")).toBe(2);
-    expect(await repos.sentences.allMastery()).toEqual({ "sentence:s1": 2 });
+    expect(await repos.mastery.get("spell:w-a")).toBe(0);
+    await repos.mastery.set("spell:w-a", 2);
+    expect(await repos.mastery.get("spell:w-a")).toBe(2);
+    expect(await repos.mastery.all()).toEqual({ "spell:w-a": 2 });
   });
 
   it("unlocks achievements once", async () => {
@@ -120,14 +118,14 @@ describe.each(backends)("repository contract: %s", (_name, makeStore) => {
   it("returns a default profile and saves patches", async () => {
     const { repos } = setup(makeStore);
     expect((await repos.profile.get()).level).toBeNull();
-    await repos.profile.save({ level: "A2", plan: ["spelling"] });
+    await repos.profile.save({ level: "B2" });
     await repos.profile.save({ dailyGoalMinutes: 15 });
-    expect(await repos.profile.get()).toMatchObject({ level: "A2", plan: ["spelling"], dailyGoalMinutes: 15 });
+    expect(await repos.profile.get()).toMatchObject({ level: "B2", dailyGoalMinutes: 15 });
   });
 
   it("round-trips progress through export → JSON → import (replace)", async () => {
     const a = setup(makeStore);
-    await a.repos.progress.saveTestResult(result(33), { keyStats: { e: { hits: 1, misses: 0 } }, target: "t", ghost: [[0, 1]] });
+    await a.repos.games.saveSession(session(), 2);
     await a.repos.profile.save({ level: "B1" });
     const json = JSON.stringify(await a.repos.data.exportAll());
 
@@ -135,21 +133,21 @@ describe.each(backends)("repository contract: %s", (_name, makeStore) => {
     await b.repos.profile.save({ level: "A1" });
     await b.repos.data.importAll(parseExportFile(json), "replace");
     expect((await b.repos.profile.get()).level).toBe("B1");
-    expect(await b.repos.progress.listResults()).toHaveLength(1);
-    expect((await b.repos.progress.keyStats())["e"]).toEqual({ hits: 1, misses: 0 });
+    expect(await b.repos.games.sessions()).toHaveLength(1);
+    expect((await b.repos.games.stages())["w1-s1"]?.stars).toBe(2);
   });
 
-  it("merges an import using last-write-wins without losing local-only records", async () => {
+  it("merges an import without losing local-only records, keeping the better stage", async () => {
     const a = setup(makeStore);
-    await a.repos.progress.saveTestResult(result(20), { keyStats: {}, target: "t", ghost: [] });
+    await a.repos.games.saveSession(session({ points: 50 }), 3);
     const file = await a.repos.data.exportAll();
 
     const b = setup(makeStore, "b");
-    await b.repos.progress.saveTestResult(result(21, 95, "sentences:60"), { keyStats: {}, target: "t", ghost: [] });
+    await b.repos.games.saveSession(session({ points: 500, stageId: "w1-s1" }), 1);
     await b.repos.profile.save({ level: "A2" });
     await b.repos.data.importAll(file, "merge");
-    const modes = (await b.repos.progress.listResults()).map((r) => r.modeKey).sort();
-    expect(modes).toEqual(["sentences:60", "words:30"]);
+    expect(await b.repos.games.sessions()).toHaveLength(2);
+    expect((await b.repos.games.stages())["w1-s1"]).toMatchObject({ stars: 3, bestPoints: 50 });
     // b's profile was never in the import, so it survives
     expect((await b.repos.profile.get()).level).toBe("A2");
   });
@@ -163,44 +161,117 @@ describe.each(backends)("repository contract: %s", (_name, makeStore) => {
 });
 
 describe("parseExportFile", () => {
+  const file = (tables: unknown, version = EXPORT_VERSION) => JSON.stringify({ app: "kitaba", version, exportedAt: 1, tables });
+
   it("rejects invalid JSON and wrong shapes", () => {
     expect(() => parseExportFile("{")).toThrow("invalid-json");
     expect(() => parseExportFile(JSON.stringify({ app: "other" }))).toThrow("invalid-format");
-    expect(() => parseExportFile(JSON.stringify({ app: "kitaba", version: 1, exportedAt: 1, tables: { results: [{ id: 5 }] } }))).toThrow(
-      "invalid-format",
-    );
+    expect(() => parseExportFile(file({ sessions: [{ id: 5 }] }))).toThrow("invalid-format");
   });
   it("accepts a minimal valid file and fills missing tables", () => {
-    const f = parseExportFile(JSON.stringify({ app: "kitaba", version: 1, exportedAt: 1, tables: {} }));
-    expect(f.tables.results).toEqual([]);
+    const f = parseExportFile(file({}));
+    expect(f.tables.sessions).toEqual([]);
+    expect(f.tables.stages).toEqual([]);
   });
-});
-
-describe("parseExportFile strictness", () => {
-  const file = (tables: unknown) => JSON.stringify({ app: "kitaba", version: 1, exportedAt: 1, tables });
-
   it("rejects rows with missing or mistyped fields", () => {
-    expect(() => parseExportFile(file({ keystats: [{ id: "k", updatedAt: 1, at: 1 }] }))).toThrow("invalid-format");
-    expect(() => parseExportFile(file({ results: [{ id: "r", updatedAt: 1, wpm: "fast" }] }))).toThrow("invalid-format");
-  });
-  it("rejects prototype-polluting keys in key stats", () => {
-    const json = file({ keystats: [{ id: "k", updatedAt: 1, at: 1, stats: { __proto__: { hits: 1, misses: 0 } } }] }).replace(
-      '"stats":{}',
-      '"stats":{"__proto__":{"hits":1,"misses":0}}',
-    );
-    // Either rejected outright, or the key is dropped: never stored, never polluting.
-    let stored: unknown = null;
-    try {
-      stored = parseExportFile(json).tables.keystats[0];
-    } catch (e) {
-      expect((e as Error).message).toBe("invalid-format");
-    }
-    if (stored) expect(Object.hasOwn((stored as { stats: object }).stats, "__proto__")).toBe(false);
-    expect(({} as Record<string, unknown>)["hits"]).toBeUndefined();
+    expect(() => parseExportFile(file({ stages: [{ id: "w1-s1", updatedAt: 1, stars: 4, bestPoints: 1, clearedAt: 1 }] }))).toThrow("invalid-format");
+    expect(() => parseExportFile(file({ sessions: [{ ...session(), id: "s", updatedAt: 1, mode: "typing" }] }))).toThrow("invalid-format");
   });
   it("rejects unknown tables and extra fields", () => {
     expect(() => parseExportFile(file({ secrets: [] }))).toThrow("invalid-format");
     expect(() => parseExportFile(file({ mastery: [{ id: "m", updatedAt: 1, mastery: 1, extra: true }] }))).toThrow("invalid-format");
+  });
+
+  it("imports a V1 (pre-pivot) backup, keeping what spelling still needs", () => {
+    const v1 = file(
+      {
+        results: [{ id: "r1", updatedAt: 1, wpm: 40 }],
+        keystats: [{ id: "k1", updatedAt: 1, at: 1, stats: {} }],
+        srs: [{ id: "w-people", updatedAt: 2, wordId: "w-people", ease: 2.5, interval: 1, reps: 1, lapses: 0, due: 10, lastReviewed: 1 }],
+        mastery: [
+          { id: "spell:w-people", updatedAt: 2, mastery: 3 },
+          { id: "typing:t1", updatedAt: 2, mastery: 1 },
+        ],
+        activity: [
+          { id: "a1", updatedAt: 3, kind: "typing", at: 3, day: "2026-11-01", seconds: 60, xp: 20 },
+          { id: "a2", updatedAt: 3, kind: "spelling", at: 3, day: "2026-11-02", seconds: 15, xp: 3 },
+        ],
+        achievements: [
+          { id: "streak-3", updatedAt: 4, unlockedAt: 4 },
+          { id: "wpm-40", updatedAt: 4, unlockedAt: 4 },
+        ],
+        profile: [{ id: "me", updatedAt: 5, level: "A2", plan: ["typing"], dailyGoalMinutes: 15, diagnosticAt: 5 }],
+      },
+      1,
+    );
+    const f = parseExportFile(v1);
+    expect(f.version).toBe(EXPORT_VERSION);
+    expect(f.tables.srs).toHaveLength(1);
+    expect(f.tables.mastery.map((m) => m.id)).toEqual(["spell:w-people"]);
+    expect(f.tables.activity.map((a) => (a as unknown as { kind: string }).kind)).toEqual(["legacy", "spelling"]);
+    expect(f.tables.achievements.map((a) => a.id)).toEqual(["streak-3"]);
+    expect(f.tables.profile[0]).toEqual({ id: "me", updatedAt: 5, level: "A2", dailyGoalMinutes: 15 });
+  });
+});
+
+describe("Dexie v1 → v2 upgrade (existing learners)", () => {
+  it("keeps cards, spelling mastery, streak days, XP, surviving achievements and the goal", async () => {
+    const indexedDB = new IDBFactory();
+    const name = "upgrade-test";
+    // A database as V1 left it.
+    const old = new Dexie(name, { indexedDB, IDBKeyRange });
+    old.version(1).stores({
+      results: "id, at, modeKey, updatedAt",
+      keystats: "id, updatedAt",
+      ghosts: "id, updatedAt",
+      srs: "id, due, updatedAt",
+      attempts: "id, sentenceId, at, updatedAt",
+      mastery: "id, updatedAt",
+      scenarios: "id, scenarioId, at, updatedAt",
+      activity: "id, day, at, updatedAt",
+      achievements: "id, updatedAt",
+      profile: "id, updatedAt",
+      outbox: "key",
+      meta: "key",
+    });
+    await old.open();
+    await old.table("results").put({ id: "r1", updatedAt: 1, at: 1, modeKey: "words:30" });
+    await old.table("srs").put({ id: "w-people", updatedAt: 2, wordId: "w-people", ease: 2.5, interval: 1, reps: 1, lapses: 0, due: 10, lastReviewed: 1 });
+    await old.table("mastery").bulkPut([
+      { id: "spell:w-people", updatedAt: 2, mastery: 3 },
+      { id: "sentence:s1", updatedAt: 2, mastery: 2 },
+    ]);
+    await old.table("activity").bulkPut([
+      { id: "a1", updatedAt: 3, kind: "typing", at: 3, day: "2026-11-01", seconds: 60, xp: 20 },
+      { id: "a2", updatedAt: 3, kind: "spelling", at: 3, day: "2026-11-02", seconds: 15, xp: 3 },
+    ]);
+    await old.table("achievements").bulkPut([
+      { id: "streak-7", updatedAt: 4, unlockedAt: 4 },
+      { id: "first-test", updatedAt: 4, unlockedAt: 4 },
+    ]);
+    await old.table("profile").put({ id: "me", updatedAt: 5, level: "B1", plan: ["typing"], dailyGoalMinutes: 20, diagnosticAt: 5 });
+    await old.table("outbox").bulkPut([
+      { key: "results:r1", table: "results", record: { id: "r1", updatedAt: 1 } },
+      { key: "activity:a1", table: "activity", record: { id: "a1", updatedAt: 3, kind: "typing", at: 3, day: "2026-11-01", seconds: 60, xp: 20 } },
+    ]);
+    old.close();
+
+    const db = openDb({ indexedDB, IDBKeyRange }, name);
+    const repos = createRepositories({ store: createDexieStore(db) });
+    expect(await repos.words.allCards()).toHaveLength(1);
+    expect(await repos.mastery.all()).toEqual({ "spell:w-people": 3 });
+    const activity = await repos.activity.list();
+    expect(activity.map((a) => [a.day, a.kind, a.xp])).toEqual([
+      ["2026-11-01", "legacy", 20],
+      ["2026-11-02", "spelling", 3],
+    ]);
+    expect((await repos.achievements.list()).map((a) => a.id)).toEqual(["streak-7"]);
+    expect(await repos.profile.get()).toEqual({ id: "me", updatedAt: 5, level: "B1", dailyGoalMinutes: 20 });
+    expect(db.tables.map((t) => t.name)).not.toContain("results");
+    const outbox = await db.outbox.toArray();
+    expect(outbox.map((o) => o.key)).toEqual(["activity:a1"]);
+    expect((outbox[0]?.record as unknown as { kind: string }).kind).toBe("legacy");
+    db.close();
   });
 });
 

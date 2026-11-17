@@ -55,6 +55,15 @@ export default function SettingsPage() {
             onChange={(theme) => update({ theme })}
             options={(["system", "light", "dark"] as const).map((v) => ({ value: v, label: t.settings.themes[v] }))}
           />
+          <div className="space-y-2">
+            <Segmented
+              legend={t.settings.accent}
+              value={s.accent}
+              onChange={(accent) => update({ accent })}
+              options={(["us", "uk"] as const).map((v) => ({ value: v, label: t.settings.accents[v] }))}
+            />
+            <p className="text-sm text-ink-soft">{t.settings.accentHint}</p>
+          </div>
           <Segmented
             legend={t.settings.textSize}
             value={s.textScale}
@@ -69,9 +78,7 @@ export default function SettingsPage() {
           />
           <div className="divide-y divide-rule border-y border-rule">
             <Toggle label={t.settings.readableFont} hint={t.settings.readableFontHint} checked={s.readableFont} onChange={(readableFont) => update({ readableFont })} />
-            <Toggle label={t.settings.sounds} hint={t.settings.soundsHint} checked={s.keySounds} onChange={(keySounds) => update({ keySounds })} />
-            <Toggle label={t.settings.ghost} checked={s.showGhost} onChange={(showGhost) => update({ showGhost })} />
-            <Toggle label={t.settings.keyboard} checked={s.showKeyboard} onChange={(showKeyboard) => update({ showKeyboard })} />
+            <Toggle label={t.settings.sounds} hint={t.settings.soundsHint} checked={s.sounds} onChange={(sounds) => update({ sounds })} />
           </div>
         </section>
 

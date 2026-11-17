@@ -5,21 +5,24 @@ import { SiteHeader } from "@/components/shell/site-header";
 import { SiteFooter } from "@/components/shell/site-footer";
 import { PRE_PAINT_SCRIPT } from "@/lib/settings";
 import { ar } from "@/i18n/ar";
+import { PRODUCT_NAME } from "@/config/brand";
 import { fontVariables } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: ar.meta.title,
   description: ar.meta.description,
-  applicationName: "Kitaba",
+  applicationName: PRODUCT_NAME,
   icons: { icon: "/icon.svg", apple: "/icon-192.png" },
-  appleWebApp: { capable: true, title: "Kitaba", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: PRODUCT_NAME, statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Phones shrink the layout when the keyboard opens, so the answer and the Check button stay visible.
+  interactiveWidget: "resizes-content",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#eef1ec" },
     { media: "(prefers-color-scheme: dark)", color: "#0d1c1b" },

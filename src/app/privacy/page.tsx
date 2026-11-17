@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useI18n } from "@/i18n";
 import { Page } from "@/components/page";
+import { PRODUCT_NAME } from "@/config/brand";
 
 interface Section {
   readonly title: string;
@@ -11,16 +12,15 @@ interface Section {
 
 const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]; updated: string }> = {
   ar: {
-    intro: "كتابة مصممة لتعمل دون أن تعرف عنك شيئًا. هذه الصفحة تذكر بالضبط ما يُحفظ، وأين، وكيف تحذفه.",
+    intro: `${PRODUCT_NAME} مصمَّم ليعمل دون أن يعرف عنك شيئًا. هذه الصفحة تذكر بالضبط ما يُحفظ، وأين، وكيف تحذفه.`,
     sections: [
       {
         title: "على جهازك (دائمًا)",
         items: [
-          "نتائج اختبارات الكتابة: السرعة والدقة والثبات والتاريخ، وأفضل محاولة لكل وضع (للسباق مع الشبح).",
-          "إحصاءات المفاتيح: عدد الضغطات الصحيحة والخاطئة لكل حرف.",
-          "بطاقات الإملاء للمراجعة المتباعدة، ومحاولات الجمل (بما فيها النص الذي كتبته)، ورسائلك في الكتابة المهنية.",
-          "أيام التمرين والنقاط، والإنجازات، ومستواك المبدئي وخطتك وهدفك اليومي.",
-          "الإعدادات (اللغة، المظهر، حجم الخط…) في localStorage.",
+          "نتائج جولات الإملاء: النمط، وعدد الكلمات الصحيحة، والنقاط، وأطول سلسلة، والمدة، ومعرّفات الكلمات التي أخطأت فيها (لا نحفظ ما كتبته حرفيًا).",
+          "أفضل نتيجة ونجوم كل مرحلة، وبطاقات المراجعة المتباعدة للكلمات التي أخطأت فيها.",
+          "أيام التمرين ونقاط الخبرة، والإنجازات، ومستواك المفضّل وهدفك اليومي.",
+          "الإعدادات (اللغة، المظهر، حجم الخط، الإنجليزية الأمريكية أو البريطانية…) في localStorage، وترتيب الكلمات القادمة حتى لا تتكرر.",
           "كل ذلك في قاعدة IndexedDB داخل متصفحك. لا يُرسل إلى أي مكان إن لم تسجّل الدخول.",
         ],
       },
@@ -35,7 +35,7 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
       {
         title: "لوحة الصدارة (فقط إذا اشتركت)",
         items: [
-          "يظهر للعامة: اسمك المستعار، وأفضل سرعة، والدقة، وتاريخ النتيجة. لا يظهر بريدك ولا معرّف حسابك أبدًا.",
+          "يظهر للعامة: اسمك المستعار، ومجموع نقاطك هذا الأسبوع، وعدد الكلمات الصحيحة، ووقت آخر جولة. لا يظهر بريدك ولا معرّف حسابك أبدًا.",
           "يمكنك مغادرة اللوحة في أي وقت، فتُحذف نتائجك منها فورًا.",
         ],
       },
@@ -60,16 +60,15 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
     updated: "آخر تحديث: نوفمبر 2026",
   },
   en: {
-    intro: "Kitaba is designed to work without knowing anything about you. This page lists exactly what is stored, where, and how to delete it.",
+    intro: `${PRODUCT_NAME} is designed to work without knowing anything about you. This page lists exactly what is stored, where, and how to delete it.`,
     sections: [
       {
         title: "On your device (always)",
         items: [
-          "Typing test results: speed, accuracy, consistency and date, plus your best run per mode (for the ghost race).",
-          "Key statistics: correct and missed presses per key.",
-          "Spelling review cards, sentence attempts (including the text you typed), and your professional-writing messages.",
-          "Practice days and points, achievements, your starting level, plan and daily goal.",
-          "Settings (language, theme, text size…) in localStorage.",
+          "Spelling round results: the mode, words right, points, best streak, duration, and the ids of words you missed (what you typed is not kept).",
+          "The best result and stars per stage, and spaced-review cards for words you missed.",
+          "Practice days and XP, achievements, your preferred level and daily goal.",
+          "Settings (language, theme, text size, American or British English…) in localStorage, plus the order of upcoming words so they don't repeat.",
           "All of this lives in an IndexedDB database in your browser. Nothing is sent anywhere unless you sign in.",
         ],
       },
@@ -84,7 +83,7 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
       {
         title: "Leaderboard (only if you join)",
         items: [
-          "Public: your nickname, best speed, accuracy and the date of the score. Your email and account id are never shown.",
+          "Public: your nickname, your points this week, the number of correct words and the time of your last round. Your email and account id are never shown.",
           "You can leave the board at any time; your scores are removed from it immediately.",
         ],
       },

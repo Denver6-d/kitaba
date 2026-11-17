@@ -1,47 +1,20 @@
-import type { ErrorType } from "./sentences/grader";
-import type { KeyStats } from "./typing/key-stats";
-import type { GhostPoint } from "./typing/ghost";
-import type { TestSource } from "./typing/personal-best";
-import type { CefrLevel, PlanStep } from "./progress/diagnostic";
-
 /**
- * Persisted records. Every synced record carries an id, an updatedAt
- * timestamp (ms) and an optional deletedAt tombstone; the sync merge rules in
- * domain/sync/merge.ts rely on these.
+ * Persisted records (schema v2, spelling pivot). Every synced record carries
+ * an id, an updatedAt timestamp (ms) and an optional deletedAt tombstone; the
+ * sync merge rules in domain/sync/merge.ts rely on these.
  */
+
+export const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
+export type CefrLevel = (typeof LEVELS)[number];
+
+/** "mixed" = boss stages and the daily challenge (items from several modes). */
+export const GAME_MODES = ["listen", "bee", "fix", "missing", "scramble", "choice", "review", "mixed"] as const;
+export type GameMode = (typeof GAME_MODES)[number];
+
 export interface SyncRecord {
   readonly id: string;
   readonly updatedAt: number;
   readonly deletedAt?: number;
-}
-
-export interface TestResultRecord extends SyncRecord {
-  readonly modeKey: string;
-  readonly source: TestSource;
-  readonly duration: number;
-  readonly wpm: number;
-  readonly rawWpm: number;
-  readonly accuracy: number;
-  readonly consistency: number;
-  readonly chars: number;
-  readonly errors: number;
-  readonly layoutMismatches: number;
-  readonly samples: readonly number[];
-  readonly at: number;
-}
-
-/** Key statistics are stored as one delta per session (append-only, so merging never double counts). */
-export interface KeyStatsDelta extends SyncRecord {
-  readonly stats: KeyStats;
-  readonly at: number;
-}
-
-/** The best run for a mode, replayed as the ghost. id = modeKey. */
-export interface GhostRecord extends SyncRecord {
-  readonly modeKey: string;
-  readonly wpm: number;
-  readonly target: string;
-  readonly ghost: readonly GhostPoint[];
 }
 
 /** Spaced-repetition card for a spelling word. id = word id. */
@@ -55,28 +28,16 @@ export interface SrsCardRecord extends SyncRecord {
   readonly lastReviewed: number;
 }
 
-export interface SentenceAttemptRecord extends SyncRecord {
-  readonly sentenceId: string;
-  readonly input: string;
-  readonly score: number;
-  readonly errors: readonly ErrorType[];
-  readonly at: number;
-}
-
-/** How well an item (sentence, lesson, scenario) is known; drives Arabic hint fading. id = item key. */
+/** How well an item is known; drives Arabic hint fading. id = "spell:<wordId>". */
 export interface MasteryRecord extends SyncRecord {
   readonly mastery: number;
 }
 
-export interface ScenarioAttemptRecord extends SyncRecord {
-  readonly scenarioId: string;
-  readonly text: string;
-  readonly passed: number;
-  readonly total: number;
-  readonly at: number;
-}
-
-export type ActivityKind = "typing" | "lesson" | "spelling" | "sentence" | "scenario" | "diagnostic";
+/**
+ * "legacy" marks practice from V1 features that no longer exist (typing,
+ * lessons, sentences…). It still counts for streak days and XP.
+ */
+export type ActivityKind = "spelling" | "game" | "review" | "legacy";
 
 /** One practice event: feeds streaks, daily goal and XP. Append-only. */
 export interface ActivityRecord extends SyncRecord {
@@ -94,45 +55,51 @@ export interface AchievementRecord extends SyncRecord {
 
 /** id = "me". */
 export interface ProfileRecord extends SyncRecord {
+  /** The learner's chosen comfort level for free play (null = all levels). */
   readonly level: CefrLevel | null;
-  readonly plan: readonly PlanStep[];
   readonly dailyGoalMinutes: number;
-  readonly diagnosticAt: number | null;
+}
+
+/** One finished game (append-only). */
+export interface SessionRecord extends SyncRecord {
+  readonly mode: GameMode;
+  /** Campaign stage id, "daily:YYYY-MM-DD", or null for free play. */
+  readonly stageId: string | null;
+  readonly items: number;
+  readonly correct: number;
+  readonly points: number;
+  readonly maxCombo: number;
+  readonly seconds: number;
+  readonly at: number;
+  /** Word ids answered wrongly (capped). */
+  readonly missed: readonly string[];
+}
+
+/** Best result for a campaign stage or daily challenge. id = stage id. */
+export interface StageRecord extends SyncRecord {
+  readonly stars: number;
+  readonly bestPoints: number;
+  /** First time the stage was cleared (≥ 1 star). */
+  readonly clearedAt: number;
 }
 
 export interface TableMap {
-  readonly results: TestResultRecord;
-  readonly keystats: KeyStatsDelta;
-  readonly ghosts: GhostRecord;
   readonly srs: SrsCardRecord;
-  readonly attempts: SentenceAttemptRecord;
   readonly mastery: MasteryRecord;
-  readonly scenarios: ScenarioAttemptRecord;
   readonly activity: ActivityRecord;
   readonly achievements: AchievementRecord;
   readonly profile: ProfileRecord;
+  readonly sessions: SessionRecord;
+  readonly stages: StageRecord;
 }
 
 export type TableName = keyof TableMap;
 
-export const TABLE_NAMES: readonly TableName[] = [
-  "results",
-  "keystats",
-  "ghosts",
-  "srs",
-  "attempts",
-  "mastery",
-  "scenarios",
-  "activity",
-  "achievements",
-  "profile",
-];
+export const TABLE_NAMES: readonly TableName[] = ["srs", "mastery", "activity", "achievements", "profile", "sessions", "stages"];
 
 export const DEFAULT_PROFILE: ProfileRecord = {
   id: "me",
   updatedAt: 0,
   level: null,
-  plan: [],
   dailyGoalMinutes: 10,
-  diagnosticAt: null,
 };

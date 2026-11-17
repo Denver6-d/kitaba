@@ -28,12 +28,12 @@ export function AchievementToast() {
     <div role="status" aria-live="polite" className="no-print pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
       {ids.length > 0 && (
         <Link
-          href="/achievements"
+          href="/progress#achievements"
           className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-2xl border border-brass-fill/60 bg-sheet px-4 py-3 shadow-float animate-in fade-in slide-in-from-bottom-2"
         >
           <Award className="size-6 shrink-0 text-brass" aria-hidden="true" />
           <span className="text-sm">
-            <span className="block text-xs text-ink-soft">{t.achievements.newUnlock}</span>
+            <span className="block text-xs text-ink-soft">{t.progress.newUnlock}</span>
             <span className="font-semibold">{ids.map((id) => ACHIEVEMENT_TEXT[id]?.[lang].title ?? id).join(" · ")}</span>
           </span>
         </Link>

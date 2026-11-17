@@ -5,17 +5,16 @@ export interface NavItem {
   readonly label: (t: Dictionary) => string;
 }
 
+/** The core learning areas: the main bar (and the bottom bar on phones). */
 export const PRIMARY_NAV: readonly NavItem[] = [
-  { href: "/practice", label: (t) => t.nav.practice },
-  { href: "/learn", label: (t) => t.nav.learn },
-  { href: "/spelling", label: (t) => t.nav.spelling },
-  { href: "/sentences", label: (t) => t.nav.sentences },
-  { href: "/professional", label: (t) => t.nav.professional },
-  { href: "/stats", label: (t) => t.nav.stats },
+  { href: "/", label: (t) => t.nav.home },
+  { href: "/play", label: (t) => t.nav.play },
+  { href: "/review", label: (t) => t.nav.review },
+  { href: "/progress", label: (t) => t.nav.progress },
 ];
 
-export const SECONDARY_NAV: readonly NavItem[] = [
-  { href: "/achievements", label: (t) => t.nav.achievements },
+/** Everything else lives in the menu. */
+export const MENU_NAV: readonly NavItem[] = [
   { href: "/leaderboard", label: (t) => t.nav.leaderboard },
   { href: "/account", label: (t) => t.nav.account },
   { href: "/settings", label: (t) => t.nav.settings },

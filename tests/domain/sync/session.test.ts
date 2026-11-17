@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { canonicalJson, decideFirstSync, reconcilePulled, PULL_OVERLAP_MS } from "@/domain/sync/session";
-import type { GhostRecord, MasteryRecord } from "@/domain/model";
+import type { MasteryRecord, StageRecord } from "@/domain/model";
 
 describe("decideFirstSync", () => {
   it("syncs normally when this device is already linked to the account", () => {
@@ -31,11 +31,12 @@ describe("reconcilePulled", () => {
     expect(reconcilePulled("mastery", m("a", 2, 5), m("a", 2, 5))).toEqual({ toLocal: null, toRemote: null });
   });
   it("re-stamps a local winner that is older (special rules) so the server's last-write-wins accepts it", () => {
-    const ghost = (updatedAt: number, wpm: number): GhostRecord => ({ id: "words:30", updatedAt, modeKey: "words:30", wpm, target: "x", ghost: [] });
-    const r = reconcilePulled("ghosts", ghost(1, 50), ghost(9, 40));
+    const stage = (updatedAt: number, stars: number, clearedAt: number): StageRecord => ({ id: "w1-s1", updatedAt, stars, bestPoints: 10, clearedAt });
+    const r = reconcilePulled("stages", stage(1, 3, 100), stage(9, 1, 50));
     // Stored locally with the new stamp too, so both sides end up identical.
     expect(r.toLocal).toEqual(r.toRemote);
-    expect(r.toRemote?.wpm).toBe(50);
+    expect(r.toRemote?.stars).toBe(3);
+    expect(r.toRemote?.clearedAt).toBe(50);
     expect(r.toRemote?.updatedAt).toBe(10);
   });
   it("stores remote-only records locally", () => {

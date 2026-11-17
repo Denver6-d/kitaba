@@ -3,23 +3,20 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import { validateNickname } from "@/domain/leaderboard/nickname";
-import { LEADERBOARD_RULES } from "@/domain/leaderboard/plausibility";
 import { useI18n } from "@/i18n";
 import type { PublicScore } from "@/repositories/types";
 import { Page, LoadingBlock, ErrorBlock, EmptyBlock } from "@/components/page";
-import { Segmented } from "@/components/segmented";
+import { Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/features/account/account-provider";
 import { useLeaderboard } from "@/features/leaderboard/use-leaderboard";
 
-type Board = "weekly" | "all";
 type Load<T> = { status: "loading" } | { status: "error" } | { status: "ready"; data: T };
 
 export default function LeaderboardPage() {
   const { t } = useI18n();
   const { configured, user } = useAccount();
   const board = useLeaderboard();
-  const [which, setWhich] = useState<Board>("weekly");
   const [rows, setRows] = useState<Load<PublicScore[]>>({ status: "loading" });
   const [nonce, setNonce] = useState(0);
 
@@ -27,78 +24,77 @@ export default function LeaderboardPage() {
     if (!board) return;
     let alive = true;
     board
-      .top(which)
-      .then((data) => alive && setRows({ status: "ready", data }))
-      .catch(() => alive && setRows({ status: "error" }));
+      .weekly()
+      .then((data) => {
+        if (alive) setRows({ status: "ready", data });
+      })
+      .catch(() => {
+        if (alive) setRows({ status: "error" });
+      });
     return () => {
       alive = false;
     };
-  }, [board, which, nonce]);
+  }, [board, nonce]);
 
   const refresh = useCallback(() => setNonce((n) => n + 1), []);
 
   return (
     <Page title={t.leaderboard.title} intro={t.leaderboard.intro}>
-      <div className="space-y-8">
-        <p className="rounded-xl bg-brass-wash p-4 text-sm">{t.leaderboard.honest}</p>
-        {!configured || !board ? (
-          <EmptyBlock>{t.account.notConfigured}</EmptyBlock>
-        ) : (
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-            <section className="space-y-4">
-              <Segmented
-                legend={t.leaderboard.title}
-                hideLegend
-                value={which}
-                onChange={(v) => {
-                  setWhich(v);
-                  setRows({ status: "loading" });
-                }}
-                options={[
-                  { value: "weekly", label: t.leaderboard.weekly },
-                  { value: "all", label: t.leaderboard.allTime },
-                ]}
-              />
-              <BoardTable rows={rows} onRetry={refresh} />
-              <p className="text-xs text-ink-soft">{t.leaderboard.rules(LEADERBOARD_RULES.minAccuracy, LEADERBOARD_RULES.minDurationS)}</p>
-            </section>
-            <aside>{user ? <Membership key={user.id} onChange={refresh} /> : <SignInPrompt />}</aside>
+      {!configured || !board ? (
+        <div className="sheet flex flex-col items-start gap-4 p-6 sm:p-8">
+          <Trophy className="size-8 text-brass" aria-hidden="true" />
+          <h2 className="text-xl font-semibold">{t.leaderboard.notConfiguredTitle}</h2>
+          <p className="max-w-xl text-ink-soft">{t.leaderboard.notConfigured}</p>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild className="h-11">
+              <Link href="/play">{t.nav.play}</Link>
+            </Button>
+            <Button asChild variant="outline" className="h-11">
+              <Link href="/progress">{t.nav.progress}</Link>
+            </Button>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <section className="space-y-4">
+            <BoardTable rows={rows} onRetry={refresh} />
+            <p className="text-sm text-ink-soft">
+              {t.leaderboard.rules} {t.leaderboard.resets}
+            </p>
+            <p className="rounded-xl bg-brass-wash p-4 text-sm">{t.leaderboard.honest}</p>
+          </section>
+          <aside>{user ? <Membership key={user.id} onChange={refresh} /> : <SignInPrompt />}</aside>
+        </div>
+      )}
     </Page>
   );
 }
 
 function BoardTable({ rows, onRetry }: { rows: Load<PublicScore[]>; onRetry: () => void }) {
-  const { t, num, pct, date } = useI18n();
+  const { t, num } = useI18n();
   if (rows.status === "loading") return <LoadingBlock label={t.common.loading} />;
   if (rows.status === "error") return <ErrorBlock title={t.common.errorTitle} body={t.account.errors.generic} onRetry={onRetry} retryLabel={t.common.retry} />;
   if (rows.data.length === 0) return <EmptyBlock>{t.leaderboard.empty}</EmptyBlock>;
   return (
-    <table className="w-full text-sm">
+    <table className="w-full">
       <thead>
-        <tr className="border-b border-rule text-ink-soft">
+        <tr className="border-b border-rule text-sm text-ink-soft">
           <th scope="col" className="py-2 text-start font-normal">{t.leaderboard.rank}</th>
           <th scope="col" className="py-2 text-start font-normal">{t.leaderboard.nickname}</th>
-          <th scope="col" className="py-2 text-start font-normal">{t.leaderboard.score}</th>
-          <th scope="col" className="py-2 text-start font-normal">{t.common.accuracy}</th>
-          <th scope="col" className="hidden py-2 text-start font-normal sm:table-cell">{t.leaderboard.date}</th>
+          <th scope="col" className="py-2 text-start font-normal">{t.leaderboard.points}</th>
+          <th scope="col" className="hidden py-2 text-start font-normal sm:table-cell">{t.leaderboard.words}</th>
         </tr>
       </thead>
       <tbody className="tabular">
         {rows.data.map((r) => (
           <tr key={`${r.rank}-${r.nickname}`} className="border-b border-rule/60">
-            <td className="py-2.5">{num(r.rank)}</td>
+            <td className="py-3">{num(r.rank)}</td>
             {/* Nicknames are user content: rendered as text, isolated for bidi. */}
-            <td className="py-2.5 font-medium">
+            <td className="py-3 font-medium">
               <bdi>{r.nickname}</bdi>
             </td>
-            <td className="py-2.5 font-semibold">
-              {num(r.wpm, 1)} <span className="font-normal text-ink-soft">{t.common.wpmShort}</span>
-            </td>
-            <td className="py-2.5">{pct(r.accuracy, 1)}</td>
-            <td className="hidden py-2.5 text-ink-soft sm:table-cell">{date(Date.parse(r.achievedAt))}</td>
+            <td className="py-3 font-semibold">{num(r.points)}</td>
+            <td className="hidden py-3 sm:table-cell">{num(r.words)}</td>
           </tr>
         ))}
       </tbody>
@@ -155,7 +151,7 @@ function Membership({ onChange }: { onChange: () => void }) {
       const status = await board.setNickname(v.value);
       if (status === "ok") {
         setNick({ status: "ready", data: v.value });
-        setMessage({ kind: "ok", text: t.leaderboard.joined(v.value) });
+        setMessage({ kind: "ok", text: `${t.leaderboard.onBoardAs} ${v.value}` });
         onChange();
       } else {
         setMessage({ kind: "error", text: t.leaderboard.nicknameErrors[status] ?? t.account.errors.generic });

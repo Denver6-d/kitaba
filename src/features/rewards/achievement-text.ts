@@ -1,33 +1,19 @@
 /** Bilingual titles and descriptions for each achievement id. */
 export const ACHIEVEMENT_TEXT: Readonly<Record<string, { ar: { title: string; body: string }; en: { title: string; body: string } }>> = {
-  "first-test": {
-    ar: { title: "السطر الأول", body: "أكملت أول اختبار كتابة." },
-    en: { title: "First line", body: "You finished your first typing test." },
-  },
-  diagnostic: {
-    ar: { title: "نقطة البداية", body: "أكملت الاختبار التشخيصي." },
-    en: { title: "Starting point", body: "You completed the diagnostic." },
-  },
-  "wpm-20": { ar: { title: "20 كلمة في الدقيقة", body: "وصلت إلى 20 كلمة في الدقيقة بدقة جيدة." }, en: { title: "20 wpm", body: "You reached 20 words per minute with good accuracy." } },
-  "wpm-40": { ar: { title: "40 كلمة في الدقيقة", body: "وصلت إلى 40 كلمة في الدقيقة." }, en: { title: "40 wpm", body: "You reached 40 words per minute." } },
-  "wpm-60": { ar: { title: "60 كلمة في الدقيقة", body: "سرعة كتابة مهنية." }, en: { title: "60 wpm", body: "A professional typing speed." } },
-  "accuracy-98": {
-    ar: { title: "يد ثابتة", body: "دقة 98٪ أو أكثر في اختبار مدته دقيقة." },
-    en: { title: "Steady hand", body: "98% accuracy or more in a one-minute test." },
-  },
+  "first-game": { ar: { title: "الحرف الأول", body: "أكملت أول جولة إملاء." }, en: { title: "First letter", body: "You finished your first spelling round." } },
+  "spelling-50": { ar: { title: "خمسون كلمة", body: "كتبت 50 كلمة صحيحة." }, en: { title: "Fifty words", body: "You spelled 50 words correctly." } },
+  "words-250": { ar: { title: "مئتان وخمسون كلمة", body: "كتبت 250 كلمة صحيحة." }, en: { title: "Two hundred and fifty", body: "You spelled 250 words correctly." } },
+  "words-1000": { ar: { title: "ألف كلمة", body: "كتبت 1000 كلمة صحيحة. إملاؤك يتغيّر فعلًا." }, en: { title: "A thousand words", body: "You spelled 1,000 words correctly. Your spelling is really changing." } },
+  "perfect-stage": { ar: { title: "ثلاث نجوم", body: "أنهيت مرحلة بثلاث نجوم." }, en: { title: "Three stars", body: "You cleared a stage with three stars." } },
+  "stars-60": { ar: { title: "ستون نجمة", body: "جمعت 60 نجمة في الرحلة." }, en: { title: "Sixty stars", body: "You collected 60 stars on the journey." } },
+  "first-boss": { ar: { title: "التحدي الأول", body: "اجتزت أول مرحلة تحدٍّ." }, en: { title: "First challenge", body: "You beat your first challenge stage." } },
+  "all-bosses": { ar: { title: "العوالم الثمانية", body: "اجتزت مراحل التحدي في كل العوالم." }, en: { title: "All eight worlds", body: "You beat the challenge stage of every world." } },
+  "combo-10": { ar: { title: "عشر متتالية", body: "عشر إجابات صحيحة متتالية في جولة واحدة." }, en: { title: "Ten in a row", body: "Ten correct answers in a row in one round." } },
+  "daily-7": { ar: { title: "سبعة تحديات", body: "أنهيت سبعة تحديات يومية." }, en: { title: "Seven challenges", body: "You finished seven daily challenges." } },
+  "review-50": { ar: { title: "ذاكرة ثابتة", body: "راجعت 50 كلمة من أخطائك." }, en: { title: "Steady memory", body: "You reviewed 50 of your own mistakes." } },
   "streak-3": { ar: { title: "ثلاثة أيام", body: "تمرّنت ثلاثة أيام متتالية." }, en: { title: "Three days", body: "You practised three days in a row." } },
   "streak-7": { ar: { title: "أسبوع كامل", body: "تمرّنت سبعة أيام متتالية." }, en: { title: "A full week", body: "You practised seven days in a row." } },
-  "streak-30": { ar: { title: "شهر من الكتابة", body: "تمرّنت ثلاثين يومًا متتالية." }, en: { title: "A month of writing", body: "You practised thirty days in a row." } },
-  "spelling-50": { ar: { title: "خمسون كلمة", body: "كتبت 50 كلمة إملاء صحيحة." }, en: { title: "Fifty words", body: "You spelled 50 dictation words correctly." } },
-  "sentences-25": { ar: { title: "خمس وعشرون جملة", body: "كتبت 25 جملة صحيحة تمامًا." }, en: { title: "Twenty-five sentences", body: "You wrote 25 fully correct sentences." } },
-  "scenario-first": {
-    ar: { title: "أول رسالة مهنية", body: "اجتازت رسالتك قائمة التحقق كاملة." },
-    en: { title: "First professional message", body: "One of your messages passed the full checklist." },
-  },
-  "scenario-all": {
-    ar: { title: "جاهز للعمل", body: "اجتزت كل مواقف الكتابة المهنية." },
-    en: { title: "Work-ready", body: "You passed every professional writing scenario." },
-  },
-  "lessons-all": { ar: { title: "الأصابع في مكانها", body: "أكملت كل دروس الأساس." }, en: { title: "Fingers in place", body: "You completed every foundation lesson." } },
-  "level-5": { ar: { title: "المستوى الخامس", body: "وصلت إلى مستوى التمرين الخامس." }, en: { title: "Level five", body: "You reached practice level five." } },
+  "streak-30": { ar: { title: "شهر من الإملاء", body: "تمرّنت ثلاثين يومًا متتالية." }, en: { title: "A month of spelling", body: "You practised thirty days in a row." } },
+  "level-5": { ar: { title: "المستوى الخامس", body: "وصلت إلى المستوى الخامس." }, en: { title: "Level five", body: "You reached level five." } },
+  "level-10": { ar: { title: "المستوى العاشر", body: "وصلت إلى المستوى العاشر." }, en: { title: "Level ten", body: "You reached level ten." } },
 };

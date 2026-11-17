@@ -1,12 +1,13 @@
-import type { AchievementRecord, GhostRecord, SyncRecord, TableMap, TableName } from "../model";
+import type { AchievementRecord, StageRecord, SyncRecord, TableMap, TableName } from "../model";
 
 /**
- * Merge rules for sync (documented in DECISIONS.md, D7):
+ * Merge rules for sync (DECISIONS A4, V3):
  * - Default: last-write-wins per record by `updatedAt`; an exact tie goes to the remote copy.
  *   Tombstones (`deletedAt`) are ordinary writes and follow the same rule.
- * - Append-only tables (results, keystats, attempts, scenarios, activity) have unique ids, so the
- *   rule degenerates to a union and nothing is lost.
- * - ghosts: the faster run wins (it is a personal best, not an edit).
+ * - Append-only tables (activity, sessions) have unique ids, so the rule degenerates to a
+ *   union and nothing is lost.
+ * - stages: the better result wins (more stars, then more points); it is a best, not an edit.
+ *   The earliest clear time is kept either way.
  * - achievements: the earliest unlock wins.
  */
 export function mergeRecord<T extends TableName>(
@@ -16,10 +17,15 @@ export function mergeRecord<T extends TableName>(
 ): TableMap[T] | undefined {
   if (!local) return remote;
   if (!remote) return local;
-  if (table === "ghosts") {
-    const l = local as unknown as GhostRecord;
-    const r = remote as unknown as GhostRecord;
-    if (l.wpm !== r.wpm) return (l.wpm > r.wpm ? local : remote);
+  if (table === "stages") {
+    const l = local as unknown as StageRecord;
+    const r = remote as unknown as StageRecord;
+    const better = compareStage(l, r);
+    if (better !== 0) {
+      const winner = better > 0 ? l : r;
+      const clearedAt = earliestClear(l, r);
+      return (clearedAt === winner.clearedAt ? winner : { ...winner, clearedAt }) as unknown as TableMap[T];
+    }
   }
   if (table === "achievements") {
     const l = local as unknown as AchievementRecord;
@@ -27,6 +33,17 @@ export function mergeRecord<T extends TableName>(
     if (l.unlockedAt !== r.unlockedAt) return l.unlockedAt < r.unlockedAt ? local : remote;
   }
   return lww(local, remote);
+}
+
+/** > 0 when a is the better stage result, < 0 when b is, 0 when equal. */
+export function compareStage(a: StageRecord, b: StageRecord): number {
+  if (a.stars !== b.stars) return a.stars - b.stars;
+  return a.bestPoints - b.bestPoints;
+}
+
+function earliestClear(a: StageRecord, b: StageRecord): number {
+  const times = [a.clearedAt, b.clearedAt].filter((t) => t > 0);
+  return times.length === 0 ? 0 : Math.min(...times);
 }
 
 function lww<R extends SyncRecord>(local: R, remote: R): R {

@@ -2,42 +2,17 @@ import type {
   AchievementRecord,
   ActivityKind,
   ActivityRecord,
-  GhostRecord,
   ProfileRecord,
-  ScenarioAttemptRecord,
-  SentenceAttemptRecord,
+  SessionRecord,
   SrsCardRecord,
-  TestResultRecord,
+  StageRecord,
 } from "@/domain/model";
-import type { KeyStats } from "@/domain/typing/key-stats";
-import type { GhostPoint } from "@/domain/typing/ghost";
-import type { PersonalBests } from "@/domain/typing/personal-best";
 import type { ExportFile } from "./export";
 
 /**
  * Repository interfaces: the only persistence API the UI and features see.
  * They do not know whether data lives in IndexedDB, in memory or in Supabase.
  */
-
-export type NewTestResult = Omit<TestResultRecord, "id" | "updatedAt" | "deletedAt">;
-
-export interface SaveTestOutcome {
-  readonly record: TestResultRecord;
-  readonly isNewBest: boolean;
-  readonly previousBest: number | null;
-}
-
-export interface ProgressRepository {
-  saveTestResult(
-    result: NewTestResult,
-    extras: { readonly keyStats: KeyStats; readonly target: string; readonly ghost: readonly GhostPoint[] },
-  ): Promise<SaveTestOutcome>;
-  listResults(): Promise<TestResultRecord[]>;
-  personalBests(): Promise<PersonalBests>;
-  keyStats(): Promise<KeyStats>;
-  addKeyStats(stats: KeyStats): Promise<void>;
-  ghost(modeKey: string): Promise<GhostRecord | undefined>;
-}
 
 export interface ActivityRepository {
   log(kind: ActivityKind, seconds: number, xp: number): Promise<void>;
@@ -51,17 +26,28 @@ export interface WordRepository {
   dueCards(now: number): Promise<SrsCardRecord[]>;
 }
 
-export interface SentenceRepository {
-  saveAttempt(attempt: Omit<SentenceAttemptRecord, "id" | "updatedAt">): Promise<void>;
-  attempts(): Promise<SentenceAttemptRecord[]>;
-  mastery(itemKey: string): Promise<number>;
-  allMastery(): Promise<Record<string, number>>;
-  setMastery(itemKey: string, mastery: number): Promise<void>;
+/** Per-item mastery (Arabic hint fading). Keys look like "spell:<wordId>". */
+export interface MasteryRepository {
+  get(itemKey: string): Promise<number>;
+  all(): Promise<Record<string, number>>;
+  set(itemKey: string, mastery: number): Promise<void>;
 }
 
-export interface ScenarioRepository {
-  saveAttempt(attempt: Omit<ScenarioAttemptRecord, "id" | "updatedAt">): Promise<void>;
-  attempts(): Promise<ScenarioAttemptRecord[]>;
+export type NewSession = Omit<SessionRecord, "id" | "updatedAt" | "deletedAt">;
+
+export interface SaveSessionOutcome {
+  readonly record: SessionRecord;
+  /** The stage's best before this session (null for free play or a first attempt). */
+  readonly previous: StageRecord | null;
+  /** The stage's best after this session (null for free play). */
+  readonly best: StageRecord | null;
+}
+
+export interface GameRepository {
+  /** Saves a finished game; for a stage it also keeps the best result (stars, then points). */
+  saveSession(session: NewSession, stars: number): Promise<SaveSessionOutcome>;
+  sessions(): Promise<SessionRecord[]>;
+  stages(): Promise<Record<string, StageRecord>>;
 }
 
 export interface AchievementRepository {
@@ -83,39 +69,39 @@ export interface DataRepository {
 }
 
 export interface Repositories {
-  readonly progress: ProgressRepository;
   readonly activity: ActivityRepository;
   readonly words: WordRepository;
-  readonly sentences: SentenceRepository;
-  readonly scenarios: ScenarioRepository;
+  readonly mastery: MasteryRepository;
+  readonly games: GameRepository;
   readonly achievements: AchievementRepository;
   readonly profile: ProfileRepository;
   readonly data: DataRepository;
 }
 
-/** Public leaderboard row: nickname, score and date only (the SQL views expose nothing else). */
+/** Public weekly leaderboard row: nickname and score only (the SQL view exposes nothing else). */
 export interface PublicScore {
   readonly rank: number;
   readonly nickname: string;
-  readonly wpm: number;
-  readonly accuracy: number;
-  readonly achievedAt: string;
+  /** Points this week (sum of submitted games). */
+  readonly points: number;
+  /** Words spelled correctly this week. */
+  readonly words: number;
+  readonly lastAt: string;
 }
 
 export type SubmitStatus = "ok" | "not_opted_in" | "too_short" | "low_accuracy" | "implausible" | "rate_limited" | "error";
 export type NicknameStatus = "ok" | "length" | "chars" | "blocked" | "taken" | "error";
 
 export interface ScoreSubmission {
-  readonly wpm: number;
-  readonly accuracy: number;
+  readonly points: number;
+  readonly correct: number;
+  readonly total: number;
   readonly durationS: number;
-  /** Correct characters typed. */
-  readonly chars: number;
 }
 
 /** Opt-in public leaderboard (cloud only; exists only when accounts are configured). */
 export interface LeaderboardRepository {
-  top(board: "weekly" | "all"): Promise<PublicScore[]>;
+  weekly(): Promise<PublicScore[]>;
   /** The caller's nickname, or null when not on the board. */
   myNickname(): Promise<string | null>;
   /** Join the board, or change the nickname. */

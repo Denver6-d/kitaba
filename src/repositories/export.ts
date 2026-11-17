@@ -1,13 +1,14 @@
 import { z } from "zod";
-import type { SyncRecord, TableName } from "@/domain/model";
-import { ERROR_TYPES } from "@/domain/sentences/grader";
+import { GAME_MODES, LEVELS, type SyncRecord, type TableName } from "@/domain/model";
+import { migrateV1Tables } from "@/domain/sync/migrate-v1";
 
 /**
  * Versioned JSON export of all progress. On import every record is validated
  * against a strict per-table schema, so a corrupt or hand-edited file cannot
- * plant rows that break the app later.
+ * plant rows that break the app later. Version 1 files (before the spelling
+ * pivot) are migrated with the same rules as the local database (DECISIONS V3).
  */
-export const EXPORT_VERSION = 1;
+export const EXPORT_VERSION = 2;
 
 const num = z.number().finite();
 const nonNeg = num.nonnegative();
@@ -15,55 +16,15 @@ const int = z.number().int().nonnegative();
 const shortId = z.string().min(1).max(200);
 const base = { id: shortId, updatedAt: nonNeg, deletedAt: nonNeg.optional() };
 
-/** Key stats keyed by a single character. Rejects "__proto__" and friends by construction. */
-const keyStats = z
-  .record(z.string().regex(/^[\x20-\x7E]$/), z.object({ hits: int, misses: int }).strict())
-  .refine((r) => Object.keys(r).length <= 128);
-
-const cefr = z.enum(["A1", "A2", "B1"]);
-const planStep = z.enum(["foundation", "typing", "spelling", "sentences", "professional"]);
-const source = z.enum(["words", "sentences", "custom", "adaptive", "lesson", "diagnostic"]);
-
 export const recordSchemas = {
-  results: z
-    .object({
-      ...base,
-      modeKey: z.string().max(40),
-      source,
-      duration: int.max(3600),
-      wpm: nonNeg.max(400),
-      rawWpm: nonNeg.max(500),
-      accuracy: nonNeg.max(100),
-      consistency: nonNeg.max(100),
-      chars: int,
-      errors: int,
-      layoutMismatches: int,
-      samples: z.array(nonNeg).max(3600),
-      at: nonNeg,
-    })
-    .strict(),
-  keystats: z.object({ ...base, stats: keyStats, at: nonNeg }).strict(),
-  ghosts: z
-    .object({
-      ...base,
-      modeKey: z.string().max(40),
-      wpm: nonNeg.max(400),
-      target: z.string().max(20_000),
-      ghost: z.array(z.tuple([nonNeg, int])).max(2000),
-    })
-    .strict(),
   srs: z
     .object({ ...base, wordId: shortId, ease: num.min(1).max(5), interval: int, reps: int, lapses: int, due: nonNeg, lastReviewed: nonNeg })
     .strict(),
-  attempts: z
-    .object({ ...base, sentenceId: shortId, input: z.string().max(2000), score: nonNeg.max(1), errors: z.array(z.enum(ERROR_TYPES as [string, ...string[]])).max(100), at: nonNeg })
-    .strict(),
   mastery: z.object({ ...base, mastery: int.max(1000) }).strict(),
-  scenarios: z.object({ ...base, scenarioId: shortId, text: z.string().max(10_000), passed: int, total: int, at: nonNeg }).strict(),
   activity: z
     .object({
       ...base,
-      kind: z.enum(["typing", "lesson", "spelling", "sentence", "scenario", "diagnostic"]),
+      kind: z.enum(["spelling", "game", "review", "legacy"]),
       at: nonNeg,
       day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       seconds: int.max(86_400),
@@ -71,24 +32,46 @@ export const recordSchemas = {
     })
     .strict(),
   achievements: z.object({ ...base, unlockedAt: nonNeg }).strict(),
-  profile: z
-    .object({ ...base, level: cefr.nullable(), plan: z.array(planStep).max(10), dailyGoalMinutes: int.max(240), diagnosticAt: nonNeg.nullable() })
+  profile: z.object({ ...base, level: z.enum(LEVELS).nullable(), dailyGoalMinutes: int.max(240) }).strict(),
+  sessions: z
+    .object({
+      ...base,
+      mode: z.enum(GAME_MODES),
+      stageId: z.string().max(40).nullable(),
+      items: int.max(500),
+      correct: int.max(500),
+      points: int.max(100_000),
+      maxCombo: int.max(500),
+      seconds: int.max(86_400),
+      at: nonNeg,
+      missed: z.array(shortId).max(100),
+    })
     .strict(),
+  stages: z.object({ ...base, stars: int.max(3), bestPoints: int.max(100_000), clearedAt: nonNeg }).strict(),
 } satisfies Record<TableName, z.ZodType>;
 
 const MAX_ROWS = 50_000;
+
+const tablesSchema = z
+  .object(
+    Object.fromEntries(Object.entries(recordSchemas).map(([t, s]) => [t, z.array(s).max(MAX_ROWS).default([])])) as {
+      [K in TableName]: z.ZodDefault<z.ZodArray<(typeof recordSchemas)[K]>>;
+    },
+  )
+  .strict();
 
 export const exportFileSchema = z.object({
   app: z.literal("kitaba"),
   version: z.literal(EXPORT_VERSION),
   exportedAt: z.number(),
-  tables: z
-    .object(
-      Object.fromEntries(Object.entries(recordSchemas).map(([t, s]) => [t, z.array(s).max(MAX_ROWS).default([])])) as {
-        [K in TableName]: z.ZodDefault<z.ZodArray<(typeof recordSchemas)[K]>>;
-      },
-    )
-    .strict(),
+  tables: tablesSchema,
+});
+
+const v1FileSchema = z.object({
+  app: z.literal("kitaba"),
+  version: z.literal(1),
+  exportedAt: z.number(),
+  tables: z.record(z.string(), z.array(z.unknown()).max(MAX_ROWS)),
 });
 
 export interface ExportFile {
@@ -108,6 +91,10 @@ export function parseExportFile(json: string): ExportFile {
     raw = JSON.parse(json);
   } catch {
     throw new Error("invalid-json");
+  }
+  const v1 = v1FileSchema.safeParse(raw);
+  if (v1.success) {
+    raw = { app: "kitaba", version: EXPORT_VERSION, exportedAt: v1.data.exportedAt, tables: migrateV1Tables(v1.data.tables) };
   }
   const parsed = exportFileSchema.safeParse(raw);
   if (!parsed.success) throw new Error("invalid-format");

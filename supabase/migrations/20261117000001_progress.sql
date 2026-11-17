@@ -1,4 +1,4 @@
--- Kitaba: progress sync schema.
+-- Progress sync schema (v2, spelling only).
 -- Run in the Supabase SQL editor (or `supabase db push`). Safe to re-run.
 --
 -- One table stores every synced progress record as JSON, keyed by
@@ -7,7 +7,7 @@
 create table if not exists public.progress_records (
   user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   table_name text not null check (
-    table_name in ('results', 'keystats', 'ghosts', 'srs', 'attempts', 'mastery', 'scenarios', 'activity', 'achievements', 'profile')
+    table_name in ('srs', 'mastery', 'activity', 'achievements', 'profile', 'sessions', 'stages')
   ),
   id text not null check (char_length(id) between 1 and 200),
   data jsonb not null check (jsonb_typeof(data) = 'object' and pg_column_size(data) <= 65536),

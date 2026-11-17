@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { addDays, currentStreak, dayKey, longestStreak } from "@/domain/progress/streak";
-import { levelInfo, xpFor } from "@/domain/progress/levels";
+import { levelInfo } from "@/domain/progress/levels";
 import { goalProgress } from "@/domain/progress/goal";
 import { hintLevel, nextMastery } from "@/domain/progress/hints";
-import { buildPlan, placeLevel, type DiagnosticInput } from "@/domain/progress/diagnostic";
 
 describe("dayKey / addDays", () => {
   it("formats a local date as YYYY-MM-DD", () => {
@@ -45,14 +44,6 @@ describe("levels", () => {
     expect(levelInfo(300).level).toBe(3);
     expect(levelInfo(150).progress).toBeCloseTo(0.25);
   });
-  it("awards xp per activity", () => {
-    expect(xpFor({ kind: "typing-test", chars: 250, accuracy: 95 })).toBe(25);
-    expect(xpFor({ kind: "typing-test", chars: 250, accuracy: 50 })).toBe(12);
-    expect(xpFor({ kind: "spelling", correct: true })).toBe(3);
-    expect(xpFor({ kind: "spelling", correct: false })).toBe(1);
-    expect(xpFor({ kind: "sentence", score: 1 })).toBe(8);
-    expect(xpFor({ kind: "scenario", passed: 6, total: 8 })).toBe(15);
-  });
 });
 
 describe("goalProgress", () => {
@@ -76,39 +67,5 @@ describe("hint fading", () => {
     expect(nextMastery(2, true)).toBe(3);
     expect(nextMastery(3, false)).toBe(1);
     expect(nextMastery(0, false)).toBe(0);
-  });
-});
-
-describe("diagnostic placement and plan", () => {
-  const input = (o: Partial<DiagnosticInput>): DiagnosticInput => ({
-    wpm: 30,
-    accuracy: 95,
-    spellingCorrect: 7,
-    spellingTotal: 10,
-    sentenceScores: [0.8, 0.7, 0.9],
-    ...o,
-  });
-
-  it("places strong learners at B1", () => {
-    expect(placeLevel(input({ wpm: 40, spellingCorrect: 10, sentenceScores: [1, 1, 0.9] }))).toBe("B1");
-  });
-  it("places mid learners at A2", () => {
-    expect(placeLevel(input({ spellingCorrect: 6, sentenceScores: [0.6, 0.5, 0.7] }))).toBe("A2");
-  });
-  it("places beginners at A1", () => {
-    expect(placeLevel(input({ wpm: 8, spellingCorrect: 2, sentenceScores: [0.1, 0.2, 0] }))).toBe("A1");
-  });
-  it("handles empty sections without dividing by zero", () => {
-    expect(placeLevel(input({ spellingTotal: 0, spellingCorrect: 0, sentenceScores: [] }))).toBe("A1");
-  });
-
-  it("orders the plan weakest area first and starts slow typists on foundation lessons", () => {
-    const plan = buildPlan(input({ wpm: 10, accuracy: 85, spellingCorrect: 9, sentenceScores: [0.4, 0.5, 0.3] }));
-    expect(plan[0]).toBe("foundation");
-    expect(plan.indexOf("sentences")).toBeLessThan(plan.indexOf("spelling"));
-    expect(plan).toContain("professional");
-  });
-  it("does not include foundation lessons for confident typists", () => {
-    expect(buildPlan(input({ wpm: 45, accuracy: 97 }))).not.toContain("foundation");
   });
 });

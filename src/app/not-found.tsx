@@ -12,8 +12,8 @@ export default function NotFound() {
         <Link href="/" className="font-medium text-brass underline underline-offset-4">
           {t.nav.home}
         </Link>
-        <Link href="/practice" className="font-medium text-brass underline underline-offset-4">
-          {t.nav.practice}
+        <Link href="/play" className="font-medium text-brass underline underline-offset-4">
+          {t.nav.play}
         </Link>
       </div>
     </Page>

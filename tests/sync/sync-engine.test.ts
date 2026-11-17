@@ -50,11 +50,11 @@ function device(remote: SupabaseRemote, prefix: string, startTime: number) {
   /** Write through repositories and queue the change, as the store observer does in the app. */
   const write = async (fn: () => Promise<unknown>) => {
     const before = new Map<string, string>();
-    for (const table of ["mastery", "profile", "results", "ghosts"] as const) {
+    for (const table of ["mastery", "profile", "sessions", "stages"] as const) {
       for (const r of await local.all(table)) before.set(`${table}:${r.id}`, JSON.stringify(r));
     }
     await fn();
-    for (const table of ["mastery", "profile", "results", "ghosts"] as const) {
+    for (const table of ["mastery", "profile", "sessions", "stages"] as const) {
       const changed = (await local.all(table)).filter((r) => before.get(`${table}:${r.id}`) !== JSON.stringify(r));
       if (changed.length > 0) await outbox.add(table, changed);
     }
@@ -79,41 +79,41 @@ describe("SyncEngine against a fake server", () => {
     const { remote } = fakeServer();
     const a = device(remote, "a", 1000);
     const b = device(remote, "b", 9000); // b writes later
-    await a.write(() => a.repos.sentences.setMastery("sentence:s-001", 1));
-    await b.write(() => b.repos.sentences.setMastery("sentence:s-001", 4));
+    await a.write(() => a.repos.mastery.set("spell:w-people", 1));
+    await b.write(() => b.repos.mastery.set("spell:w-people", 4));
     await a.engine.syncNow();
     await b.engine.syncNow();
     await a.engine.syncNow();
-    expect(await a.repos.sentences.mastery("sentence:s-001")).toBe(4);
-    expect(await b.repos.sentences.mastery("sentence:s-001")).toBe(4);
+    expect(await a.repos.mastery.get("spell:w-people")).toBe(4);
+    expect(await b.repos.mastery.get("spell:w-people")).toBe(4);
   });
+
+  const session = (points: number) => ({ mode: "listen" as const, stageId: "w1-s1", items: 10, correct: 9, points, maxCombo: 5, seconds: 90, at: 1, missed: [] });
 
   it("unions append-only records from both devices", async () => {
     const { remote } = fakeServer();
     const a = device(remote, "a", 1000);
     const b = device(remote, "b", 2000);
-    const result = { modeKey: "words:30", source: "words" as const, duration: 30, wpm: 30, rawWpm: 31, accuracy: 95, consistency: 80, chars: 75, errors: 1, layoutMismatches: 0, samples: [30], at: 1 };
-    await a.write(() => a.repos.progress.saveTestResult(result, { keyStats: {}, target: "t", ghost: [] }));
-    await b.write(() => b.repos.progress.saveTestResult({ ...result, wpm: 35 }, { keyStats: {}, target: "t", ghost: [] }));
+    await a.write(() => a.repos.games.saveSession({ ...session(100), stageId: null }, 0));
+    await b.write(() => b.repos.games.saveSession({ ...session(120), stageId: null }, 0));
     await a.engine.syncNow();
     await b.engine.syncNow();
     await a.engine.syncNow();
-    expect(await a.repos.progress.listResults()).toHaveLength(2);
-    expect(await b.repos.progress.listResults()).toHaveLength(2);
+    expect(await a.repos.games.sessions()).toHaveLength(2);
+    expect(await b.repos.games.sessions()).toHaveLength(2);
   });
 
-  it("keeps the faster ghost even when the slower one was written later", async () => {
+  it("keeps the better stage result even when a worse one was written later", async () => {
     const { remote } = fakeServer();
     const a = device(remote, "a", 1000);
     const b = device(remote, "b", 9000);
-    const result = (wpm: number) => ({ modeKey: "words:30", source: "words" as const, duration: 30, wpm, rawWpm: wpm, accuracy: 95, consistency: 80, chars: 75, errors: 1, layoutMismatches: 0, samples: [wpm], at: 1 });
-    await a.write(() => a.repos.progress.saveTestResult(result(50), { keyStats: {}, target: "t", ghost: [[0, 1]] }));
-    await b.write(() => b.repos.progress.saveTestResult(result(40), { keyStats: {}, target: "t", ghost: [[0, 1]] }));
+    await a.write(() => a.repos.games.saveSession(session(150), 3));
+    await b.write(() => b.repos.games.saveSession(session(400), 1));
     await b.engine.syncNow();
-    await a.engine.syncNow(); // a pulls the slower, newer ghost, keeps its own and re-stamps it
+    await a.engine.syncNow(); // a pulls the worse, newer stage, keeps its own and re-stamps it
     await b.engine.syncNow();
-    expect((await a.repos.progress.ghost("words:30"))?.wpm).toBe(50);
-    expect((await b.repos.progress.ghost("words:30"))?.wpm).toBe(50);
+    expect((await a.repos.games.stages())["w1-s1"]?.stars).toBe(3);
+    expect((await b.repos.games.stages())["w1-s1"]?.stars).toBe(3);
   });
 
   it("keeps changes queued while offline and sends them later", async () => {
@@ -136,7 +136,7 @@ describe("SyncEngine against a fake server", () => {
     const { remote, rows } = fakeServer();
     const a = device(remote, "a", 1000);
     await a.repos.profile.save({ level: "A1" }); // written before sign-in: not queued
-    await a.repos.sentences.setMastery("x", 2);
+    await a.repos.mastery.set("x", 2);
     expect(await a.outbox.count()).toBe(0);
     await a.engine.enqueueAllLocal();
     await a.engine.syncNow();

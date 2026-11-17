@@ -37,7 +37,7 @@ const same = (a: SyncRecord, b: SyncRecord) => canonicalJson(a) === canonicalJso
 
 /**
  * Merges one pulled record with the local copy using the sync rules.
- * A local winner is sent back; if it is not newer than the remote copy (ghost
+ * A local winner is sent back; if it is not newer than the remote copy (stage
  * and achievement rules can prefer an older record), its timestamp is bumped
  * so the server's last-write-wins guard accepts it.
  */
@@ -51,5 +51,6 @@ export function reconcilePulled<T extends TableName>(
     return { toLocal: local && same(local, remote) ? null : remote, toRemote: null };
   }
   const stamped = winner.updatedAt > remote.updatedAt ? winner : ({ ...winner, updatedAt: remote.updatedAt + 1 } as TableMap[T]);
-  return { toLocal: stamped === winner ? null : stamped, toRemote: stamped };
+  // The winner can be a blend (a stage keeps the earliest clear time), so compare with the local copy.
+  return { toLocal: local && same(stamped, local) ? null : stamped, toRemote: stamped };
 }

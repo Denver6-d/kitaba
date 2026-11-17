@@ -10,9 +10,10 @@ export const settingsSchema = z.object({
   textScale: z.number().min(0.9).max(1.4).catch(1),
   readableFont: z.boolean().catch(false),
   motion: z.enum(["system", "reduce", "full"]).catch("system"),
-  keySounds: z.boolean().catch(false),
-  showGhost: z.boolean().catch(true),
-  showKeyboard: z.boolean().catch(true),
+  /** Optional feedback tones; off by default. */
+  sounds: z.boolean().catch(false),
+  /** American or British English: sets the voice and the expected spelling (DECISIONS V6). */
+  accent: z.enum(["us", "uk"]).catch("us"),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

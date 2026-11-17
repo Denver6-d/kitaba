@@ -1,4 +1,4 @@
--- Kitaba: opt-in leaderboard. Run after 20261117000001_progress.sql. Safe to re-run.
+-- Opt-in weekly spelling leaderboard. Run after 20261117000001_progress.sql. Safe to re-run.
 --
 -- Privacy model:
 -- * Nothing about a user is public until they choose a nickname (opt in).
@@ -17,16 +17,18 @@ create table if not exists public.leaderboard_profiles (
 );
 create unique index if not exists leaderboard_profiles_nickname_key on public.leaderboard_profiles (lower(nickname));
 
+-- One row per submitted spelling game. The public board shows the weekly sum.
 create table if not exists public.leaderboard_scores (
   id bigint generated always as identity primary key,
   user_id uuid not null references auth.users (id) on delete cascade,
-  wpm numeric(5, 1) not null check (wpm >= 0 and wpm <= 250),
-  accuracy numeric(4, 1) not null check (accuracy >= 0 and accuracy <= 100),
-  duration_s integer not null check (duration_s between 30 and 3600),
+  points integer not null check (points between 0 and 2700),
+  correct integer not null check (correct between 0 and 60),
+  total integer not null check (total between 5 and 60 and correct <= total),
+  duration_s integer not null check (duration_s between 5 and 3600),
   created_at timestamptz not null default now()
 );
 create index if not exists leaderboard_scores_user_idx on public.leaderboard_scores (user_id, created_at desc);
-create index if not exists leaderboard_scores_time_idx on public.leaderboard_scores (created_at, wpm desc);
+create index if not exists leaderboard_scores_time_idx on public.leaderboard_scores (created_at);
 
 -- Blocked words for nicknames (normalised: lower case, de-leeted, letters only).
 -- Not readable by clients. Keep in sync with src/domain/leaderboard/nickname.ts (a test checks this).
@@ -57,39 +59,28 @@ create policy "leaderboard scores: owner can read" on public.leaderboard_scores
 revoke all on table public.leaderboard_profiles, public.leaderboard_scores, public.leaderboard_blocked_words from anon, authenticated;
 grant select on table public.leaderboard_profiles, public.leaderboard_scores to authenticated;
 
--- ---------------------------------------------------------------- public views
--- Views run as their owner, so they can read every opted-in row, but they
--- only expose these five columns: never user ids or emails.
-create or replace view public.leaderboard_all_time as
-  with best as (
-    select distinct on (s.user_id) s.user_id, s.wpm, s.accuracy, s.created_at
-    from public.leaderboard_scores s
-    order by s.user_id, s.wpm desc, s.created_at asc
-  )
-  select rank() over (order by b.wpm desc, b.created_at asc)::integer as rank,
-         p.nickname, b.wpm, b.accuracy, b.created_at as achieved_at
-  from best b
-  join public.leaderboard_profiles p on p.user_id = b.user_id
-  order by rank
-  limit 100;
-
-create or replace view public.leaderboard_weekly as
-  with best as (
-    select distinct on (s.user_id) s.user_id, s.wpm, s.accuracy, s.created_at
+-- ---------------------------------------------------------------- public view
+-- The view runs as its owner, so it can read every opted-in row, but it only
+-- exposes these five columns: never user ids or emails.
+drop view if exists public.leaderboard_all_time;
+drop view if exists public.leaderboard_weekly;
+create view public.leaderboard_weekly as
+  with week as (
+    select s.user_id, sum(s.points)::integer as points, sum(s.correct)::integer as words, max(s.created_at) as last_at
     from public.leaderboard_scores s
     -- The week starts on Monday 00:00 UTC.
     where s.created_at >= date_trunc('week', now() at time zone 'utc') at time zone 'utc'
-    order by s.user_id, s.wpm desc, s.created_at asc
+    group by s.user_id
   )
-  select rank() over (order by b.wpm desc, b.created_at asc)::integer as rank,
-         p.nickname, b.wpm, b.accuracy, b.created_at as achieved_at
-  from best b
-  join public.leaderboard_profiles p on p.user_id = b.user_id
-  order by rank
+  select rank() over (order by w.points desc, w.words desc)::integer as rank,
+         p.nickname, w.points, w.words, w.last_at
+  from week w
+  join public.leaderboard_profiles p on p.user_id = w.user_id
+  order by rank, p.nickname
   limit 100;
 
-revoke all on public.leaderboard_all_time, public.leaderboard_weekly from anon, authenticated;
-grant select on public.leaderboard_all_time, public.leaderboard_weekly to anon, authenticated;
+revoke all on public.leaderboard_weekly from anon, authenticated;
+grant select on public.leaderboard_weekly to anon, authenticated;
 
 -- ---------------------------------------------------------------- functions
 create or replace function public.normalize_nickname_for_filter(p text)
@@ -157,9 +148,11 @@ begin
 end;
 $$;
 
--- Submit a typing result. Validates plausibility and rate limits, writes only the caller's row.
+-- Submit a finished spelling game. Validates plausibility and rate limits, writes only the caller's row.
+-- Keep the thresholds in sync with src/domain/leaderboard/plausibility.ts (a test checks this).
 -- Returns {"status": ok|not_opted_in|too_short|low_accuracy|implausible|rate_limited}.
-create or replace function public.submit_score(p_wpm numeric, p_accuracy numeric, p_duration_s integer, p_chars integer)
+drop function if exists public.submit_score(numeric, numeric, integer, integer);
+create or replace function public.submit_score(p_points integer, p_correct integer, p_total integer, p_duration_s integer)
 returns jsonb
 language plpgsql
 security definer
@@ -167,7 +160,6 @@ set search_path = ''
 as $$
 declare
   uid uuid := auth.uid();
-  derived numeric;
 begin
   if uid is null then
     raise exception 'not authenticated' using errcode = '42501';
@@ -175,21 +167,24 @@ begin
   if not exists (select 1 from public.leaderboard_profiles where user_id = uid) then
     return jsonb_build_object('status', 'not_opted_in');
   end if;
-  if p_wpm is null or p_accuracy is null or p_duration_s is null or p_chars is null then
+  if p_points is null or p_correct is null or p_total is null or p_duration_s is null then
     return jsonb_build_object('status', 'implausible');
   end if;
-  if p_duration_s < 30 or p_duration_s > 3600 then
+  if p_total < 5 then
     return jsonb_build_object('status', 'too_short');
   end if;
-  if p_accuracy < 90 then
-    return jsonb_build_object('status', 'low_accuracy');
-  end if;
-  if p_wpm < 0 or p_wpm > 250 or p_accuracy > 100 or p_chars < 0 then
+  if p_total > 60 or p_correct < 0 or p_correct > p_total or p_points < 0 then
     return jsonb_build_object('status', 'implausible');
   end if;
-  -- Net WPM must follow from the characters typed in the time taken.
-  derived := (p_chars::numeric / 5) / (p_duration_s::numeric / 60);
-  if abs(derived - p_wpm) > greatest(2, p_wpm * 0.1) then
+  if p_correct * 100 < p_total * 50 then
+    return jsonb_build_object('status', 'low_accuracy');
+  end if;
+  -- At most 10 points x the top combo multiplier (4) + a speed bonus of 5 per correct word.
+  if p_points > p_correct * 45 then
+    return jsonb_build_object('status', 'implausible');
+  end if;
+  -- At least 1 second per item.
+  if p_duration_s < p_total * 1 or p_duration_s > 3600 then
     return jsonb_build_object('status', 'implausible');
   end if;
   -- Rate limits: one score per 20 seconds, at most 60 per day. A per-user lock makes
@@ -201,12 +196,12 @@ begin
   if (select count(*) from public.leaderboard_scores where user_id = uid and created_at > now() - interval '1 day') >= 60 then
     return jsonb_build_object('status', 'rate_limited');
   end if;
-  insert into public.leaderboard_scores (user_id, wpm, accuracy, duration_s)
-  values (uid, round(p_wpm, 1), round(p_accuracy, 1), p_duration_s);
+  insert into public.leaderboard_scores (user_id, points, correct, total, duration_s)
+  values (uid, p_points, p_correct, p_total, p_duration_s);
   return jsonb_build_object('status', 'ok');
 end;
 $$;
 
-revoke all on function public.set_leaderboard_nickname(text), public.leave_leaderboard(), public.submit_score(numeric, numeric, integer, integer) from public, anon;
-grant execute on function public.set_leaderboard_nickname(text), public.leave_leaderboard(), public.submit_score(numeric, numeric, integer, integer) to authenticated;
+revoke all on function public.set_leaderboard_nickname(text), public.leave_leaderboard(), public.submit_score(integer, integer, integer, integer) from public, anon;
+grant execute on function public.set_leaderboard_nickname(text), public.leave_leaderboard(), public.submit_score(integer, integer, integer, integer) to authenticated;
 revoke all on function public.normalize_nickname_for_filter(text) from public, anon, authenticated;

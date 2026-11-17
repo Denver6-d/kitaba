@@ -10,7 +10,7 @@ Run `rls_tests.sql` in the Supabase SQL editor after the migrations. Then check 
 - [ ] `upsert_progress` always writes `user_id = auth.uid()`; it cannot create or change another user's rows.
 - [ ] `upsert_progress` with an older `updated_at` does not overwrite a newer row (last-write-wins guard).
 - [ ] `upsert_progress` rejects batches over 500 rows and rejects anonymous callers.
-- [ ] Rows over 64 KB, with an unknown `table_name`, or with an `updated_at` after the year 2100 are rejected by the check constraints.
+- [ ] Rows over 64 KB, with an unknown `table_name` (allowed: `srs, mastery, activity, achievements, profile, sessions, stages`), or with an `updated_at` after the year 2100 are rejected by the check constraints.
 - [ ] A user cannot store more than 50,000 records (quota trigger).
 
 ## Account deletion
@@ -20,11 +20,11 @@ Run `rls_tests.sql` in the Supabase SQL editor after the migrations. Then check 
 ## Leaderboard (migration 2)
 - [ ] RLS is enabled on `leaderboard_profiles` and `leaderboard_scores`.
 - [ ] The client has **no** insert or update policy on `leaderboard_scores`. Scores can only be written through `submit_score()`.
-- [ ] `submit_score()` rejects: not opted in; duration under 30 s; accuracy under 90%; WPM over 250; WPM inconsistent with chars and duration; more than 1 submission per 20 s; more than 60 per day. It takes a per-user advisory lock, so parallel calls cannot bypass the rate limit.
+- [ ] `submit_score(points, correct, total, duration_s)` rejects: not opted in; fewer than 5 or more than 60 items; `correct > total`; under 50% correct; more than 45 points per correct word; under 1 second per item; more than 1 submission per 20 s; more than 60 per day. It takes a per-user advisory lock, so parallel calls cannot bypass the rate limit.
 - [ ] `anon` cannot call `submit_score()`, `set_leaderboard_nickname()` or `leave_leaderboard()`, and no client can read `leaderboard_blocked_words`.
 - [ ] User B cannot read user A's `leaderboard_profiles` or `leaderboard_scores` rows directly.
-- [ ] The public views `leaderboard_weekly` and `leaderboard_all_time` expose only `rank, nickname, wpm, accuracy, achieved_at`. No `user_id`, no email.
-- [ ] Opted-out users never appear in the views. `leave_leaderboard()` deletes the caller's scores.
+- [ ] The public view `leaderboard_weekly` exposes only `rank, nickname, points, words, last_at` (the weekly sum since Monday 00:00 UTC). No `user_id`, no email. The old `leaderboard_all_time` view no longer exists.
+- [ ] Opted-out users never appear in the view. `leave_leaderboard()` deletes the caller's scores.
 - [ ] Nicknames are unique (case-insensitive), 3–20 characters, letters (Latin or Arabic), digits, space, `_` and `-`, and not on the blocked-word list.
 
 ## Client bundle

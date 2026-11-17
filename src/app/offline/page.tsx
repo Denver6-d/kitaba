@@ -9,8 +9,8 @@ export default function OfflinePage() {
   const { t } = useI18n();
   return (
     <Page title={t.offline.title} intro={t.offline.body} width="narrow">
-      <Link href="/practice" className="font-medium text-brass underline underline-offset-4">
-        {t.nav.practice}
+      <Link href="/play" className="font-medium text-brass underline underline-offset-4">
+        {t.nav.play}
       </Link>
     </Page>
   );
