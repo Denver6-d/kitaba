@@ -10,9 +10,9 @@
 - [x] Game engine, item builders, misspelling generator, shuffle-bag, answer checking (US/UK)
 
 ## Phase B: content
-- [ ] ≥ 1,500 words over 15 categories and A1–C1, Arabic hints, unique example sentences
-- [ ] ≥ 800 dictation sentences
-- [ ] Volume thresholds in the content test; validate:content script
+- [x] ≥ 1,500 words over 15 categories and A1–C1, Arabic hints, unique example sentences (1,591)
+- [x] ≥ 800 dictation sentences (1,589)
+- [x] Volume thresholds in the content test; validate:content script
 
 ## Phase C: games
 - [ ] Campaign map, daily challenge, free play filters, Arabic hint fading, celebration, leaderboard flow
