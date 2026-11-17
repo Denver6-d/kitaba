@@ -41,6 +41,7 @@ function SignedIn() {
   const repos = useRepos();
   const { user, syncNow, signOut, exportCloud, deleteAccount } = useAccount();
   const [confirm, setConfirm] = useState("");
+  const [removeLocal, setRemoveLocal] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const confirmId = useId();
@@ -58,10 +59,16 @@ function SignedIn() {
             {t.account.syncNow}
           </Button>
         </div>
-        <Button variant="ghost" className="h-10 gap-2" onClick={() => void signOut()}>
-          <LogOut className="size-4" aria-hidden="true" />
-          {t.account.signOut}
-        </Button>
+        <div className="space-y-2 rounded-xl border border-rule p-4">
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" checked={removeLocal} onChange={(e) => setRemoveLocal(e.target.checked)} className="mt-1 size-4 accent-[var(--brass-fill)]" />
+            {t.account.signOutRemove}
+          </label>
+          <Button variant="outline" className="h-10 gap-2" onClick={() => void signOut({ removeLocalData: removeLocal })}>
+            <LogOut className="size-4" aria-hidden="true" />
+            {t.account.signOut}
+          </Button>
+        </div>
       </section>
 
       <section className="space-y-3">

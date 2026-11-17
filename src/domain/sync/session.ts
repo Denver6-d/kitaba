@@ -19,7 +19,21 @@ export function decideFirstSync(i: { linkedUserId: string | null; userId: string
  */
 export const PULL_OVERLAP_MS = 5000;
 
-const same = (a: SyncRecord, b: SyncRecord) => JSON.stringify(a) === JSON.stringify(b);
+/** Key-order-independent JSON (jsonb and zod both reorder keys). */
+export function canonicalJson(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(canonicalJson).join(",")}]`;
+  if (v && typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    return `{${Object.keys(o)
+      .filter((k) => o[k] !== undefined)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${canonicalJson(o[k])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(v);
+}
+
+const same = (a: SyncRecord, b: SyncRecord) => canonicalJson(a) === canonicalJson(b);
 
 /**
  * Merges one pulled record with the local copy using the sync rules.

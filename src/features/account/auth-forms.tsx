@@ -9,7 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAccount } from "./account-provider";
 
 export const emailSchema = z.string().trim().toLowerCase().email().max(254);
-export const passwordSchema = z.string().min(8).max(72);
+/** 8+ characters; bcrypt reads at most 72 bytes, and Arabic letters take 2 bytes each in UTF-8. */
+export const passwordSchema = z
+  .string()
+  .min(8)
+  .refine((p) => new TextEncoder().encode(p).length <= 72);
 
 type Message = { kind: "ok" | "error"; text: string } | null;
 
@@ -101,7 +105,7 @@ function SignInForm() {
         const { error } = await client.auth.signInWithPassword({ email: e.data, password });
         if (error) setMessage({ kind: "error", text: errorText(error) });
       } else if (mode === "magic") {
-        const { error } = await client.auth.signInWithOtp({ email: e.data, options: { emailRedirectTo: callbackUrl() } });
+        const { error } = await client.auth.signInWithOtp({ email: e.data, options: { emailRedirectTo: callbackUrl(), shouldCreateUser: false } });
         setMessage(error ? { kind: "error", text: errorText(error) } : { kind: "ok", text: t.account.magicSent });
       } else {
         const { error } = await client.auth.resetPasswordForEmail(e.data, { redirectTo: callbackUrl("/account/reset") });

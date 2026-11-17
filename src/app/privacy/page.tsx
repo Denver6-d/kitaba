@@ -52,7 +52,7 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
         title: "كيف تحذف بياناتك",
         items: [
           "على هذا الجهاز: الإعدادات ← «حذف كل بياناتي من هذا الجهاز».",
-          "في السحابة: الحساب ← «احذف حسابي وبياناتي». يحذف الحساب وكل سجلاته ونتائج لوحة الصدارة نهائيًا.",
+          "في السحابة: الحساب ← «احذف حسابي وبياناتي». يحذف الحساب وكل سجلاته ونتائج لوحة الصدارة نهائيًا، وكذلك التقدّم المحفوظ على هذا الجهاز. وعند تسجيل الخروج يمكنك أيضًا حذف تقدّمك من الجهاز (مستحسن على الأجهزة المشتركة).",
           "يمكنك تصدير كل بياناتك بصيغة JSON من الإعدادات أو من صفحة الحساب قبل الحذف.",
         ],
       },
@@ -101,7 +101,7 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
         title: "How to delete your data",
         items: [
           "On this device: Settings → “Delete all my data on this device”.",
-          "In the cloud: Account → “Delete my account and data”. This permanently deletes the account, all of its records and its leaderboard scores.",
+          "In the cloud: Account → “Delete my account and data”. This permanently deletes the account, all of its records, its leaderboard scores and the progress on this device. When signing out you can also remove your progress from the device (recommended on shared devices).",
           "You can export everything as JSON from Settings or the Account page before deleting.",
         ],
       },

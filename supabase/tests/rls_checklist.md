@@ -3,13 +3,15 @@
 Run `rls_tests.sql` in the Supabase SQL editor after the migrations. Then check each item. All must hold before going live.
 
 ## progress_records (migration 1)
-- [ ] RLS is **enabled and forced** on `public.progress_records`.
+- [ ] RLS is **enabled** on `public.progress_records` (deliberately not forced: the owner-run `SECURITY DEFINER` functions are the only write path).
 - [ ] `anon` has no table privileges. A signed-out REST call `GET /rest/v1/progress_records` returns `[]` or 401, never rows.
-- [ ] User A cannot select, insert, update or delete rows with `user_id = B`. The script checks this by impersonating two users.
-- [ ] An insert with another user's `user_id` fails the `with check` policy.
+- [ ] `authenticated` has only `select` and `delete` on the table, so a direct `insert` or `update` fails with `insufficient_privilege`.
+- [ ] User A cannot select or delete rows with `user_id = B`. The script checks this by impersonating two users.
+- [ ] `upsert_progress` always writes `user_id = auth.uid()`; it cannot create or change another user's rows.
 - [ ] `upsert_progress` with an older `updated_at` does not overwrite a newer row (last-write-wins guard).
 - [ ] `upsert_progress` rejects batches over 500 rows and rejects anonymous callers.
-- [ ] Rows over 64 KB, or with an unknown `table_name`, are rejected by the check constraints.
+- [ ] Rows over 64 KB, with an unknown `table_name`, or with an `updated_at` after the year 2100 are rejected by the check constraints.
+- [ ] A user cannot store more than 50,000 records (quota trigger).
 
 ## Account deletion
 - [ ] `delete_my_account()` is executable by `authenticated` only (not `anon`, not `public`).

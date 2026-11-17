@@ -11,9 +11,10 @@ import { createRepositories } from "@/repositories/create";
 import { createSupabaseStore } from "@/repositories/supabase/store";
 import { useRepoContext } from "@/repositories/provider";
 import { SyncEngine, type SyncSnapshot } from "./sync-engine";
-import { MergeDialog } from "./merge-dialog";
+import { MergeDialog, type MergeChoice } from "./merge-dialog";
 
 const LINKED_KEY = "linkedUser";
+const FLUSH_TIMEOUT_MS = 5000;
 
 interface AccountValue {
   readonly configured: boolean;
@@ -23,13 +24,17 @@ interface AccountValue {
   readonly ready: boolean;
   readonly sync: SyncSnapshot | null;
   readonly syncNow: () => Promise<void>;
-  readonly signOut: () => Promise<void>;
+  /** Signs out; by default also removes this account's progress from the device (shared devices). */
+  readonly signOut: (opts: { removeLocalData: boolean }) => Promise<void>;
   /** Exports everything stored in the cloud for this account. */
   readonly exportCloud: () => Promise<void>;
+  /** Deletes the account, its cloud data and its data on this device. */
   readonly deleteAccount: () => Promise<void>;
 }
 
 const AccountContext = createContext<AccountValue | null>(null);
+
+const withTimeout = (p: Promise<void>, ms: number) => Promise.race([p, new Promise<void>((r) => setTimeout(r, ms))]);
 
 export function AccountProvider({ children }: { children: ReactNode }) {
   const configured = isSupabaseConfigured();
@@ -63,10 +68,18 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     };
   }, [client, router]);
 
+  const stopEngine = useCallback(async () => {
+    const engine = engineRef.current;
+    engineRef.current = null;
+    setSync(null);
+    await engine?.stopAndWait();
+  }, []);
+
   const startEngine = useCallback(
-    (uid: string) => {
+    async (uid: string, fullResync: boolean) => {
       if (!client) return null;
-      engineRef.current?.stop();
+      await stopEngine();
+      if (fullResync) await outbox.setMeta(`cursor:${uid}`, null);
       const engine = new SyncEngine({
         userId: uid,
         local: baseStore,
@@ -74,23 +87,22 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         outbox,
         onChange: setSync,
         onLocalData: invalidate,
+        currentUserId: async () => (await client.auth.getSession()).data.session?.user.id ?? null,
       });
       engineRef.current = engine;
       engine.start();
       return engine;
     },
-    [client, baseStore, outbox, invalidate],
+    [client, baseStore, outbox, invalidate, stopEngine],
   );
 
-  // First sign-in on this device: never mix or replace local progress without asking.
+  // Account changes (including A → B without a sign-out in between) always stop the old engine first.
+  // First sign-in on this device never mixes or replaces local progress without asking.
   useEffect(() => {
-    if (!userId || !client) {
-      engineRef.current?.stop();
-      engineRef.current = null;
-      return;
-    }
     let cancelled = false;
     void (async () => {
+      await stopEngine();
+      if (!userId || !client || cancelled) return;
       const linked = (await outbox.getMeta<string | null>(LINKED_KEY)) ?? null;
       let localHasData = false;
       for (const t of TABLE_NAMES) {
@@ -106,15 +118,15 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         return;
       }
       if (decision === "adopt-remote") {
+        await outbox.clear(); // anything queued belonged to a previous account
         await outbox.setMeta(LINKED_KEY, userId);
-        await outbox.setMeta(`cursor:${userId}`, null);
       }
-      if (!cancelled) startEngine(userId);
+      if (!cancelled) await startEngine(userId, decision === "adopt-remote");
     })();
     return () => {
       cancelled = true;
     };
-  }, [userId, client, outbox, baseStore, startEngine]);
+  }, [userId, client, outbox, baseStore, startEngine, stopEngine]);
 
   // Queue every local write while linked to an account.
   useEffect(
@@ -129,22 +141,23 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   useEffect(() => () => engineRef.current?.stop(), []);
 
   const chooseMerge = useCallback(
-    async (merge: boolean) => {
+    async (choice: MergeChoice) => {
       if (!userId) return;
-      if (merge) {
+      if (choice === "backup") {
+        downloadJson(await repos.data.exportAll(), exportFilename("kitaba-local-backup"));
+        return;
+      }
+      await outbox.clear(); // only this device's data, queued below, may go to this account
+      if (choice === "merge") {
         await outbox.setMeta(LINKED_KEY, userId);
-        await outbox.setMeta(`cursor:${userId}`, null);
-        const engine = startEngine(userId);
+        const engine = await startEngine(userId, true);
         await engine?.enqueueAllLocal();
         await engine?.syncNow();
       } else {
-        // Keep a copy of the local progress before replacing it with the account's.
-        downloadJson(await repos.data.exportAll(), exportFilename("kitaba-local-backup"));
         await baseStore.clear();
-        await outbox.clear();
         await outbox.setMeta(LINKED_KEY, userId);
         invalidate();
-        const engine = startEngine(userId);
+        const engine = await startEngine(userId, true);
         await engine?.syncNow();
       }
       setAskMerge(false);
@@ -162,12 +175,17 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       syncNow: async () => {
         await engineRef.current?.syncNow();
       },
-      signOut: async () => {
-        engineRef.current?.stop();
-        engineRef.current = null;
-        setSync(null);
-        // Local progress stays on this device as guest data; it is no longer linked.
+      signOut: async ({ removeLocalData }) => {
+        // Try to send anything still queued before leaving.
+        const engine = engineRef.current;
+        if (engine) await withTimeout(engine.syncNow(), FLUSH_TIMEOUT_MS);
+        await stopEngine();
+        await outbox.clear();
         await outbox.setMeta(LINKED_KEY, null);
+        if (removeLocalData) {
+          await baseStore.clear();
+          invalidate();
+        }
         await client?.auth.signOut();
       },
       exportCloud: async () => {
@@ -177,17 +195,18 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       },
       deleteAccount: async () => {
         if (!client) return;
+        await stopEngine();
         const { error } = await client.rpc("delete_my_account");
         if (error) throw new Error(error.message);
-        engineRef.current?.stop();
-        engineRef.current = null;
-        setSync(null);
+        // "Delete my account and all my data": this device's copy goes too.
         await outbox.clear();
         await outbox.setMeta(LINKED_KEY, null);
+        await baseStore.clear();
+        invalidate();
         await client.auth.signOut();
       },
     }),
-    [configured, client, user, ready, sync, outbox],
+    [configured, client, user, ready, sync, outbox, baseStore, invalidate, stopEngine],
   );
 
   return (

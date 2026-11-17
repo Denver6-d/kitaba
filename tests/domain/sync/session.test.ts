@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decideFirstSync, reconcilePulled, PULL_OVERLAP_MS } from "@/domain/sync/session";
+import { canonicalJson, decideFirstSync, reconcilePulled, PULL_OVERLAP_MS } from "@/domain/sync/session";
 import type { GhostRecord, MasteryRecord } from "@/domain/model";
 
 describe("decideFirstSync", () => {
@@ -43,5 +43,15 @@ describe("reconcilePulled", () => {
   });
   it("overlaps pulls by a few seconds to tolerate out-of-order commits", () => {
     expect(PULL_OVERLAP_MS).toBeGreaterThanOrEqual(1000);
+  });
+});
+
+describe("canonicalJson", () => {
+  it("ignores key order and undefined fields (jsonb reorders keys)", () => {
+    expect(canonicalJson({ b: 1, a: { d: [1, { y: 2, x: 1 }], c: undefined } })).toBe(canonicalJson({ a: { d: [1, { x: 1, y: 2 }] }, b: 1 }));
+  });
+  it("still distinguishes different values and array orders", () => {
+    expect(canonicalJson({ a: 1 })).not.toBe(canonicalJson({ a: 2 }));
+    expect(canonicalJson([1, 2])).not.toBe(canonicalJson([2, 1]));
   });
 });

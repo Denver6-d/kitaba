@@ -126,3 +126,14 @@ Choices made while building Kitaba where the brief left room for interpretation.
   - A small header indicator shows synced, syncing, offline with pending count, or error.
   - The sync engine is tested against an in-memory server with the same last-write-wins semantics: two devices, conflicts, append-only union, ghost rule, offline queueing.
 - **A7. Supabase verification is manual.** The Supabase `RecordStore` cannot be unit-tested without a network. It implements the same interface as the tested backends, and `supabase/tests/` has an RLS checklist and SQL assertions to run in the SQL editor.
+- **A8. Phase 4 review fixes.**
+  - Writes to `progress_records` go only through `upsert_progress()`, now `SECURITY DEFINER`. Clients have no direct insert or update grant, so the 500-row batch limit and the last-write-wins guard can't be bypassed. The function always writes `user_id = auth.uid()`.
+  - RLS on the sync and leaderboard tables is enabled but **not forced**. Clients are never the table owner, so RLS always applies to them. Forcing it would make the owner-run writer functions depend on the owner role having `BYPASSRLS`.
+  - Timestamps after the year 2100 are rejected, so one bad clock can't lock a record. Each user is capped at 50,000 records.
+  - Switching accounts (A → B) always stops the old sync engine and waits for it before anything else happens. A running sync pass aborts before its next write. It also checks that the network session still belongs to its user.
+  - Sign-out first tries to flush the queue (up to 5 s). By default it also removes the account's progress from the device, which suits shared devices; a checkbox keeps it. Deleting the account clears this device's copy too, and the copy says so.
+  - "Keep separate" is now two steps: download the backup, then confirm the replacement. A blocked download can't lose the only copy.
+  - Magic links never create accounts (`shouldCreateUser: false`). Sign-up is explicit.
+  - Passwords are limited to 72 UTF-8 bytes (bcrypt's limit) rather than 72 characters.
+  - `safeNext` also rejects control characters, which the URL parser strips (`/\t/evil.com` would become `//evil.com`). It then re-parses the path against a fixed origin.
+  - Pulled records are compared with key-order-independent JSON, because jsonb reorders keys. Without this, every pull would look like a change.

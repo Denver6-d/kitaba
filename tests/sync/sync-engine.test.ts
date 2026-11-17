@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SyncEngine, type SyncSnapshot } from "@/features/account/sync-engine";
+import { parseServerTime, SyncEngine, type SyncSnapshot } from "@/features/account/sync-engine";
 import { createMemoryOutbox } from "@/repositories/local/outbox";
 import { createMemoryStore, type RecordStore } from "@/repositories/store";
 import { createRepositories } from "@/repositories/create";
@@ -152,5 +152,23 @@ describe("safeNext (open-redirect guard)", () => {
     expect(safeNext("/\\evil.example")).toBe("/account");
     expect(safeNext("/javascript:alert(1)")).toBe("/account");
     expect(safeNext(null)).toBe("/account");
+  });
+  it("rejects control characters the URL parser would strip", () => {
+    expect(safeNext("/\t/evil.example")).toBe("/account");
+    expect(safeNext("/\n/evil.example")).toBe("/account");
+  });
+  it("keeps the query and hash of a same-site path", () => {
+    expect(safeNext("/test?mode=30#top")).toBe("/test?mode=30#top");
+  });
+});
+
+describe("parseServerTime", () => {
+  it("parses Postgres timestamps with microseconds and +00:00", () => {
+    const want = Date.parse("2026-11-17T10:00:00.123Z");
+    expect(parseServerTime("2026-11-17T10:00:00.123456+00:00")).toBe(want);
+    expect(parseServerTime("2026-11-17T10:00:00.123+00:00")).toBe(want);
+  });
+  it("returns 0 for garbage so the pull restarts from the beginning", () => {
+    expect(parseServerTime("not a date")).toBe(0);
   });
 });

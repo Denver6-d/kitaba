@@ -38,13 +38,22 @@ do $$ begin
   if (select updated_at from public.progress_records where id = 'me') <> 10 then raise exception 'stale write overwrote newer row'; end if;
 end $$;
 
--- A cannot write a row for B.
+-- No direct inserts at all (writes go through upsert_progress), and never for another user.
 do $$ begin
   begin
     insert into public.progress_records (user_id, table_name, id, data, updated_at)
     values ('00000000-0000-4000-8000-00000000000b', 'profile', 'x', '{}'::jsonb, 1);
-    raise exception 'A inserted a row for B';
+    raise exception 'direct insert into progress_records allowed';
   exception when insufficient_privilege or check_violation then null;
+  end;
+end $$;
+
+-- Far-future timestamps are rejected.
+do $$ begin
+  begin
+    perform public.upsert_progress('[{"table_name":"mastery","id":"f","data":{},"updated_at":9999999999999}]'::jsonb);
+    raise exception 'far-future updated_at accepted';
+  exception when check_violation then null;
   end;
 end $$;
 

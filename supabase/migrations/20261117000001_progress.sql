@@ -12,8 +12,9 @@ create table if not exists public.progress_records (
   id text not null check (char_length(id) between 1 and 200),
   data jsonb not null check (jsonb_typeof(data) = 'object' and pg_column_size(data) <= 65536),
   -- Client write time in ms: the last-write-wins key used by the merge rules.
-  updated_at bigint not null check (updated_at >= 0),
-  deleted_at bigint check (deleted_at is null or deleted_at >= 0),
+  -- Upper bound (year 2100) so one far-future timestamp cannot lock a record against later writes.
+  updated_at bigint not null check (updated_at >= 0 and updated_at < 4102444800000),
+  deleted_at bigint check (deleted_at is null or (deleted_at >= 0 and deleted_at < 4102444800000)),
   -- Server time of the last change: the pull cursor (immune to client clock skew).
   server_updated_at timestamptz not null default clock_timestamp(),
   primary key (user_id, table_name, id)
@@ -32,6 +33,25 @@ begin
 end;
 $$;
 
+-- Storage quota: at most 50,000 records per user (plenty for years of daily practice).
+create or replace function public.enforce_progress_quota()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if (select count(*) from public.progress_records where user_id = new.user_id) >= 50000 then
+    raise exception 'progress quota exceeded' using errcode = '54000';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists progress_records_quota on public.progress_records;
+create trigger progress_records_quota
+  before insert on public.progress_records
+  for each row execute function public.enforce_progress_quota();
+
 drop trigger if exists progress_records_touch on public.progress_records;
 create trigger progress_records_touch
   before insert or update on public.progress_records
@@ -39,33 +59,34 @@ create trigger progress_records_touch
 
 -- Row Level Security: a user can only see and change their own rows.
 alter table public.progress_records enable row level security;
-alter table public.progress_records force row level security;
+-- RLS is enabled but not FORCED: clients are never the table owner, so it always
+-- applies to them, while the owner-run SECURITY DEFINER functions below (the only
+-- write path) must be able to write without a client-facing insert/update policy.
 
 drop policy if exists "progress: owner can read" on public.progress_records;
 create policy "progress: owner can read" on public.progress_records
   for select to authenticated using (user_id = (select auth.uid()));
 
+-- Writes go only through upsert_progress() (batch limit, last-write-wins); no direct insert/update policy.
 drop policy if exists "progress: owner can insert" on public.progress_records;
-create policy "progress: owner can insert" on public.progress_records
-  for insert to authenticated with check (user_id = (select auth.uid()));
-
 drop policy if exists "progress: owner can update" on public.progress_records;
-create policy "progress: owner can update" on public.progress_records
-  for update to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 
 drop policy if exists "progress: owner can delete" on public.progress_records;
 create policy "progress: owner can delete" on public.progress_records
   for delete to authenticated using (user_id = (select auth.uid()));
 
 revoke all on table public.progress_records from anon;
-grant select, insert, update, delete on table public.progress_records to authenticated;
+revoke insert, update on table public.progress_records from authenticated;
+grant select, delete on table public.progress_records to authenticated;
 
 -- Batched upsert with last-write-wins: an older write never overwrites a newer one.
--- SECURITY INVOKER, so the RLS policies above still apply to every row.
+-- SECURITY DEFINER because clients have no direct insert/update rights. Every row is
+-- written with user_id = auth.uid(), and the conflict target includes user_id, so a
+-- caller can only ever create or change their own rows.
 create or replace function public.upsert_progress(records jsonb)
 returns integer
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
 declare
@@ -111,7 +132,7 @@ begin
     raise exception 'not authenticated' using errcode = '42501';
   end if;
   delete from public.progress_records where user_id = uid;
-  -- Leaderboard rows (migration 2) cascade from auth.users.
+  -- Leaderboard rows (20261117000002_leaderboard.sql) cascade from auth.users.
   delete from auth.users where id = uid;
 end;
 $$;
