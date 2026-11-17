@@ -6,6 +6,7 @@ import type {
   SessionRecord,
   SrsCardRecord,
   StageRecord,
+  WritingRecord,
 } from "@/domain/model";
 import type { ExportFile } from "./export";
 
@@ -61,6 +62,24 @@ export interface ProfileRepository {
   save(patch: Partial<Omit<ProfileRecord, "id" | "updatedAt">>): Promise<ProfileRecord>;
 }
 
+export type NewWriting = Omit<WritingRecord, "id" | "updatedAt" | "deletedAt">;
+
+/** Free-writing and dictation history (append-only). */
+export interface WritingRepository {
+  /** Saves a finished text; the text and the mistakes list are capped. */
+  save(w: NewWriting): Promise<WritingRecord>;
+  /** Newest first. */
+  list(): Promise<WritingRecord[]>;
+}
+
+/** The learner's own words, never flagged by the spelling checker. Synced. */
+export interface DictionaryRepository {
+  /** Lower-cased words. */
+  words(): Promise<string[]>;
+  add(word: string): Promise<void>;
+  remove(word: string): Promise<void>;
+}
+
 export interface DataRepository {
   exportAll(): Promise<ExportFile>;
   /** "merge" applies the sync merge rules; "replace" clears local data first. */
@@ -75,6 +94,8 @@ export interface Repositories {
   readonly games: GameRepository;
   readonly achievements: AchievementRepository;
   readonly profile: ProfileRepository;
+  readonly writing: WritingRepository;
+  readonly dictionary: DictionaryRepository;
   readonly data: DataRepository;
 }
 

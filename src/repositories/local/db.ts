@@ -90,6 +90,8 @@ export function openDb(options?: ConstructorParameters<typeof Dexie>[1], name = 
           if (item.table === "profile") ref.value = { ...item, record: migrateProfileRow(item.record as unknown as Record<string, unknown>) };
         });
     });
+  // v4: sentences and messages (DECISIONS F6): writing history and the learner's own dictionary.
+  db.version(4).stores({ writings: "id, at, updatedAt", dictionary: "id, updatedAt" });
   return db;
 }
 

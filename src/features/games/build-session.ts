@@ -6,7 +6,7 @@ import { DAILY_MODES, dailyId, seedFrom, stageDef } from "@/domain/games/campaig
 import type { GameConfig, GameItem, ItemMode } from "@/domain/games/engine";
 import { drawFromBag, returnToBag, type BagState } from "@/domain/games/shuffle-bag";
 import { buildItems } from "@/domain/games/session";
-import type { CefrLevel, GameMode } from "@/domain/model";
+import type { CefrLevel, GameMode, SrsCardRecord } from "@/domain/model";
 import { dayKey } from "@/domain/progress/streak";
 import { poolAtLevel } from "@/domain/levels/pool";
 import { seededRng, shuffle, type Rng } from "@/domain/shared/random";
@@ -32,6 +32,24 @@ export interface BuiltSession {
   readonly mastery: Readonly<Record<string, number>>;
   /** The learner level the words were chosen for (null for review). Shown in the game header. */
   readonly level: CefrLevel | null;
+  /** Review only: words from free writing or dictation that are not in the word bank (DECISIONS F7). */
+  readonly extraWords?: ReadonlyMap<string, SpellingWord>;
+}
+
+/** Arabic label for a review word that came from the learner's own writing (it has no dictionary meaning). */
+export const WRITING_WORD_AR = "كلمة من كتابتك";
+
+/** A review word built from an SM-2 card written by the sentences and messages section. */
+export function writingWord(card: SrsCardRecord): SpellingWord | null {
+  if (!card.word) return null;
+  return {
+    id: card.wordId,
+    word: card.word.toLowerCase(),
+    ar: WRITING_WORD_AR,
+    level: "B1",
+    category: "common",
+    example: card.context && card.context.toLowerCase().includes(card.word.toLowerCase()) ? card.context : `${card.word}.`,
+  };
 }
 
 const UNTIMED: GameConfig = { durationMs: null, speedBonus: false };
@@ -137,8 +155,17 @@ async function buildItemsFor(
     }
     case "review": {
       const due = await deps.repos.words.dueCards(deps.now);
-      const words = due.flatMap((c) => spellingWordById.get(c.wordId) ?? []).slice(0, REVIEW_MAX);
-      return { items: buildItems("review", words, ctx, words.length), config: UNTIMED, stageId: null, mode: "review", boss: false, level: null };
+      const extra = new Map<string, SpellingWord>();
+      const words = due
+        .flatMap((c) => {
+          const bank = spellingWordById.get(c.wordId);
+          if (bank) return [bank];
+          const own = writingWord(c);
+          if (own) extra.set(own.id, own);
+          return own ? [own] : [];
+        })
+        .slice(0, REVIEW_MAX);
+      return { items: buildItems("review", words, ctx, words.length), config: UNTIMED, stageId: null, mode: "review", boss: false, level: null, extraWords: extra };
     }
   }
 }

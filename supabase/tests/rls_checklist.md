@@ -10,8 +10,10 @@ Run `rls_tests.sql` in the Supabase SQL editor after the migrations. Then check 
 - [ ] `upsert_progress` always writes `user_id = auth.uid()`; it cannot create or change another user's rows.
 - [ ] `upsert_progress` with an older `updated_at` does not overwrite a newer row (last-write-wins guard).
 - [ ] `upsert_progress` rejects batches over 500 rows and rejects anonymous callers.
-- [ ] Rows over 64 KB, with an unknown `table_name` (allowed: `srs, mastery, activity, achievements, profile, sessions, stages`), or with an `updated_at` after the year 2100 are rejected by the check constraints.
+- [ ] Rows over 64 KB, with an unknown `table_name` (allowed: `srs, mastery, activity, achievements, profile, sessions, stages`, plus `writings, dictionary` after migration `20261118000001_writing.sql`), or with an `updated_at` after the year 2100 are rejected by the check constraints.
 - [ ] A user cannot store more than 50,000 records (quota trigger).
+
+- [ ] After migration 3, `writings` and `dictionary` rows are accepted through `upsert_progress` and, like every other row, are visible only to their owner (the script stores one of each as user A; user B's checks below cover them too).
 
 ## Account deletion
 - [ ] `delete_my_account()` is executable by `authenticated` only (not `anon`, not `public`).

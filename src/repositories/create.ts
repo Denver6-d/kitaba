@@ -1,4 +1,4 @@
-import { DEFAULT_PROFILE, TABLE_NAMES, type StageRecord, type SyncRecord, type TableMap, type TableName } from "@/domain/model";
+import { DEFAULT_PROFILE, TABLE_NAMES, WRITING_MISSED_MAX, WRITING_TEXT_MAX, type StageRecord, type SyncRecord, type TableMap, type TableName } from "@/domain/model";
 import { compareStage, mergeTable } from "@/domain/sync/merge";
 import { dayKey } from "@/domain/progress/streak";
 import { EXPORT_VERSION, type ExportFile } from "./export";
@@ -128,6 +128,39 @@ export function createRepositories({ store, now = Date.now, newId = () => crypto
         const next = { ...current, ...patch, id: "me", updatedAt: now() };
         await store.put("profile", next);
         return next;
+      },
+    },
+
+    writing: {
+      async save(w) {
+        const t = now();
+        const record = {
+          ...w,
+          text: w.text.slice(0, WRITING_TEXT_MAX),
+          missed: w.missed.slice(0, WRITING_MISSED_MAX).map((m) => ({ wrong: m.wrong.slice(0, 60), right: m.right?.slice(0, 60) ?? null, type: m.type })),
+          id: newId(),
+          updatedAt: t,
+        };
+        await store.put("writings", record);
+        return record;
+      },
+      async list() {
+        return live(await store.all("writings")).sort((a, b) => b.at - a.at);
+      },
+    },
+
+    dictionary: {
+      async words() {
+        return live(await store.all("dictionary")).map((d) => d.word);
+      },
+      async add(word) {
+        const w = word.trim().toLowerCase().slice(0, 60);
+        if (w) await store.put("dictionary", { id: w, word: w, updatedAt: now() });
+      },
+      async remove(word) {
+        const w = word.trim().toLowerCase();
+        const t = now();
+        await store.put("dictionary", { id: w, word: w, updatedAt: t, deletedAt: t });
       },
     },
 

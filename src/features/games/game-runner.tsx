@@ -82,10 +82,12 @@ export function GameRunner({ request, title, emptyText, emptyAction }: { request
       );
     }
     const mastery = phase.session.mastery;
+    const extra = phase.session.extraWords;
+    const words = extra && extra.size > 0 ? new Map([...spellingWordById, ...extra]) : spellingWordById;
     // Arabic hints fade as a word is mastered; sound-alikes keep theirs (the meaning tells them apart).
-    const showMeaning = (wordId: string) => spellingWordById.get(wordId)?.category === "homophones" || hintLevel(mastery[wordId] ?? 0) !== "none";
+    const showMeaning = (wordId: string) => !extra?.has(wordId) && (spellingWordById.get(wordId)?.category === "homophones" || hintLevel(mastery[wordId] ?? 0) !== "none");
     return (
-      <GameSession key={phase.round} items={phase.session.items} config={phase.session.config} words={spellingWordById} onFinish={onFinish} title={title} showMeaning={showMeaning} level={phase.session.level} />
+      <GameSession key={phase.round} items={phase.session.items} config={phase.session.config} words={words} onFinish={onFinish} title={title} showMeaning={showMeaning} level={phase.session.level} />
     );
   }
 

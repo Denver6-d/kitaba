@@ -30,3 +30,12 @@
 - [x] Stages, bosses, daily and free play read the stored levels on every build; level shown in the game header
 - [x] /welcome: choose a level, adaptive placement test (16 items), skip (A2); /play redirects on first visit
 - [x] Levels card on /play (change any level, applies to the next game); "retake the placement test" in settings
+
+## Phase F: sentences and messages
+- [x] Spell-check dependency checked and reported (DECISIONS F1); lazy, worker-only, on-device
+- [x] Checker: dictionary, rule-based confusables, British notes, names/numbers/acronyms skipped, own dictionary; mistake types with Arabic reasons
+- [x] Content: 150 scenarios, 300 sentences, 60 messages (A1–C1), original, validated, spell-checked clean
+- [x] /write hub, free writing, sentence and message dictation (speed, replay, sentence by sentence, no-voice fallback)
+- [x] Tap-to-explain detail, summary (accuracy, types, words to practise), stars, XP, celebration
+- [x] Mistakes to SM-2 (bank cards reused, own-word cards with their sentence); review plays them
+- [x] History in My progress; Dexie v4, Supabase migration 3, RLS tests; privacy page

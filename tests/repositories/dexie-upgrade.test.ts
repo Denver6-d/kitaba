@@ -40,7 +40,7 @@ describe("Dexie v1 → v2 upgrade, more cases", () => {
     expect(await repos.profile.get()).toMatchObject({ id: "me", levelSource: null, levels: sameLevels("A2") });
     await repos.games.saveSession({ mode: "listen", stageId: "w1-s1", items: 10, correct: 9, points: 90, maxCombo: 5, seconds: 60, at: 1, missed: [] }, 2);
     expect(await repos.games.sessions()).toHaveLength(1);
-    expect(db.verno).toBe(3);
+    expect(db.verno).toBe(4);
     db.close();
   });
 
@@ -116,7 +116,7 @@ describe("Dexie v2 → v3 upgrade (three learner levels)", () => {
     expect(await repos.profile.get()).toEqual(expected);
     expect((await createDexieOutbox(db).list(10))[0]?.record).toEqual(expected);
     expect((await repos.games.stages())["w1-s1"]?.stars).toBe(2);
-    expect(db.verno).toBe(3);
+    expect(db.verno).toBe(4);
     db.close();
   });
 

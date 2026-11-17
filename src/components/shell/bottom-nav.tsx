@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
-import { BookOpenCheck, ChartNoAxesColumn, Gamepad2, House } from "lucide-react";
+import { BookOpenCheck, ChartNoAxesColumn, Gamepad2, House, PenLine } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { PRIMARY_NAV } from "./nav-items";
 import { isActive } from "./site-header";
 
-const ICONS: Record<string, typeof House> = { "/": House, "/play": Gamepad2, "/review": BookOpenCheck, "/progress": ChartNoAxesColumn };
+const ICONS: Record<string, typeof House> = { "/": House, "/play": Gamepad2, "/write": PenLine, "/review": BookOpenCheck, "/progress": ChartNoAxesColumn };
 
 function subscribeViewport(cb: () => void) {
   const vv = window.visualViewport;
@@ -23,17 +23,17 @@ const keyboardOpen = () => {
 };
 
 /**
- * Phones: the four core areas within thumb reach. Hidden on the game screen,
+ * Phones: the five core areas within thumb reach. Hidden on the game and writing screens,
  * which has its own bottom action, and while the keyboard is open.
  */
 export function BottomNav() {
   const { t } = useI18n();
   const pathname = usePathname();
   const typing = useSyncExternalStore(subscribeViewport, keyboardOpen, () => false);
-  if (pathname.startsWith("/play/game") || typing) return null;
+  if (pathname.startsWith("/play/game") || pathname.startsWith("/write/") || typing) return null;
   return (
     <nav aria-label={t.nav.bottom} className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-rule bg-sheet pb-[env(safe-area-inset-bottom)] md:hidden">
-      <ul className="mx-auto grid max-w-md grid-cols-4">
+      <ul className="mx-auto grid max-w-md grid-cols-5">
         {PRIMARY_NAV.map((item) => {
           const Icon = ICONS[item.href] ?? House;
           const active = isActive(pathname, item.href);

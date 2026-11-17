@@ -26,6 +26,10 @@ export interface SrsCardRecord extends SyncRecord {
   readonly lapses: number;
   readonly due: number;
   readonly lastReviewed: number;
+  /** For a word that is not in the word bank (misspelled in free writing or dictation): its spelling. */
+  readonly word?: string;
+  /** The sentence the mistake came from (sentences and messages), shown and spoken in review. */
+  readonly context?: string;
 }
 
 /** How well an item is known; drives Arabic hint fading. id = "spell:<wordId>". */
@@ -37,7 +41,7 @@ export interface MasteryRecord extends SyncRecord {
  * "legacy" marks practice from V1 features that no longer exist (typing,
  * lessons, sentences…). It still counts for streak days and XP.
  */
-export type ActivityKind = "spelling" | "game" | "review" | "legacy";
+export type ActivityKind = "spelling" | "game" | "review" | "writing" | "legacy";
 
 /** One practice event: feeds streaks, daily goal and XP. Append-only. */
 export interface ActivityRecord extends SyncRecord {
@@ -106,6 +110,38 @@ export interface StageRecord extends SyncRecord {
   readonly clearedAt: number;
 }
 
+/** One mistake in a writing record. */
+export interface WritingMiss {
+  readonly wrong: string;
+  readonly right: string | null;
+  readonly type: string;
+}
+
+/** One finished free-writing text or dictation (append-only). Feeds "My progress". */
+export interface WritingRecord extends SyncRecord {
+  readonly mode: "free" | "dictation";
+  /** Scenario or dictation id. */
+  readonly sourceId: string;
+  readonly level: CefrLevel;
+  /** What the learner wrote (capped at WRITING_TEXT_MAX characters). */
+  readonly text: string;
+  readonly words: number;
+  readonly mistakes: number;
+  /** 0–1. */
+  readonly accuracy: number;
+  readonly stars: number;
+  readonly at: number;
+  readonly missed: readonly WritingMiss[];
+}
+
+export const WRITING_TEXT_MAX = 4000;
+export const WRITING_MISSED_MAX = 50;
+
+/** A word the learner added to their own dictionary. id = the word in lower case; removal is a tombstone. */
+export interface DictionaryRecord extends SyncRecord {
+  readonly word: string;
+}
+
 export interface TableMap {
   readonly srs: SrsCardRecord;
   readonly mastery: MasteryRecord;
@@ -114,11 +150,13 @@ export interface TableMap {
   readonly profile: ProfileRecord;
   readonly sessions: SessionRecord;
   readonly stages: StageRecord;
+  readonly writings: WritingRecord;
+  readonly dictionary: DictionaryRecord;
 }
 
 export type TableName = keyof TableMap;
 
-export const TABLE_NAMES: readonly TableName[] = ["srs", "mastery", "activity", "achievements", "profile", "sessions", "stages"];
+export const TABLE_NAMES: readonly TableName[] = ["srs", "mastery", "activity", "achievements", "profile", "sessions", "stages", "writings", "dictionary"];
 
 export const DEFAULT_PROFILE: ProfileRecord = {
   id: "me",

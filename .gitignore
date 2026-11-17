@@ -53,3 +53,6 @@ ehthumbs.db
 
 # local tool config
 .claude/settings.local.json
+
+# spell-check dictionary, copied from node_modules by scripts/copy-dictionary.mjs
+/public/dict/

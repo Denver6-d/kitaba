@@ -20,21 +20,23 @@ import { freePlayHref } from "@/features/games/parse-request";
 
 const GOAL_OPTIONS = [5, 10, 15, 20, 30];
 const RECENT_SESSIONS = 30;
+const RECENT_WRITINGS = 20;
 
 export default function ProgressPage() {
   const { t, num, pct, date, lang } = useI18n();
   const repos = useRepos();
   const goalId = useId();
   const data = useRepoQuery(async (r) => {
-    const [activity, profile, sessions, stages, due, achievements] = await Promise.all([
+    const [activity, profile, sessions, stages, due, achievements, writings] = await Promise.all([
       r.activity.list(),
       r.profile.get(),
       r.games.sessions(),
       r.games.stages(),
       r.words.dueCards(Date.now()),
       r.achievements.list(),
+      r.writing.list(),
     ]);
-    return { activity, profile, sessions, stages, due: due.length, achievements };
+    return { activity, profile, sessions, stages, due: due.length, achievements, writings };
   });
 
   if (data.status === "loading")
@@ -50,7 +52,7 @@ export default function ProgressPage() {
       </Page>
     );
 
-  const { activity, profile, sessions, stages, due, achievements } = data.data;
+  const { activity, profile, sessions, stages, due, achievements, writings } = data.data;
   const today = dayKey(new Date());
   const days = activity.map((a) => a.day);
   const secondsToday = activity.filter((a) => a.day === today).reduce((s, a) => s + a.seconds, 0);
@@ -143,6 +145,47 @@ export default function ProgressPage() {
             <Tile label={t.progress.games} value={num(sessions.length)} />
             <Tile label={t.progress.stars} value={num(stars)} />
           </dl>
+        </section>
+
+        <section aria-labelledby="writ-h" className="space-y-4">
+          <h2 id="writ-h" className="text-xl font-semibold">
+            {t.writing.history}
+          </h2>
+          {writings.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-rule-strong p-6 text-ink-soft">
+              {t.writing.historyEmpty}{" "}
+              <Link href="/write" className="font-medium text-brass underline underline-offset-4">
+                {t.writing.title}
+              </Link>
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {writings.slice(0, RECENT_WRITINGS).map((w) => (
+                <li key={w.id}>
+                  <details className="sheet group p-4">
+                    <summary className="flex min-h-11 cursor-pointer flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="font-semibold">{t.writing.modeNames[w.mode]}</span>
+                      <span className="rounded-full border border-rule px-2 py-0.5 text-sm tabular">{w.level}</span>
+                      <span className="text-sm text-ink-soft">{t.writing.historyItem(w.words, pct(Math.round(w.accuracy * 100)))}</span>
+                      <span className="ms-auto text-sm text-ink-soft">{date(w.at)}</span>
+                    </summary>
+                    <p dir="ltr" lang="en" className="mt-3 font-mono whitespace-pre-wrap break-words">
+                      {w.text}
+                    </p>
+                    {w.missed.length > 0 && (
+                      <ul className="mt-3 flex flex-wrap gap-2" dir="ltr" lang="en">
+                        {w.missed.map((m) => (
+                          <li key={`${m.wrong}-${m.right ?? ""}`} className="rounded-full border border-rule px-3 py-1 text-sm">
+                            <span className="text-error line-through">{m.wrong}</span> <span className="font-mono text-correct">{m.right ?? "?"}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </details>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section aria-labelledby="weak-h" className="space-y-4">

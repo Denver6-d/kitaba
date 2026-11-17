@@ -9,6 +9,7 @@ export interface NavItem {
 export const PRIMARY_NAV: readonly NavItem[] = [
   { href: "/", label: (t) => t.nav.home },
   { href: "/play", label: (t) => t.nav.play },
+  { href: "/write", label: (t) => t.nav.write },
   { href: "/review", label: (t) => t.nav.review },
   { href: "/progress", label: (t) => t.nav.progress },
 ];

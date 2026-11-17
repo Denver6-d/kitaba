@@ -13,7 +13,7 @@ import { migrateProfileRow } from "./migrate-profile";
 
 export const V1_DROPPED_TABLES = ["results", "keystats", "ghosts", "attempts", "scenarios"] as const;
 
-const KEPT_ACTIVITY: ReadonlySet<string> = new Set<ActivityKind>(["spelling", "game", "review", "legacy"]);
+const KEPT_ACTIVITY: ReadonlySet<string> = new Set<ActivityKind>(["spelling", "game", "review", "writing", "legacy"]);
 const VALID_LEVELS: ReadonlySet<string> = new Set(LEVELS);
 
 type Row = Record<string, unknown>;

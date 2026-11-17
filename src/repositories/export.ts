@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GAME_MODES, LEVEL_SOURCES, LEVELS, type SyncRecord, type TableName } from "@/domain/model";
+import { GAME_MODES, LEVEL_SOURCES, LEVELS, WRITING_MISSED_MAX, WRITING_TEXT_MAX, type SyncRecord, type TableName } from "@/domain/model";
 import { migrateProfileRow } from "@/domain/sync/migrate-profile";
 import { migrateV1Tables } from "@/domain/sync/migrate-v1";
 
@@ -19,13 +19,24 @@ const base = { id: shortId, updatedAt: nonNeg, deletedAt: nonNeg.optional() };
 
 export const recordSchemas = {
   srs: z
-    .object({ ...base, wordId: shortId, ease: num.min(1).max(5), interval: int, reps: int, lapses: int, due: nonNeg, lastReviewed: nonNeg })
+    .object({
+      ...base,
+      wordId: shortId,
+      ease: num.min(1).max(5),
+      interval: int,
+      reps: int,
+      lapses: int,
+      due: nonNeg,
+      lastReviewed: nonNeg,
+      word: z.string().min(1).max(60).optional(),
+      context: z.string().max(400).optional(),
+    })
     .strict(),
   mastery: z.object({ ...base, mastery: int.max(1000) }).strict(),
   activity: z
     .object({
       ...base,
-      kind: z.enum(["spelling", "game", "review", "legacy"]),
+      kind: z.enum(["spelling", "game", "review", "writing", "legacy"]),
       at: nonNeg,
       day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       seconds: int.max(86_400),
@@ -57,6 +68,24 @@ export const recordSchemas = {
     })
     .strict(),
   stages: z.object({ ...base, stars: int.max(3), bestPoints: int.max(100_000), clearedAt: nonNeg }).strict(),
+  writings: z
+    .object({
+      ...base,
+      mode: z.enum(["free", "dictation"]),
+      sourceId: shortId,
+      level: z.enum(LEVELS),
+      text: z.string().max(WRITING_TEXT_MAX),
+      words: int.max(5000),
+      mistakes: int.max(5000),
+      accuracy: num.min(0).max(1),
+      stars: int.max(3),
+      at: nonNeg,
+      missed: z
+        .array(z.object({ wrong: z.string().max(60), right: z.string().max(60).nullable(), type: z.string().max(20) }).strict())
+        .max(WRITING_MISSED_MAX),
+    })
+    .strict(),
+  dictionary: z.object({ ...base, word: z.string().min(1).max(60) }).strict(),
 } satisfies Record<TableName, z.ZodType>;
 
 const MAX_ROWS = 50_000;

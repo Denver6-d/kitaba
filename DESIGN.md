@@ -67,8 +67,9 @@ Phone (390 px, RTL)                      Desktop (1280 px+, RTL)
 ```
 
 - The UI aligns to the **start** edge. English answer areas are LTR islands (`dir="ltr" lang="en"`).
-- **Header:** the name, the four core destinations (Home, Play, Review, My progress) on ≥ 768 px, and a three-line menu button on every size. The menu is a drawer dialog holding Leaderboard, Account, Settings, Privacy, and the language and theme switches. It traps focus, closes on Esc and on an outside click, and opens from the end edge (left in RTL, right in LTR).
-- **Phones:** the core destinations move to a bottom tab bar within thumb reach. It hides while the virtual keyboard is open.
+- **Header:** the name, the five core destinations (Home, Play, Sentences, Review, My progress; phase F added Sentences) on ≥ 768 px, and a three-line menu button on every size. The menu is a drawer dialog holding Leaderboard, Account, Settings, Privacy, and the language and theme switches. It traps focus, closes on Esc and on an outside click, and opens from the end edge (left in RTL, right in LTR).
+- **Phones:** the core destinations move to a bottom tab bar within thumb reach (five tabs). It hides while the virtual keyboard is open and on the game and writing screens.
+- **Writing screens (phase F):** the task card, then a large LTR textarea (mono, at least 11rem tall) with a sticky action bar on phones. In the result, flagged words are buttons inside the text: spelling mistakes have a wavy red underline, sound-alikes a dashed one, notes (an accepted British spelling) a dotted hint-coloured one. The word's detail panel opens under the text. The summary reuses the stage-clear stars and XP count-up.
 - **Footer:** only the name and one short line.
 - **Game screens:** one centred sheet (max 42rem). On phones the primary action is full width at the bottom, kept above the virtual keyboard (`interactive-widget=resizes-content` plus `scrollIntoView` on focus). Short landscape screens put the prompt and the input side by side.
 - **Campaign map:** each world is a section with its name, rule focus and level. Its 10 stages are a grid of nodes (5 columns on phones, 10 on wide screens), and each node shows 0–3 brass stars. The boss node is ringed in brass. Locked nodes are dimmed and labelled "locked" for screen readers.

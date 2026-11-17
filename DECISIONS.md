@@ -283,3 +283,74 @@ Choices made while building Kitaba where the brief left room for interpretation.
 - **E5. First visit.** `/play` redirects to `/welcome` while `levelSource` is null.
   - The landing page keeps its playable round, so "play within 10 seconds" still holds, and "Skip for now" sets A2 in one tap.
   - A signed-in learner is redirected only after the first sync (or when sync is offline or in error), so a new device does not ask for a level the account already has.
+
+## Phase F: sentences and messages (spelling only)
+
+- **F1. One spell-check dependency: `nspell@2.1.5` + `dictionary-en@4.0.0` (report to the owner).**
+  - **What they are.** nspell is a Hunspell-compatible spell checker in plain JavaScript, by Titus Wormer. dictionary-en is the same author's packaging of the SCOWL en-US Hunspell dictionary (version 2020.12.07). The owner's brief named exactly this pair as one dependency.
+  - **Licences.**
+    - nspell: MIT. Its only dependency is `is-buffer@2.0.5`, also MIT.
+    - dictionary-en: "(MIT AND BSD)". The SCOWL word list carries a BSD-style permissive licence, shipped with the files as `public/dict/LICENSE-dictionary-en.txt`.
+    - Both allow commercial use and redistribution with the notice kept.
+  - **Size.**
+    - nspell is 42 KB unpacked, about 25 KB in the built worker chunk.
+    - The dictionary is 552 KB (`.dic`) plus 3 KB (`.aff`) of plain text, which compresses well over HTTP.
+  - **Maintenance.**
+    - nspell's last release was 2.1.5 (2021, metadata updated 2022). It is stable rather than active: the Hunspell format it reads has not changed, and it is still widely used (it is the engine behind retext-spell).
+    - dictionary-en 4.0.0 was released in November 2023.
+    - `npm audit --omit=dev` reports 0 vulnerabilities.
+  - **Alternatives rejected.**
+    - `typo-js` (BSD-3-Clause) was republished one day before this phase (2026-11-16). That is too fresh to trust from a supply-chain point of view.
+    - `hunspell-asm` is WASM and much larger.
+  - **How it is loaded (browser only, lazily, nothing sent anywhere).**
+    - `dictionary-en` reads its files with `node:fs`, so it cannot be bundled. `scripts/copy-dictionary.mjs` runs before `dev` and `build` and copies the files to `public/dict/`, which is git-ignored and generated.
+    - The checker runs in a Web Worker (`features/writing/spell.worker.ts`). The worker is created only when a writing page opens, and it fetches the dictionary from this same site. The built output confirms that nspell is only in the worker's chunk, not in any page's main bundle. Building the dictionary in the worker (≈ 0.4 s in Node, longer on phones) never blocks typing.
+    - No text leaves the device. The service worker caches the dictionary after its first use, so checking then works offline.
+    - Side effect: Turbopack also copies the worker's TypeScript source into `/_next/static/media`. That is the same open source as the repository and is never loaded.
+  - Exact versions are pinned (`--save-exact`), as for every other dependency.
+- **F2. Spelling only, never grammar.**
+  - The page states this on every writing screen ("Spelling only: an English dictionary on your device plus known rules for sound-alike words. It does not check grammar or style").
+  - The confusable rules (F4) fire only on patterns that are wrong in almost every context. They are named "sound-alike word", not "grammar".
+- **F3. The checker (`domain/writing/check.ts`, pure, dictionary injected).** Tokens keep inner apostrophes and hyphens.
+  - **Skipped:** chunks with a digit, @, ://, or a leading "www."; all-capitals words (acronyms); the learner's own words; and a list of common Arabic names and Arab cities.
+  - **Hyphenated words:** each part is checked.
+  - **Capitalised unknown word inside a sentence:** treated as a name. Exception: a misspelled day, month or language within two letters (wensday → Wednesday) is flagged. nspell's own suggestions miss those, so they are matched directly.
+  - **Capitalised unknown word at the start of a sentence:** flagged only when a real word is within two letters. A capitalised word that also appears mid-sentence is a name.
+  - **Lower-case `i` and day names:** flagged as capital-letter mistakes.
+  - **Contractions without an apostrophe:** `dont`, `im`, `theyre` and others are flagged, but only when they are not real words (`cant`, `wont` and `its` are left to the confusable rules or left alone).
+  - **Suggestions are ranked:**
+    1. a real word one typical learner slip away (ie/ei swapped, p/b or v/f swapped, a letter doubled or undoubled), so "recieve" becomes "receive" and not nspell's first choice "relieve";
+    2. then word-bank words;
+    3. then the closest by letters.
+  - **British spellings:** the dictionary is en-US, so a British spelling is recognised by rules (our→or, ise→ize, tre→ter, ll→l before -ed/-ing/-er, ence→ense, ogue→og, plus listed pairs such as grey/gray and programme/program).
+    - For an American learner it is accepted with a note and never counted as a mistake.
+    - For a British learner it is silent, and an American spelling with a known British form gets the note instead.
+  - **Tests:** every dictation sentence, message line, English prompt and help word must check clean with the real dictionary. This is the false-positive guard, and it caught two words the dictionary lacks ("onboarding", "wellbeing"), which were reworded.
+- **F4. Confusable rules** (`domain/writing/confusables.ts`). A rule looks at the word and its direct neighbours in the same clause only.
+  - **Fires on:** "your welcome / your going", "their is", "there house", "its a", "it's tail", "to hot", "me to.", "taller then", "to loose", "a big affect / affect on", "everyone accept", "please be quite", "were is…?" at the start, "we where", "could of".
+  - **Left alone:** anything ambiguous, so correct uses stay quiet. Examples: "Are there books?", "open the folder then click", "your very own", "tell you where to go".
+  - Both sides are covered by tests.
+- **F5. Dictation comparison** (`domain/writing/dictation.ts`).
+  - It is a word-level alignment. Case and punctuation are ignored; apostrophes count.
+  - A typed word is paired with an expected word only when it looks like an attempt at it (letter distance ≤ max(2, half the length)). Otherwise it is one missing and one extra word, so the learner never sees "very → tired".
+  - A British spelling of the expected word counts as right, with a note.
+  - Accuracy is correct words / words in the text. Missing and extra words count as errors, but only misspellings go to the words to practise.
+- **F6. Storage.**
+  - **Two new synced tables:** `writings` (append-only history; text capped at 4,000 characters and 50 mistakes) and `dictionary` (id = the lower-cased word; removal is a tombstone, so it syncs).
+  - **Local:** Dexie v4 adds both stores. The export format stays version 3, because the change is additive and phases E and F ship together.
+  - **Supabase:** migration `20261118000001_writing.sql` widens the `table_name` check. It is a separate migration, so it applies on top of an existing database. RLS, the 64 KB row cap, the quota and the `SECURITY DEFINER` write path are unchanged, and `rls_tests.sql` and the checklist cover the new names.
+  - The activity kind `writing` feeds streak days and XP.
+- **F7. Mistakes go to review.**
+  - Every misspelled word with a suggestion (capital-letter fixes and two-word fixes excepted) gets an SM-2 miss.
+  - A word in the bank reuses its bank card (`w-…`, British forms included). Any other word gets `x-<word>`, which stores its spelling.
+  - Every card stores the sentence it came from, with the word spelled right. For a dictation, that is the original sentence.
+  - Review plays bank words as before, and `x-` words as listen-and-type with the stored sentence as the spoken example. The Arabic line reads "a word from your writing", because there is no dictionary meaning to show.
+  - A new card is first due the next day (SM-2 S1), so "added to your review" means "in your deck", not "due now".
+- **F8. Stars, XP and celebration.**
+  - **Stars:** the game thresholds (60/80/95%), and only from three words up.
+  - **XP:** one per correct word (capped at 60), plus 5 per star.
+  - **Celebration:** the stage-clear stars and XP count-up are reused, with the optional "cleared" tone.
+  - **History:** every check is saved. "Edit your text" and checking again saves a new entry, so the history shows progress on the same task.
+- **F9. Navigation.**
+  - "Sentences" joins the core destinations (the header from 768 px and a fifth bottom tab on phones).
+  - The bottom bar hides on `/write/free` and `/write/dictation`, which have their own sticky action, as the game screen does.
