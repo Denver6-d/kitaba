@@ -296,6 +296,8 @@ export const en: Dictionary = {
     filter: "Level",
     heuristic: "Checking is automatic and based on rules and prepared answers, so a correct wording that is not on our list may not be accepted.",
     progress: (done: number, total: number) => `${done} of ${total}`,
+    farOff: "Your answer is quite different from the expected answers. Read the Arabic sentence again and compare with the model answer below.",
+    showDetails: "Show details",
     diffLegend: "Missing words are underlined, extra words are struck through, and wrong words show the correct word next to them.",
   },
   professional: {
@@ -339,6 +341,7 @@ export const en: Dictionary = {
     namePlaceholder: "Type your name",
     body: "In recognition of regular practice writing English on Kitaba.",
     stats: "Progress summary",
+    minutes: "Minutes practised",
     disclaimer: "This is a personal progress certificate summarising your practice, not an official language certificate.",
     date: "Date",
     empty: "Complete a few exercises first and your numbers will appear here.",

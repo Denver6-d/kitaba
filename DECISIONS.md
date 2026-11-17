@@ -75,3 +75,27 @@ Choices made while building Kitaba where the brief left room for interpretation.
 - **S3. American spelling throughout** (color, favorite, center, neighbor, license), so the bank, the sentence answers and the scenarios agree.
 - **S4. Every spelling word comes with an example sentence** that is spoken on request. It disambiguates sound-alike words (their / there / they're), and the content test checks that each word appears in its own example.
 - **S5. Daily-goal minutes for dictation** use a fixed 15 seconds per word. Per-word timing was not worth extra state.
+
+## Phase 3: sentences, professional writing, rewards
+
+- **G1. The sentence grader is a heuristic, not a grammar checker.** It is rule-based and deterministic:
+  1. Normalise case, punctuation, curly apostrophes, contractions (`I'm` = `I am`, `can't` = `cannot`), digits up to twelve, and contractions typed without the apostrophe (`dont`).
+  2. Run a weighted token-level Levenshtein alignment against every accepted answer and choose the cheapest.
+  3. Classify each edit with ordered rules: article, to be, preposition, singular/plural, verb form or tense (stems plus an irregular-verb table), word order (moved or swapped words), spelling (character distance, with no tolerance for words of three letters or fewer), then missing, extra or different word.
+
+  It cannot judge a correct sentence that is not in the accepted list. The UI says so on every sentence screen. Spelling and article mistakes count as half an error in the score. 60+ grader cases are unit-tested, and the content test checks that every accepted answer grades as correct.
+- **G2. Far-off answers** (more than 4 errors and a score below 35%) get one plain message and the model answer instead of a long list of "different word" items. The details are one click away.
+- **G3. Hints fade per sentence.** Mastery 0 offers a masked hint (`I a_ a s______.`), 1–2 offers the first word, 3 or more offers nothing.
+- **P1. The professional checklist checks form only.** It looks for:
+  - a greeting on the first line;
+  - a closing phrase in the last three lines, followed by a name;
+  - a polite phrase;
+  - capitalised sentences (common abbreviations such as a.m. and Mr. do not end a sentence) and a capital I;
+  - body lines that end with punctuation;
+  - a length within the scenario's word range;
+  - no text-speak;
+  - each required point, matched by keyword at the start of a word.
+
+  The content test checks that every model answer passes its own checklist.
+- **R1. Achievements are derived** from stored progress by pure rules (`domain/progress/achievements.ts`). Correct dictations are counted from activity XP because activity records do not store the verdict. A new unlock shows a quiet toast, never confetti.
+- **R2. Certificate and share image.** The certificate is a print-CSS A4 landscape page. The learner's name stays in the page and is not stored. The share image is drawn on a `<canvas>` with the same next/font faces (read from their CSS variables) and shared through the Web Share API, falling back to a download.

@@ -23,11 +23,11 @@ Each task: verify with `npm run typecheck && npm test` (domain) and `npm run bui
 - [x] CHECKPOINT P2
 
 ## Phase 3 — Sentences and professional writing
-- [ ] 15 Grader + classifier (≥ 60 tests)
-- [ ] 16 150+ sentences + practice UI
-- [ ] 17 Scenarios + checklist + UI
-- [ ] 18 Achievements + certificate + share image
-- [ ] CHECKPOINT P3
+- [x] 15 Grader + classifier (≥ 60 tests)
+- [x] 16 150+ sentences + practice UI
+- [x] 17 Scenarios + checklist + UI
+- [x] 18 Achievements + certificate + share image
+- [x] CHECKPOINT P3
 
 ## Phase 4 — Accounts and sync
 - [ ] 19 Migrations + RLS + RPCs

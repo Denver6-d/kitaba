@@ -1,0 +1,33 @@
+/* Print layout for the certificate: A4 landscape, only the certificate, true colours. */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+  }
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  main > div > header {
+    display: none !important;
+  }
+  main > div {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  .certificate {
+    box-shadow: none !important;
+    max-width: none !important;
+    width: 100% !important;
+    height: 180mm;
+    aspect-ratio: auto !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    break-inside: avoid;
+  }
+}
