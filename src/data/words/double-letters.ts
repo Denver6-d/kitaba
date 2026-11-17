@@ -26,7 +26,6 @@ export const doubleLetters: readonly WordRow[] = [
   ["immediately", "فورًا", "B1", "Please reply immediately."],
   ["really", "حقًا", "A1", "I really like it."],
   ["usually", "عادةً", "A2", "I usually walk to work."],
-  ["until", "حتى", "A2", "Wait until five."],
   ["apply", "يتقدّم بطلب", "A2", "I want to apply for the job."],
   ["happy", "سعيد", "A1", "We are happy to help."],
   ["embarrass", "يُحرِج", "B2", "Please don't embarrass me in front of my friends."],

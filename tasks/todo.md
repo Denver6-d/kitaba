@@ -15,7 +15,7 @@
 - [x] Volume thresholds in the content test; validate:content script
 
 ## Phase C: games
-- [ ] Campaign map, daily challenge, free play filters, Arabic hint fading, celebration, leaderboard flow
+- [x] Campaign map, daily challenge, free play filters, Arabic hint fading, celebration, leaderboard flow
 
 ## Phase D: navigation, responsive, login, design, copy
 - [ ] Hamburger menu (focus trap, Esc, outside click, RTL/LTR), bottom bar, footer

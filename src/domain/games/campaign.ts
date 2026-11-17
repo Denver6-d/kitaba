@@ -23,7 +23,7 @@ export const WORLDS: readonly World[] = [
   { n: 3, name: { ar: "الحروف المضاعفة", en: "Double letters" }, categories: ["double-letters"], levels: ["A1", "A2", "B1", "B2"] },
   { n: 4, name: { ar: "حروف تُكتب ولا تُنطق", en: "Silent letters" }, categories: ["silent-letters"], levels: ["A1", "A2", "B1", "B2"] },
   { n: 5, name: { ar: "نهايات الكلمات", en: "Word endings" }, categories: ["plurals", "verb-endings", "adverbs-ly"], levels: ["A2", "B1", "B2"] },
-  { n: 6, name: { ar: "ie وei وفخاخ أخرى", en: "ie, ei and other traps" }, categories: ["ie-ei", "common"], levels: ["A2", "B1", "B2"] },
+  { n: 6, name: { ar: "فخاخ ie وei وغيرها", en: "ie, ei and other traps" }, categories: ["ie-ei", "common"], levels: ["A2", "B1", "B2"] },
   { n: 7, name: { ar: "بناء الكلمات", en: "Building words" }, categories: ["prefixes", "suffixes", "british-american"], levels: ["B1", "B2", "C1"] },
   { n: 8, name: { ar: "كلمات متشابهة وأصعب الكلمات", en: "Sound-alikes and the hardest words" }, categories: ["homophones", "common"], levels: ["B1", "B2", "C1"] },
 ];

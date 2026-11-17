@@ -36,7 +36,7 @@ export const pB: readonly WordRow[] = [
   ["big", "كبير", "A1", "They live in a big house."],
   ["pig", "خنزير", "A2", "The pig is in the mud."],
   ["pet", "حيوان أليف", "A1", "Do you have a pet?"],
-  ["pin", "دبوس / رمز سري", "A2", "Enter your PIN, and keep the pin in a safe place."],
+  ["pin", "دبوس", "A2", "Use a pin to hold the papers together."],
   ["bin", "سلة مهملات", "A2", "Put the paper in the bin."],
   ["pear", "كمثرى", "A1", "I ate a pear for lunch."],
   ["bear", "دبّ", "A2", "We saw a bear at the zoo."],
@@ -116,7 +116,6 @@ export const pB: readonly WordRow[] = [
   ["label", "ملصق", "B1", "Read the label before you buy."],
   ["global", "عالمي", "B2", "Climate change is a global problem."],
   ["tablet", "قرص دواء / جهاز لوحي", "A2", "Take one tablet after each meal."],
-  ["cupboard", "خزانة", "A2", "The cups are in the cupboard."],
   ["robber", "سارق", "B1", "The robber ran away."],
   ["upper", "علوي", "B2", "My office is on the upper floor."],
 ];

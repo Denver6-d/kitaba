@@ -34,6 +34,8 @@ interface Props {
   readonly onFinish: (state: GameState) => void;
   /** Label shown above the play area (mode or stage name). */
   readonly title: string;
+  /** Whether to show the Arabic meaning for a word in listen-like items (hints fade with mastery). */
+  readonly showMeaning: (wordId: string) => boolean;
 }
 
 const TICK_MS = 250;
@@ -53,7 +55,7 @@ const takesTyping = (item: GameItem | undefined) => item !== undefined && (item.
  * across typed items (DECISIONS B1), so focus and the first keystroke are
  * never lost between words.
  */
-export function GameSession({ items, config, words, onFinish, title }: Props) {
+export function GameSession({ items, config, words, onFinish, title, showMeaning }: Props) {
   const { t, lang, num } = useI18n();
   const [settings] = useSettings();
   const { status: voice, speak, usingOtherAccent } = useSpeech();
@@ -269,6 +271,7 @@ export function GameSession({ items, config, words, onFinish, title }: Props) {
             labels={{ fix: t.game.fixPrompt, fixWrong: t.game.fixWrongPick, missing: t.game.missingPrompt, scramble: t.game.scramblePrompt, choice: t.game.choicePrompt, sentence: t.game.sentencePrompt, meaning: t.game.meaning }}
             lang={lang}
             revealing={revealing}
+            meaningShown={showMeaning(item.wordId) || answered}
           />
 
           {listenLike && (
@@ -344,6 +347,7 @@ export function GameSession({ items, config, words, onFinish, title }: Props) {
 
           {verdict && <Feedback verdict={verdict} item={item} word={word} rule={info.rule[lang]} category={info.label[lang]} />}
 
+          {(answered || showInput) && (
           <div className="flex flex-wrap items-center gap-3 max-sm:sticky max-sm:bottom-0 max-sm:-mx-5 max-sm:border-t max-sm:border-rule max-sm:bg-sheet max-sm:px-5 max-sm:py-3">
             {answered ? (
               <Button ref={nextRef} size="lg" onMouseDown={showInput ? keepInputFocus : undefined} onClick={goNext} className="h-12 flex-1 px-8 text-base sm:flex-none">
@@ -369,6 +373,7 @@ export function GameSession({ items, config, words, onFinish, title }: Props) {
             )}
             {answered && showInput && <p className="text-sm text-ink-soft max-sm:hidden">{t.game.pressEnter}</p>}
           </div>
+          )}
         </>
       )}
     </section>
@@ -384,6 +389,7 @@ function Prompt({
   labels,
   lang,
   revealing,
+  meaningShown,
 }: {
   item: GameItem;
   word: SpellingWord;
@@ -393,6 +399,7 @@ function Prompt({
   labels: Record<"fix" | "fixWrong" | "missing" | "scramble" | "choice" | "sentence" | "meaning", string>;
   lang: "ar" | "en";
   revealing: boolean;
+  meaningShown: boolean;
 }) {
   const meaning = (
     <p className="text-hint">
@@ -476,7 +483,7 @@ function Prompt({
           </div>
         );
       }
-      return <div lang={lang}>{meaning}</div>;
+      return meaningShown ? <div lang={lang}>{meaning}</div> : null;
   }
 }
 
@@ -521,7 +528,7 @@ function Feedback({ verdict, item, word, rule, category }: { verdict: Verdict; i
   return (
     <div className={`space-y-3 rounded-xl border-s-4 p-4 ${verdict.correct ? "border-correct bg-[var(--correct-wash)]" : "border-error bg-[var(--error-wash)]"}`}>
       {verdict.correct ? (
-        <p className="text-lg font-semibold text-correct">{v === "other-variant" ? t.game.otherVariant(item.answer) : t.game.correct}</p>
+        <p className="answer-sweep inline-block pb-2 text-lg font-semibold text-correct">{v === "other-variant" ? t.game.otherVariant(item.answer) : t.game.correct}</p>
       ) : (
         <div className="space-y-2">
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">

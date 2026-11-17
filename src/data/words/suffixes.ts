@@ -75,7 +75,7 @@ export const suffixes: readonly WordRow[] = [
   ["ambitious", "طموح", "B2", "She is young and ambitious."],
   ["courteous", "مهذّب", "C1", "The waiter was courteous and quick."],
   ["gorgeous", "رائع الجمال", "B2", "What a gorgeous view!"],
-  ["outrageous", "فاضح / غير معقول", "C1", "The prices here are outrageous."],
+  ["outrageous", "مُشين / باهظ جدًّا", "C1", "The prices here are outrageous."],
   ["spontaneous", "عفوي", "C1", "We made a spontaneous trip to the coast."],
   ["simultaneous", "متزامن", "C1", "The talk had simultaneous translation."],
   ["grateful", "ممتنّ", "B1", "I am grateful for your help."],

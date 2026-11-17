@@ -6,6 +6,7 @@ import { spellingWordById } from "@/data/words";
 import { nextStageAfter, parseStageId } from "@/domain/games/campaign";
 import type { GameState } from "@/domain/games/engine";
 import { seededRng } from "@/domain/shared/random";
+import { hintLevel } from "@/domain/progress/hints";
 import { useI18n } from "@/i18n";
 import { useSettings } from "@/lib/settings-store";
 import { useRepoContext } from "@/repositories/provider";
@@ -80,7 +81,12 @@ export function GameRunner({ request, title, emptyText, emptyAction }: { request
         </EmptyBlock>
       );
     }
-    return <GameSession key={phase.round} items={phase.session.items} config={phase.session.config} words={spellingWordById} onFinish={onFinish} title={title} />;
+    const mastery = phase.session.mastery;
+    // Arabic hints fade as a word is mastered; sound-alikes keep theirs (the meaning tells them apart).
+    const showMeaning = (wordId: string) => spellingWordById.get(wordId)?.category === "homophones" || hintLevel(mastery[wordId] ?? 0) !== "none";
+    return (
+      <GameSession key={phase.round} items={phase.session.items} config={phase.session.config} words={spellingWordById} onFinish={onFinish} title={title} showMeaning={showMeaning} />
+    );
   }
 
   const stageId = phase.session.stageId;

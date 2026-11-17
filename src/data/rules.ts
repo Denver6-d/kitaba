@@ -22,7 +22,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
   homophones: {
     label: { ar: "كلمات متشابهة النطق", en: "Homophones and confusables" },
     rule: {
-      ar: "كلمات تُنطق متشابهة وتختلف في المعنى والكتابة. المعنى في الجملة هو الذي يحدد الكتابة.",
+      ar: "كلمات تتشابه في النطق وتختلف في المعنى والكتابة. المعنى في الجملة هو الذي يحدد الكتابة.",
       en: "These words sound alike but differ in meaning and spelling. The sentence decides which one you need.",
     },
   },
@@ -41,44 +41,44 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
     },
   },
   "ie-ei": {
-    label: { ar: "ie أم ei", en: "ie or ei" },
+    label: { ar: "الترتيب ie أم ei", en: "ie or ei" },
     rule: {
-      ar: "القاعدة الغالبة: i قبل e، إلا بعد c (receive)، أو إذا نُطقت مثل «اي» (eight). ولها استثناءات تُحفظ.",
+      ar: "القاعدة الغالبة: i قبل e، إلا بعد c (receive)، أو إذا نُطقت مثل «إيْ» (eight). ولها استثناءات تُحفظ.",
       en: "Usually i before e, except after c (receive) or when it sounds like 'ay' (eight). Some exceptions must be learned.",
     },
   },
   plurals: {
     label: { ar: "الجمع", en: "Plurals" },
     rule: {
-      ar: "نضيف s عادةً، وes بعد s وx وz وch وsh. الساكن ثم y يصبح ies. وبعض الكلمات جمعها شاذ.",
-      en: "Add s; add es after s, x, z, ch, sh; consonant + y becomes ies. Some plurals are irregular.",
+      ar: "نضيف s عادةً، وes بعد s وx وz وch وsh وبعد o في كلمات مثل potatoes. الساكن ثم y يصبح ies، وf أو fe تصبح ves غالبًا. وبعض الكلمات جمعها شاذ.",
+      en: "Add s; add es after s, x, z, ch, sh (and o in words like potatoes); consonant + y becomes ies; f or fe often becomes ves. Some plurals are irregular.",
     },
   },
   "verb-endings": {
-    label: { ar: "نهايات الأفعال ‎-ed و‎-ing", en: "-ed and -ing endings" },
+    label: { ar: "نهايات الأفعال ed وing", en: "-ed and -ing endings" },
     rule: {
-      ar: "احذف e الأخيرة قبل ‎-ing، وضاعف الحرف الساكن الأخير في الكلمات القصيرة (stop → stopping)، والساكن ثم y يصبح ied.",
+      ar: "احذف حرف e الأخير قبل ing، وضاعف الحرف الساكن الأخير في الكلمات القصيرة (stop → stopping)، والساكن ثم y يصبح ied.",
       en: "Drop a final e before -ing, double the last consonant in short words (stop → stopping), and consonant + y becomes ied.",
     },
   },
   "adverbs-ly": {
-    label: { ar: "الظروف ‎-ly", en: "-ly adverbs" },
+    label: { ar: "الظروف المنتهية بـ ly", en: "-ly adverbs" },
     rule: {
-      ar: "نضيف ly إلى الصفة كما هي (careful → carefully)، وy تصبح ily، وle تصبح ly.",
-      en: "Add ly to the whole adjective (careful → carefully); y becomes ily; le becomes ly.",
+      ar: "نضيف ly إلى الصفة كما هي (careful → carefully)، وy تصبح ily، وle تصبح ly، وic تصبح ically.",
+      en: "Add ly to the whole adjective (careful → carefully); y becomes ily; le becomes ly; ic becomes ically.",
     },
   },
   prefixes: {
     label: { ar: "البادئات", en: "Prefixes" },
     rule: {
-      ar: "البادئة تُضاف كما هي دون تغيير الكلمة، لذلك قد يتكرر الحرف: dis + satisfied ← dissatisfied.",
+      ar: "البادئة تُضاف كما هي دون تغيير الكلمة، لذلك قد يتكرر الحرف: dis + satisfied = dissatisfied.",
       en: "A prefix is added without changing the word, so letters can double: dis + satisfied = dissatisfied.",
     },
   },
   suffixes: {
     label: { ar: "اللواحق", en: "Suffixes" },
     rule: {
-      ar: "انتبه لنهاية الكلمة: ‎-able أم ‎-ible، ‎-ance أم ‎-ence، ‎-ment، ‎-tion. كثير منها يُحفظ بالشكل.",
+      ar: "انتبه لنهاية الكلمة: able أم ible، وance أم ence، وment، وtion. كثير منها يُحفظ بالشكل.",
       en: "Watch the ending: -able or -ible, -ance or -ence, -ment, -tion. Many must be learned by sight.",
     },
   },
@@ -90,16 +90,16 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
     },
   },
   "p-b": {
-    label: { ar: "P وB", en: "P and B" },
+    label: { ar: "الحرفان P وB", en: "P and B" },
     rule: {
       ar: "العربية ليس فيها صوت P. صوت P يخرج معه نفَس هواء، وB لا. ضع يدك أمام فمك لتشعر بالفرق.",
       en: "Arabic has no P sound. P comes with a puff of air; B does not. Feel it with your hand in front of your mouth.",
     },
   },
   "v-f": {
-    label: { ar: "V وF", en: "V and F" },
+    label: { ar: "الحرفان V وF", en: "V and F" },
     rule: {
-      ar: "V صوت مجهور تهتز معه الحنجرة، وF مهموس بلا اهتزاز. المس حلقك وأنت تنطق لتميّز بينهما.",
+      ar: "صوت V مجهور تهتز معه الحنجرة، وصوت F مهموس بلا اهتزاز. المس حلقك وأنت تنطق لتميّز بينهما.",
       en: "V is voiced (your throat vibrates); F is not. Touch your throat as you say it to tell them apart.",
     },
   },
@@ -113,8 +113,8 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
   "vowel-confusion": {
     label: { ar: "خلط e وi وa", en: "e, i and a confusion" },
     rule: {
-      ar: "الحروف المتحركة الضعيفة تُنطق متشابهة، فلا تعتمد على السمع. فكّر في كلمة من العائلة نفسها: separate من part.",
-      en: "Weak vowels sound alike, so don't spell by ear. Think of a related word: separate has 'a part' in it.",
+      ar: "الحروف المتحركة الضعيفة تُنطق متشابهة، فلا تعتمد على السمع. استعن بحيلة للتذكّر: في separate كلمة a part.",
+      en: "Weak vowels sound alike, so don't spell by ear. Use a memory trick: separate has 'a part' in it.",
     },
   },
 };

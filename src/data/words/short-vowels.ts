@@ -1,8 +1,8 @@
 import type { WordRow } from "./row";
 
 export const shortVowels: readonly WordRow[] = [
-  ["chocolate", "شوكولاتة", "A1", "I like dark chocolate.", { uk: "colour" }],
-  ["restaurant", "مطعم", "A1", "Let's eat at a restaurant.", { uk: "centre" }],
+  ["chocolate", "شوكولاتة", "A1", "I like dark chocolate."],
+  ["restaurant", "مطعم", "A1", "Let's eat at a restaurant."],
   ["interest", "اهتمام / فائدة", "B1", "Thank you for your interest."],
   ["family", "عائلة", "A1", "I love my family."],
   ["memory", "ذاكرة", "A2", "He has a good memory."],
@@ -18,11 +18,11 @@ export const shortVowels: readonly WordRow[] = [
   ["dollar", "دولار", "A1", "It costs one dollar."],
   ["doctor", "طبيب", "A1", "I need to see a doctor."],
   ["teacher", "معلّم", "A1", "My teacher is kind."],
-  ["color", "لون", "A1", "What color is your car?"],
+  ["color", "لون", "A1", "What color is your car?", { uk: "colour" }],
   ["calendar", "تقويم", "A2", "Check the calendar."],
   ["grammar", "القواعد", "A2", "English grammar is not easy."],
   ["sugar", "سكر", "A1", "No sugar, please."],
-  ["center", "مركز", "A2", "The shop is in the city center."],
+  ["center", "مركز", "A2", "The shop is in the city center.", { uk: "centre" }],
   ["minute", "دقيقة", "A1", "Wait a minute."],
   ["parent", "والد / والدة", "A2", "Each parent got a letter."],
   ["banana", "موز", "A1", "I eat a banana every morning."],
@@ -54,7 +54,7 @@ export const shortVowels: readonly WordRow[] = [
   ["vitamin", "فيتامين", "B1", "Oranges are full of vitamin C."],
   ["cinema", "سينما", "A1", "Let's go to the cinema tonight."],
   ["diploma", "دبلوم", "B1", "She has a diploma in nursing."],
-  ["pyramid", "هرم", "B1", "We visited the pyramid at Giza."],
+  ["pyramid", "هرم", "B1", "We visited a pyramid at Giza."],
   ["paragraph", "فقرة", "B1", "Write one paragraph about your town."],
   ["manager", "مدير", "A2", "I want to speak to the manager."],
   ["passenger", "راكب", "B1", "Every passenger must wear a seat belt."],

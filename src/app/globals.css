@@ -256,15 +256,46 @@ html[data-motion="reduce"] *::after {
   }
 }
 
-@keyframes caret-blink {
-  0% {
-    opacity: 1;
+/* Game feedback (DESIGN.md "Game feel"): a short shake for a wrong answer and a
+   brass underline sweep for a right one. Both collapse to nothing under reduced motion. */
+.answer-shake {
+  animation: answer-shake 320ms ease-out;
+}
+@keyframes answer-shake {
+  0%,
+  100% {
+    transform: translateX(0);
   }
-  50% {
-    opacity: 0;
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
   }
 }
-
+.answer-sweep {
+  position: relative;
+}
+.answer-sweep::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brass-fill);
+  transform-origin: left;
+  animation: rule-draw 180ms ease-out both;
+}
+[dir="rtl"] .answer-sweep::after {
+  transform-origin: right;
+}
 @keyframes rule-draw {
   from {
     transform: scaleX(0);

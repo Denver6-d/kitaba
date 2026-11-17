@@ -1,7 +1,7 @@
 import type { WordRow } from "./row";
 
 export const vowelConfusion: readonly WordRow[] = [
-  ["because", "لأنّ", "A1", "I was late because of the rain.", { uk: "favourite" }],
+  ["because", "لأنّ", "A1", "I was late because of the rain."],
   ["people", "ناس", "A1", "Many people work here."],
   ["beautiful", "جميل", "A1", "The garden is beautiful."],
   ["separate", "منفصل", "B1", "Keep the two files separate."],
@@ -11,7 +11,7 @@ export const vowelConfusion: readonly WordRow[] = [
   ["government", "الحكومة", "B1", "The government built a new road."],
   ["library", "مكتبة", "A2", "I study at the library."],
   ["probably", "على الأرجح", "A2", "It will probably rain today."],
-  ["favorite", "مفضّل", "A1", "Blue is my favorite color."],
+  ["favorite", "مفضّل", "A1", "Blue is my favorite color.", { uk: "favourite" }],
   ["mountain", "جبل", "A2", "We climbed the mountain."],
   ["breakfast", "الفطور", "A1", "I eat breakfast at seven."],
   ["build", "يبني", "A2", "They build houses."],
@@ -99,4 +99,12 @@ export const vowelConfusion: readonly WordRow[] = [
   ["cousin", "ابن العم / الخال", "A1", "My cousin lives in Dubai."],
   ["engine", "محرّك", "B1", "The engine is making a strange noise."],
   ["imagine", "يتخيّل", "A2", "Imagine a world without cars."],
+  ["science", "علم", "A2", "Science is my favorite subject."],
+  ["quiet", "هادئ", "A1", "Please be quiet in the library."],
+  ["diet", "نظام غذائي", "A2", "I am on a diet."],
+  ["society", "المجتمع", "B1", "Technology changed our society."],
+  ["variety", "تنوّع", "B1", "The menu offers a wide variety."],
+  ["anxiety", "قلق", "B2", "Exercise can reduce anxiety."],
+  ["client", "عميل", "B1", "I have a meeting with a client."],
+  ["alien", "غريب / كائن فضائي", "B1", "The film is about an alien."],
 ];

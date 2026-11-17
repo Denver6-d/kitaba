@@ -62,7 +62,7 @@ export const plurals: readonly WordRow[] = [
   ["crises", "أزمات", "C1", "The country survived several crises."],
   ["hypotheses", "فرضيات", "C1", "The scientist tested two hypotheses."],
   ["cacti", "صبّار (جمع)", "C1", "Cacti grow well in the desert."],
-  ["fungi", "فطريات", "C1", "Mushrooms are a kind of fungi."],
+  ["fungi", "فطريات", "C1", "Mushrooms are fungi."],
   ["nuclei", "أنوية", "C1", "The cells have large nuclei."],
   ["stimuli", "مثيرات", "C1", "The eye reacts to light stimuli."],
   ["appendices", "ملاحق", "C1", "The tables are in the appendices."],
@@ -102,6 +102,6 @@ export const plurals: readonly WordRow[] = [
   ["species", "أنواع (من الكائنات)", "B2", "Many species of birds live here."],
   ["series", "سلسلة / مسلسل", "B1", "I watched the whole series in a week."],
   ["sheep", "خراف", "A2", "The sheep are in the field."],
-  ["deer", "غزلان / أيائل", "B1", "We saw three deer in the forest."],
+  ["deer", "أيائل", "B1", "We saw three deer in the forest."],
   ["data", "بيانات", "B2", "The data shows a clear trend."],
 ];

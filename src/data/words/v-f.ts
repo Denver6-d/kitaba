@@ -1,7 +1,7 @@
 import type { WordRow } from "./row";
 
 export const vF: readonly WordRow[] = [
-  ["very", "جدًا", "A1", "It is very cold.", { uk: "favour" }],
+  ["very", "جدًا", "A1", "It is very cold."],
   ["vegetable", "خضار", "A2", "Eat a vegetable with every meal."],
   ["visit", "يزور", "A1", "We visit our family on Friday."],
   ["village", "قرية", "A2", "My grandfather lives in a village."],
@@ -26,9 +26,9 @@ export const vF: readonly WordRow[] = [
   ["invite", "يدعو", "A2", "I will invite all my friends."],
   ["develop", "يطوّر", "B1", "We develop mobile apps."],
   ["improve", "يحسّن", "B1", "I want to improve my English."],
-  ["favor", "معروف / خدمة", "B1", "Can you do me a favor?"],
+  ["favor", "معروف / خدمة", "B1", "Can you do me a favor?", { uk: "favour" }],
   ["festival", "مهرجان", "A2", "The festival is next week."],
-  ["vest", "صدرية / سترة بلا أكمام", "B1", "He wore a vest under his shirt."],
+  ["vest", "صدرية / سترة بلا أكمام", "B1", "He wore a warm vest over his shirt."],
   ["fast", "سريع", "A1", "This car is very fast."],
   ["vast", "شاسع", "B2", "The desert is vast and empty."],
   ["fine", "بخير / غرامة", "A1", "I am fine, thank you."],

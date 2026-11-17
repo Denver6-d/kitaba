@@ -28,6 +28,8 @@ export interface BuiltSession {
   readonly stageId: string | null;
   readonly mode: GameMode;
   readonly boss: boolean;
+  /** Mastery per word id when the session was built (Arabic hint fading). */
+  readonly mastery: Readonly<Record<string, number>>;
 }
 
 const UNTIMED: GameConfig = { durationMs: null, speedBonus: false };
@@ -76,6 +78,15 @@ export async function buildSession(
   req: GameRequest,
   deps: { readonly repos: Repositories; readonly meta: OutboxStore; readonly accent: Accent; readonly rng: Rng; readonly now: number },
 ): Promise<BuiltSession> {
+  const [session, all] = await Promise.all([buildItemsFor(req, deps), deps.repos.mastery.all().catch(() => ({}) as Record<string, number>)]);
+  const mastery = Object.fromEntries(Object.entries(all).filter(([k]) => k.startsWith("spell:")).map(([k, v]) => [k.slice(6), v]));
+  return { ...session, mastery };
+}
+
+async function buildItemsFor(
+  req: GameRequest,
+  deps: { readonly repos: Repositories; readonly meta: OutboxStore; readonly accent: Accent; readonly rng: Rng; readonly now: number },
+): Promise<Omit<BuiltSession, "mastery">> {
   const ctx = { accent: deps.accent, rng: deps.rng, bankSpellings };
   switch (req.kind) {
     case "stage": {
