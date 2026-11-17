@@ -1,0 +1,94 @@
+import type {
+  AchievementRecord,
+  ActivityKind,
+  ActivityRecord,
+  GhostRecord,
+  ProfileRecord,
+  ScenarioAttemptRecord,
+  SentenceAttemptRecord,
+  SrsCardRecord,
+  TestResultRecord,
+} from "@/domain/model";
+import type { KeyStats } from "@/domain/typing/key-stats";
+import type { GhostPoint } from "@/domain/typing/ghost";
+import type { PersonalBests } from "@/domain/typing/personal-best";
+import type { ExportFile } from "./export";
+
+/**
+ * Repository interfaces: the only persistence API the UI and features see.
+ * They do not know whether data lives in IndexedDB, in memory or in Supabase.
+ */
+
+export type NewTestResult = Omit<TestResultRecord, "id" | "updatedAt" | "deletedAt">;
+
+export interface SaveTestOutcome {
+  readonly record: TestResultRecord;
+  readonly isNewBest: boolean;
+  readonly previousBest: number | null;
+}
+
+export interface ProgressRepository {
+  saveTestResult(
+    result: NewTestResult,
+    extras: { readonly keyStats: KeyStats; readonly target: string; readonly ghost: readonly GhostPoint[] },
+  ): Promise<SaveTestOutcome>;
+  listResults(): Promise<TestResultRecord[]>;
+  personalBests(): Promise<PersonalBests>;
+  keyStats(): Promise<KeyStats>;
+  addKeyStats(stats: KeyStats): Promise<void>;
+  ghost(modeKey: string): Promise<GhostRecord | undefined>;
+}
+
+export interface ActivityRepository {
+  log(kind: ActivityKind, seconds: number, xp: number): Promise<void>;
+  list(): Promise<ActivityRecord[]>;
+}
+
+export interface WordRepository {
+  card(wordId: string): Promise<SrsCardRecord | undefined>;
+  saveCard(card: Omit<SrsCardRecord, "id" | "updatedAt">): Promise<void>;
+  allCards(): Promise<SrsCardRecord[]>;
+  dueCards(now: number): Promise<SrsCardRecord[]>;
+}
+
+export interface SentenceRepository {
+  saveAttempt(attempt: Omit<SentenceAttemptRecord, "id" | "updatedAt">): Promise<void>;
+  attempts(): Promise<SentenceAttemptRecord[]>;
+  mastery(itemKey: string): Promise<number>;
+  allMastery(): Promise<Record<string, number>>;
+  setMastery(itemKey: string, mastery: number): Promise<void>;
+}
+
+export interface ScenarioRepository {
+  saveAttempt(attempt: Omit<ScenarioAttemptRecord, "id" | "updatedAt">): Promise<void>;
+  attempts(): Promise<ScenarioAttemptRecord[]>;
+}
+
+export interface AchievementRepository {
+  list(): Promise<AchievementRecord[]>;
+  /** Unlocks the given ids (already-unlocked ids are left untouched). Returns the newly unlocked ids. */
+  unlock(ids: readonly string[]): Promise<string[]>;
+}
+
+export interface ProfileRepository {
+  get(): Promise<ProfileRecord>;
+  save(patch: Partial<Omit<ProfileRecord, "id" | "updatedAt">>): Promise<ProfileRecord>;
+}
+
+export interface DataRepository {
+  exportAll(): Promise<ExportFile>;
+  /** "merge" applies the sync merge rules; "replace" clears local data first. */
+  importAll(file: ExportFile, mode: "merge" | "replace"): Promise<void>;
+  clearAll(): Promise<void>;
+}
+
+export interface Repositories {
+  readonly progress: ProgressRepository;
+  readonly activity: ActivityRepository;
+  readonly words: WordRepository;
+  readonly sentences: SentenceRepository;
+  readonly scenarios: ScenarioRepository;
+  readonly achievements: AchievementRepository;
+  readonly profile: ProfileRepository;
+  readonly data: DataRepository;
+}
