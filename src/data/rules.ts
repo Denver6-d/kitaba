@@ -50,12 +50,12 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
   plurals: {
     label: { ar: "الجمع", en: "Plurals" },
     rule: {
-      ar: "نضيف s عادةً، وes بعد s وx وz وch وsh وبعد o في كلمات مثل potatoes. الساكن ثم y يصبح ies، وf أو fe تصبح ves غالبًا. وبعض الكلمات جمعها شاذ.",
+      ar: "نضيف s عادةً، و es بعد s و x و z و ch و sh وبعد o في كلمات مثل potatoes. الساكن ثم y يصبح ies، و f أو fe تصبح ves غالبًا. وبعض الكلمات جمعها شاذ.",
       en: "Add s; add es after s, x, z, ch, sh (and o in words like potatoes); consonant + y becomes ies; f or fe often becomes ves. Some plurals are irregular.",
     },
   },
   "verb-endings": {
-    label: { ar: "نهايات الأفعال ed وing", en: "-ed and -ing endings" },
+    label: { ar: "نهايات الأفعال ed و ing", en: "-ed and -ing endings" },
     rule: {
       ar: "احذف حرف e الأخير قبل ing، وضاعف الحرف الساكن الأخير في الكلمات القصيرة (stop → stopping)، والساكن ثم y يصبح ied.",
       en: "Drop a final e before -ing, double the last consonant in short words (stop → stopping), and consonant + y becomes ied.",
@@ -64,7 +64,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
   "adverbs-ly": {
     label: { ar: "الظروف المنتهية بـ ly", en: "-ly adverbs" },
     rule: {
-      ar: "نضيف ly إلى الصفة كما هي (careful → carefully)، وy تصبح ily، وle تصبح ly، وic تصبح ically.",
+      ar: "نضيف ly إلى الصفة كما هي (careful → carefully)، و y تصبح ily، و le تصبح ly، و ic تصبح ically.",
       en: "Add ly to the whole adjective (careful → carefully); y becomes ily; le becomes ly; ic becomes ically.",
     },
   },
@@ -78,26 +78,26 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
   suffixes: {
     label: { ar: "اللواحق", en: "Suffixes" },
     rule: {
-      ar: "انتبه لنهاية الكلمة: able أم ible، وance أم ence، وment، وtion. كثير منها يُحفظ بالشكل.",
+      ar: "انتبه لنهاية الكلمة: able أم ible، و ance أم ence، و ment، و tion. كثير منها يُحفظ بالشكل.",
       en: "Watch the ending: -able or -ible, -ance or -ence, -ment, -tion. Many must be learned by sight.",
     },
   },
   "british-american": {
     label: { ar: "البريطانية والأمريكية", en: "British and American" },
     rule: {
-      ar: "الأمريكية: color وcenter وorganize. البريطانية: colour وcentre وorganise. اختر نوعًا واحدًا والتزم به.",
+      ar: "الأمريكية: color و center و organize. البريطانية: colour و centre و organise. اختر نوعًا واحدًا والتزم به.",
       en: "American: color, center, organize. British: colour, centre, organise. Pick one and stay consistent.",
     },
   },
   "p-b": {
-    label: { ar: "الحرفان P وB", en: "P and B" },
+    label: { ar: "الحرفان P و B", en: "P and B" },
     rule: {
-      ar: "العربية ليس فيها صوت P. صوت P يخرج معه نفَس هواء، وB لا. ضع يدك أمام فمك لتشعر بالفرق.",
+      ar: "العربية ليس فيها صوت P. صوت P يخرج معه نفَس هواء، و B لا. ضع يدك أمام فمك لتشعر بالفرق.",
       en: "Arabic has no P sound. P comes with a puff of air; B does not. Feel it with your hand in front of your mouth.",
     },
   },
   "v-f": {
-    label: { ar: "الحرفان V وF", en: "V and F" },
+    label: { ar: "الحرفان V و F", en: "V and F" },
     rule: {
       ar: "صوت V مجهور تهتز معه الحنجرة، وصوت F مهموس بلا اهتزاز. المس حلقك وأنت تنطق لتميّز بينهما.",
       en: "V is voiced (your throat vibrates); F is not. Touch your throat as you say it to tell them apart.",
@@ -111,7 +111,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
     },
   },
   "vowel-confusion": {
-    label: { ar: "خلط e وi وa", en: "e, i and a confusion" },
+    label: { ar: "خلط e و i و a", en: "e, i and a confusion" },
     rule: {
       ar: "الحروف المتحركة الضعيفة تُنطق متشابهة، فلا تعتمد على السمع. استعن بحيلة للتذكّر: في separate كلمة a part.",
       en: "Weak vowels sound alike, so don't spell by ear. Use a memory trick: separate has 'a part' in it.",

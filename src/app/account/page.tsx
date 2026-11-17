@@ -19,11 +19,17 @@ export default function AccountPage() {
   return (
     <Page title={t.account.title} intro={t.account.intro} width="narrow">
       {!account.configured ? (
-        <div className="rounded-xl border border-dashed border-rule-strong p-6">
-          <p>{t.account.notConfigured}</p>
-          <Link href="/privacy" className="mt-3 inline-block text-sm text-brass underline underline-offset-4">
-            {t.nav.privacy}
-          </Link>
+        <div className="sheet space-y-4 p-6 sm:p-8">
+          <h2 className="text-xl font-semibold">{t.account.notConfiguredTitle}</h2>
+          <p className="text-ink-soft">{t.account.notConfigured}</p>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild className="h-11">
+              <Link href="/play">{t.nav.play}</Link>
+            </Button>
+            <Button asChild variant="outline" className="h-11">
+              <Link href="/privacy">{t.nav.privacy}</Link>
+            </Button>
+          </div>
         </div>
       ) : !account.ready ? (
         <LoadingBlock label={t.common.loading} />

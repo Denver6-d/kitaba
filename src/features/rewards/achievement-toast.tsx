@@ -25,7 +25,7 @@ export function AchievementToast() {
   }, [ids]);
 
   return (
-    <div role="status" aria-live="polite" className="no-print pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
+    <div role="status" aria-live="polite" className="no-print pointer-events-none fixed inset-x-0 bottom-20 z-50 md:bottom-4 flex justify-center px-4">
       {ids.length > 0 && (
         <Link
           href="/progress#achievements"

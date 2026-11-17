@@ -105,7 +105,7 @@ function Campaign({ stages }: { stages: Readonly<Record<string, StageRecord>> })
           const ids = Array.from({ length: STAGES_PER_WORLD }, (_, i) => stageId(w.n, i + 1));
           const stars = ids.reduce((n, id) => n + (stages[id]?.stars ?? 0), 0);
           return (
-            <li key={w.n} className={`sheet space-y-4 p-5 sm:p-6 ${open ? "" : "opacity-70"}`}>
+            <li key={w.n} className="sheet space-y-4 p-5 sm:p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="text-lg font-semibold">
                   <span className="text-ink-soft">{t.play.world(w.n)} · </span>
@@ -122,7 +122,7 @@ function Campaign({ stages }: { stages: Readonly<Record<string, StageRecord>> })
                   {t.play.worldLocked}
                 </p>
               )}
-              <ol className="grid grid-cols-5 gap-2 sm:gap-3 lg:grid-cols-10">
+              <ol className={`grid grid-cols-5 gap-2 sm:gap-3 lg:grid-cols-10 ${open ? "" : "opacity-60"}`}>
                 {ids.map((id, i) => {
                   const unlocked = isStageUnlocked(id, stages);
                   const s = stages[id]?.stars ?? 0;
@@ -215,15 +215,18 @@ function FreePlay() {
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FREE_MODES.map((m: FreeMode) => (
           <li key={m}>
-            <Link
-              href={count === 0 ? "#" : freePlayHref(m, lvl, cat)}
-              aria-disabled={count === 0}
-              className="sheet flex h-full flex-col gap-2 p-5 transition-colors hover:border-brass-fill"
-            >
-              <span className="text-lg font-semibold">{t.modes[m]?.name}</span>
-              <span className="text-ink-soft">{t.modes[m]?.desc}</span>
-              {m === "bee" && <span className="mt-auto text-sm text-brass">{num(60)} {t.common.seconds}</span>}
-            </Link>
+            {count === 0 ? (
+              <div aria-disabled="true" className="sheet flex h-full flex-col gap-2 p-5 opacity-60">
+                <span className="text-lg font-semibold">{t.modes[m]?.name}</span>
+                <span className="text-ink-soft">{t.game.empty}</span>
+              </div>
+            ) : (
+              <Link href={freePlayHref(m, lvl, cat)} className="sheet flex h-full flex-col gap-2 p-5 transition-colors hover:bg-brass-wash">
+                <span className="text-lg font-semibold">{t.modes[m]?.name}</span>
+                <span className="text-ink-soft">{t.modes[m]?.desc}</span>
+                {m === "bee" && <span className="mt-auto text-sm text-brass">{num(60)} {t.common.seconds}</span>}
+              </Link>
+            )}
           </li>
         ))}
       </ul>

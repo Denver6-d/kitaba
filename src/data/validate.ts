@@ -52,7 +52,7 @@ export function validateContent(words: readonly SpellingWord[], requiredIds: rea
     if (findWordToken(w.example.split(" "), w.word) === -1) issues.push(`${w.id}: example does not contain "${w.word}" as a whole word`);
     if (w.uk !== undefined && w.uk === w.word) issues.push(`${w.id}: uk spelling equals the American one`);
     // A British form is a small change of the same word (colour/color, organise/organize, aeroplane/airplane).
-    if (w.uk !== undefined && charDistance(w.uk, w.word) > Math.max(3, Math.floor(w.word.length / 2)))
+    if (w.uk !== undefined && charDistance(w.uk, w.word) > 4)
       issues.push(`${w.id}: uk spelling "${w.uk}" is not a variant of "${w.word}"`);
     if (w.category === "british-american" && !w.uk) issues.push(`${w.id}: british-american word needs a uk spelling`);
     if (w.category === "homophones" && (!w.confusables || w.confusables.length === 0)) issues.push(`${w.id}: homophone needs confusables`);

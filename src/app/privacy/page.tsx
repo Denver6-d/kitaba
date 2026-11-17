@@ -28,6 +28,7 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
         title: "في السحابة (فقط إذا أنشأت حسابًا)",
         items: [
           "بريدك الإلكتروني وكلمة المرور (مشفّرة) لدى خدمة المصادقة Supabase Auth.",
+          "إذا دخلت عبر Google أو GitHub: تحفظ Supabase Auth بريدك واسمك وصورة حسابك كما يرسلها مزوّد الخدمة. لا نطلب صلاحيات أخرى، ولا نرى كلمة مرورك عند ذلك المزوّد.",
           "نسخة من سجلات التقدّم المذكورة أعلاه لمزامنتها بين أجهزتك. كل صف مرتبط بحسابك، وقواعد قاعدة البيانات (Row Level Security) تمنع أي مستخدم آخر من قراءته.",
           "ملفات تعريف الارتباط الوحيدة هي ملفات جلسة تسجيل الدخول التي تحتاجها Supabase.",
         ],
@@ -76,6 +77,7 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
         title: "In the cloud (only if you create an account)",
         items: [
           "Your email address and password (hashed) with the Supabase Auth service.",
+          "If you sign in with Google or GitHub: Supabase Auth stores the email, name and avatar the provider sends. We ask for no other permissions and never see your password there.",
           "A copy of the progress records above, to sync them across your devices. Every row is tied to your account, and database rules (Row Level Security) stop any other user from reading it.",
           "The only cookies are the sign-in session cookies Supabase needs.",
         ],

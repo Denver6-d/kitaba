@@ -21,9 +21,8 @@
   color-scheme: light;
   --paper: #eef1ec;
   --sheet: #f8faf6;
-  --sheet-glass: rgb(248 250 246 / 0.72);
   --ink: #14302e;
-  --ink-soft: #4c625f;
+  --ink-soft: #566b67;
   --rule: #ccd6cf;
   --rule-strong: #a9b8ae;
   --brass: #86600f;
@@ -71,9 +70,8 @@
   color-scheme: dark;
   --paper: #0d1c1b;
   --sheet: #132625;
-  --sheet-glass: rgb(19 38 37 / 0.72);
   --ink: #e4ebe5;
-  --ink-soft: #9db0ab;
+  --ink-soft: #93a7a2;
   --rule: #24403d;
   --rule-strong: #35534f;
   --brass: #d9ae52;
@@ -156,8 +154,9 @@
   * {
     @apply border-border;
   }
+  /* Body text: 17 px on phones, 18 px from 768 px up (DESIGN.md "Type"), scaled by the text-size setting. */
   html {
-    font-size: calc(100% * var(--text-scale));
+    font-size: calc(106.25% * var(--text-scale));
     font-family: var(--font-ui);
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
@@ -196,16 +195,17 @@
   }
 }
 
+@media (min-width: 768px) {
+  html {
+    font-size: calc(112.5% * var(--text-scale));
+  }
+}
+
 @layer utilities {
   .sheet {
     background: var(--sheet);
     box-shadow: var(--shadow-sheet);
     border-radius: 1rem;
-  }
-  .glass {
-    background: var(--sheet-glass);
-    backdrop-filter: blur(14px) saturate(1.2);
-    -webkit-backdrop-filter: blur(14px) saturate(1.2);
   }
   .tabular {
     font-variant-numeric: tabular-nums;

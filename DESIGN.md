@@ -19,7 +19,7 @@ The design borrows the **baseline rule** and the **nib** from the notebook, not 
 | `--paper` | `#EEF1EC` | `#0D1C1B` | page background |
 | `--sheet` | `#F8FAF6` | `#132625` | raised surfaces, header, menu |
 | `--ink` | `#14302E` | `#E4EBE5` | primary text |
-| `--ink-soft` | `#566B67` (V2, ≈ 5.1:1 on paper) | `#93A7A2` (V2, ≈ 7.2:1 on paper) | secondary text: lighter than V1, still ≥ 4.5:1 |
+| `--ink-soft` | `#566B67` (V2: 5.0:1 on paper, 5.4:1 on sheet) | `#93A7A2` (V2: 6.9:1 on paper, 6.2:1 on sheet) | secondary text: lighter than V1, still ≥ 4.5:1 |
 | `--rule` | `#CCD6CF` | `#24403D` | baseline rules, borders |
 | `--brass` | `#86600F` (text-safe) / fill `#C8962E` | `#D9AE52` | the one accent: stars, focus, combo, highlights |
 | `--correct` | `#2F6B4F` | `#7CC3A0` | correct letters |

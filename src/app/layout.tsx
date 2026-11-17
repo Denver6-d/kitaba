@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/shell/site-header";
 import { SiteFooter } from "@/components/shell/site-footer";
+import { BottomNav } from "@/components/shell/bottom-nav";
 import { PRE_PAINT_SCRIPT } from "@/lib/settings";
 import { ar } from "@/i18n/ar";
 import { PRODUCT_NAME } from "@/config/brand";
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </main>
           <SiteFooter />
+          <BottomNav />
         </Providers>
       </body>
     </html>

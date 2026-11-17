@@ -43,7 +43,7 @@ export function GameView() {
         {t.play.lockedHint}
       </EmptyBlock>
     );
-  } else body = <GameRunner request={request} title={title} />;
+  } else body = <GameRunner key={JSON.stringify(request)} request={request} title={title} />;
 
   return (
     <div className="mx-auto max-w-3xl px-4 pt-6 pb-10 sm:px-6 sm:pt-10">

@@ -6,9 +6,13 @@ import { useI18n } from "@/i18n";
 import { Page, LoadingBlock, ErrorBlock } from "@/components/page";
 import { useAccount } from "@/features/account/account-provider";
 import { safeNext } from "@/lib/safe-next";
+import { callbackProblem } from "@/lib/auth-redirect";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 /**
- * Email links (sign-up confirmation, magic link, password reset) land here.
+ * Email links (sign-up confirmation, magic link, password reset) and the
+ * Google / GitHub OAuth return land here.
  * The browser client finishes the PKCE exchange from the ?code= parameter on
  * its own (detectSessionInUrl); we wait for the session, then move on.
  */
@@ -19,7 +23,8 @@ export function CallbackView() {
   const router = useRouter();
   const [failed, setFailed] = useState(false);
   const next = safeNext(params.get("next"));
-  const errorParam = params.get("error_description") ?? params.get("error");
+  const problem = callbackProblem(params);
+  const errorParam = problem !== null;
 
   useEffect(() => {
     if (user) router.replace(next);
@@ -33,8 +38,15 @@ export function CallbackView() {
 
   return (
     <Page title={t.account.title} width="narrow">
-      {errorParam || failed || (ready && !client) ? (
-        <ErrorBlock title={t.common.errorTitle} body={t.account.errors.generic} />
+      {problem === "cancelled" ? (
+        <div className="space-y-4">
+          <p>{t.account.oauthCancelled}</p>
+          <Button asChild className="h-11">
+            <Link href="/account">{t.account.signIn}</Link>
+          </Button>
+        </div>
+      ) : errorParam || failed || (ready && !client) ? (
+        <ErrorBlock title={t.common.errorTitle} body={t.account.oauthError} />
       ) : (
         <LoadingBlock label={t.common.loading} />
       )}

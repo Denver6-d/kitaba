@@ -18,8 +18,8 @@
 - [x] Campaign map, daily challenge, free play filters, Arabic hint fading, celebration, leaderboard flow
 
 ## Phase D: navigation, responsive, login, design, copy
-- [ ] Hamburger menu (focus trap, Esc, outside click, RTL/LTR), bottom bar, footer
-- [ ] Responsive at 360/390/768/1280/1920, both themes and directions; mobile inputs above the keyboard
-- [ ] Google + GitHub OAuth, safe redirects, tests; README OAuth steps in Arabic
-- [ ] Bigger body text, lighter secondary text, opaque header, wide landing, empty states, copy
-- [ ] Final report + Arabic manual test checklist
+- [x] Hamburger menu (focus trap, Esc, outside click, RTL/LTR), bottom bar, footer
+- [x] Responsive at 360/390/768/1280/1920, both themes and directions; mobile inputs above the keyboard
+- [x] Google + GitHub OAuth, safe redirects, tests; README OAuth steps in Arabic
+- [x] Bigger body text, lighter secondary text, opaque header, wide landing, empty states, copy
+- [x] Final report + Arabic manual test checklist (tasks/manual-test-checklist-ar.md)
