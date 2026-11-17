@@ -6,17 +6,27 @@ import { recordGhost } from "@/domain/typing/ghost";
 import { modeKey, type TestSource } from "@/domain/typing/personal-best";
 import { xpFor } from "@/domain/progress/levels";
 import { useRepos } from "@/repositories/provider";
-import type { SaveTestOutcome } from "@/repositories/types";
+import type { SaveTestOutcome, SubmitStatus } from "@/repositories/types";
 import { useAchievementCheck } from "@/features/rewards/use-achievement-check";
+import { useLeaderboardSubmit } from "@/features/leaderboard/use-leaderboard";
 import type { FinishedSession } from "./use-typing-session";
 
-/** Persists a finished typing session: result, key stats, ghost, activity and achievements. */
+export interface SavedTypingResult extends SaveTestOutcome {
+  /** Leaderboard submission (opted-in learners, standard timed tests). Runs after the local save and never rejects. */
+  readonly leaderboard: Promise<SubmitStatus | null>;
+}
+
+/**
+ * Persists a finished typing session: result, key stats, ghost, activity and achievements.
+ * The local save never waits for the network.
+ */
 export function useSaveTypingResult() {
   const repos = useRepos();
   const checkAchievements = useAchievementCheck();
+  const submitScore = useLeaderboardSubmit();
 
   return useCallback(
-    async (session: FinishedSession, source: TestSource, duration: number): Promise<SaveTestOutcome> => {
+    async (session: FinishedSession, source: TestSource, duration: number): Promise<SavedTypingResult> => {
       const { state, metrics } = session;
       const outcome = await repos.progress.saveTestResult(
         {
@@ -41,8 +51,13 @@ export function useSaveTypingResult() {
         xpFor({ kind: "typing-test", chars: metrics.correctChars, accuracy: metrics.accuracy }),
       );
       await checkAchievements();
-      return outcome;
+      // Real elapsed time: a timed test ends early when the text runs out.
+      const leaderboard =
+        duration > 0
+          ? submitScore(source, { wpm: metrics.netWpm, accuracy: metrics.accuracy, durationS: metrics.elapsedMs / 1000, chars: metrics.correctChars })
+          : Promise.resolve(null);
+      return { ...outcome, leaderboard };
     },
-    [repos, checkAchievements],
+    [repos, checkAchievements, submitScore],
   );
 }

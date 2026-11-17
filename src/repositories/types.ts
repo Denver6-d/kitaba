@@ -92,3 +92,35 @@ export interface Repositories {
   readonly profile: ProfileRepository;
   readonly data: DataRepository;
 }
+
+/** Public leaderboard row: nickname, score and date only (the SQL views expose nothing else). */
+export interface PublicScore {
+  readonly rank: number;
+  readonly nickname: string;
+  readonly wpm: number;
+  readonly accuracy: number;
+  readonly achievedAt: string;
+}
+
+export type SubmitStatus = "ok" | "not_opted_in" | "too_short" | "low_accuracy" | "implausible" | "rate_limited" | "error";
+export type NicknameStatus = "ok" | "length" | "chars" | "blocked" | "taken" | "error";
+
+export interface ScoreSubmission {
+  readonly wpm: number;
+  readonly accuracy: number;
+  readonly durationS: number;
+  /** Correct characters typed. */
+  readonly chars: number;
+}
+
+/** Opt-in public leaderboard (cloud only; exists only when accounts are configured). */
+export interface LeaderboardRepository {
+  top(board: "weekly" | "all"): Promise<PublicScore[]>;
+  /** The caller's nickname, or null when not on the board. */
+  myNickname(): Promise<string | null>;
+  /** Join the board, or change the nickname. */
+  setNickname(nickname: string): Promise<NicknameStatus>;
+  /** Leave the board: removes the nickname and every score. */
+  leave(): Promise<void>;
+  submit(score: ScoreSubmission): Promise<SubmitStatus>;
+}

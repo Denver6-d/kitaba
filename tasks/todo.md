@@ -37,9 +37,9 @@ Each task: verify with `npm run typecheck && npm test` (domain) and `npm run bui
 - [x] CHECKPOINT P4 (+ security review)
 
 ## Phase 5 — Leaderboard
-- [ ] 23 Leaderboard SQL + RLS tests
-- [ ] 24 Nickname + plausibility + UI
-- [ ] CHECKPOINT P5 (+ security + performance review)
+- [x] 23 Leaderboard SQL + RLS tests
+- [x] 24 Nickname + plausibility + UI
+- [x] CHECKPOINT P5 (+ security + performance review)
 
 ## Finish
-- [ ] 25 README, DECISIONS, Lighthouse attempt, final report
+- [x] 25 README, DECISIONS, Lighthouse attempt, final report

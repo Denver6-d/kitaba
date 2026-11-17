@@ -8,19 +8,21 @@ import { useI18n } from "@/i18n";
 import { AnimatedNumber } from "@/components/animated-number";
 import { LineChart } from "@/components/line-chart";
 import { Button } from "@/components/ui/button";
-import type { SaveTestOutcome } from "@/repositories/types";
+import type { SaveTestOutcome, SubmitStatus } from "@/repositories/types";
 import type { FinishedSession } from "./use-typing-session";
 import { ShareResultButton } from "@/features/rewards/share-result";
 
 interface Props {
   readonly session: FinishedSession;
   readonly outcome: SaveTestOutcome | null;
+  /** Result of the leaderboard submission, once it is known (null: nothing was sent). */
+  readonly leaderboard?: SubmitStatus | null;
   readonly onAgain: () => void;
   readonly modeLabel: string;
   readonly saveFailed?: boolean;
 }
 
-export function ResultsPanel({ session, outcome, onAgain, modeLabel, saveFailed = false }: Props) {
+export function ResultsPanel({ session, outcome, leaderboard = null, onAgain, modeLabel, saveFailed = false }: Props) {
   const { t, num, pct } = useI18n();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const { metrics, state } = session;
@@ -78,6 +80,11 @@ export function ResultsPanel({ session, outcome, onAgain, modeLabel, saveFailed 
           {saveFailed && (
             <p role="alert" className="rounded-lg bg-[var(--error-wash)] p-3 text-sm text-error">
               {t.results.saveFailed}
+            </p>
+          )}
+          {leaderboard && leaderboard !== "error" && (
+            <p role="status" className="text-sm text-ink-soft">
+              {leaderboard === "ok" ? t.leaderboard.submitted : (t.leaderboard.rejected[leaderboard] ?? "")}
             </p>
           )}
           {state.layoutMismatches > 0 && <p className="text-sm text-ink-soft">{t.results.layoutNote(state.layoutMismatches)}</p>}

@@ -30,7 +30,7 @@ export function SiteHeader() {
         {t.nav.skip}
       </a>
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
-        <Link href="/" className="rounded-md py-1" aria-label={t.common.appName}>
+        <Link href="/" className="rounded-md py-1">
           <Logo />
         </Link>
 
@@ -61,11 +61,11 @@ export function SiteHeader() {
           <button
             type="button"
             onClick={() => setLang(lang === "ar" ? "en" : "ar")}
-            aria-label={t.nav.switchLangLabel}
-            lang={lang === "ar" ? "en" : "ar"}
             className="rounded-md px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-muted hover:text-ink"
           >
-            {t.nav.switchLang}
+            {/* The accessible name starts with the visible text (WCAG 2.5.3), then explains the action. */}
+            <span lang={lang === "ar" ? "en" : "ar"}>{t.nav.switchLang}</span>
+            <span className="sr-only"> ({t.nav.switchLangLabel})</span>
           </button>
           <button
             type="button"

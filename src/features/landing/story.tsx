@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useI18n } from "@/i18n";
-import { prefersReducedMotion } from "@/lib/settings";
+import { useReducedMotion } from "@/lib/use-hydrated";
 import { KeyboardSvg } from "@/features/keyboard/keyboard-svg";
 import type { KeyStats } from "@/domain/typing/key-stats";
 
@@ -14,18 +14,20 @@ const DEMO_STATS: KeyStats = {
 };
 
 /**
- * Three-beat story. Default markup is a plain stacked layout (works with no JS
- * and with reduced motion). When motion is allowed on wide screens, GSAP
- * ScrollTrigger (loaded on demand) makes the visual column sticky and
- * cross-fades one visual per beat, scrubbed by scroll.
+ * Three-beat story. Default markup is a plain stacked layout (reduced motion,
+ * narrow screens). On wide screens with motion allowed, CSS (the story-wide
+ * variant) switches to a sticky visual column before first paint, and GSAP
+ * ScrollTrigger (loaded on demand) only cross-fades one visual per beat, so
+ * loading it never moves the layout.
  */
 export function Story() {
   const { t } = useI18n();
   const root = useRef<HTMLElement>(null);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     const el = root.current;
-    if (!el || prefersReducedMotion()) return;
+    if (!el || reduced) return;
     let cleanup = () => {};
     let cancelled = false;
     void (async () => {
@@ -34,7 +36,6 @@ export function Story() {
       gsap.registerPlugin(ScrollTrigger);
       const mm = gsap.matchMedia();
       mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
-        el.dataset.enhanced = "true";
         const visuals = gsap.utils.toArray<HTMLElement>("[data-visual]", el);
         const beats = gsap.utils.toArray<HTMLElement>("[data-beat]", el);
         gsap.set(visuals, { autoAlpha: 0, y: 16 });
@@ -58,9 +59,6 @@ export function Story() {
           { clipPath: "inset(0 100% 0 0)" },
           { clipPath: "inset(0 0% 0 0)", ease: "none", scrollTrigger: { trigger: beats[0] ?? el, start: "top 70%", end: "center 45%", scrub: true } },
         );
-        return () => {
-          delete el.dataset.enhanced;
-        };
       });
       cleanup = () => mm.revert();
     })();
@@ -68,7 +66,7 @@ export function Story() {
       cancelled = true;
       cleanup();
     };
-  }, []);
+  }, [reduced]);
 
   const visuals = [
     <figure key="v1" className="sheet space-y-4 p-6" dir="ltr" lang="en">
@@ -104,12 +102,12 @@ export function Story() {
   ];
 
   return (
-    <section ref={root} aria-labelledby="story-h" className="group/story mx-auto max-w-6xl px-4 sm:px-6">
+    <section ref={root} aria-labelledby="story-h" className="mx-auto max-w-6xl px-4 sm:px-6">
       <h2 id="story-h" className="mb-12 max-w-xl text-3xl font-bold tracking-tight sm:text-4xl">
         {t.home.storyTitle}
       </h2>
-      <div className="grid gap-12 group-data-[enhanced=true]/story:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        <ol className="space-y-16 group-data-[enhanced=true]/story:space-y-[38vh] group-data-[enhanced=true]/story:py-[18vh]">
+      <div className="grid gap-12 story-wide:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <ol className="space-y-16 story-wide:space-y-[38vh] story-wide:py-[18vh]">
           {beats.map((b, i) => (
             <li key={b.title} data-beat className="max-w-md space-y-3">
               <p className="font-latin-display text-sm text-brass" aria-hidden="true">
@@ -118,14 +116,15 @@ export function Story() {
               <h3 className="text-2xl font-semibold">{b.title}</h3>
               <p className="text-ink-soft">{b.body}</p>
               {/* Inline visual for the stacked (default) layout. */}
-              <div className="pt-4 group-data-[enhanced=true]/story:hidden">{visuals[i]}</div>
+              <div className="pt-4 story-wide:hidden">{visuals[i]}</div>
             </li>
           ))}
         </ol>
-        <div className="hidden group-data-[enhanced=true]/story:block" aria-hidden="true">
+        <div className="hidden story-wide:block" aria-hidden="true">
+          {/* Only the first visual shows until GSAP takes over the cross-fade. */}
           <div className="sticky top-[22vh] grid">
             {visuals.map((v, i) => (
-              <div key={i} data-visual className="col-start-1 row-start-1">
+              <div key={i} data-visual className="col-start-1 row-start-1 not-first:invisible">
                 {v}
               </div>
             ))}

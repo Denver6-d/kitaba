@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useClientSeed, useHydrated } from "@/lib/use-hydrated";
 import { seededRng } from "@/domain/shared/random";
 import { hintLevel, nextMastery } from "@/domain/progress/hints";
@@ -8,7 +8,7 @@ import { modeKey, TEST_DURATIONS, type TestDuration } from "@/domain/typing/pers
 import type { TestText } from "@/domain/typing/text";
 import { useI18n } from "@/i18n";
 import { useRepoQuery, useRepos } from "@/repositories/provider";
-import type { SaveTestOutcome } from "@/repositories/types";
+import type { SaveTestOutcome, SubmitStatus } from "@/repositories/types";
 import { Page, LoadingBlock } from "@/components/page";
 import { Segmented } from "@/components/segmented";
 import { TypingRun } from "@/features/typing/typing-run";
@@ -29,6 +29,9 @@ export default function PracticePage() {
   const [finished, setFinished] = useState<FinishedSession | null>(null);
   const [outcome, setOutcome] = useState<SaveTestOutcome | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<SubmitStatus | null>(null);
+  // A late leaderboard answer must not land on the next test.
+  const testRef = useRef(0);
 
   const key = modeKey(source, duration);
   const profile = useRepoQuery((r) => r.profile.get());
@@ -48,6 +51,8 @@ export default function PracticePage() {
     setFinished(null);
     setOutcome(null);
     setSaveFailed(false);
+    setLeaderboard(null);
+    testRef.current += 1;
     setNonce((n) => n + 1);
   }, []);
 
@@ -55,8 +60,12 @@ export default function PracticePage() {
     (session: FinishedSession) => {
       setFinished(session);
       (async () => {
+        const test = testRef.current;
         const result = await save(session, source, duration);
         setOutcome(result);
+        void result.leaderboard.then((s) => {
+          if (testRef.current === test) setLeaderboard(s);
+        });
         // Sentences typed without a mistake count toward fading their Arabic hint.
         if (text) {
           for (const seg of text.segments) {
@@ -84,6 +93,7 @@ export default function PracticePage() {
         <ResultsPanel
           session={finished}
           outcome={outcome}
+          leaderboard={leaderboard}
           onAgain={newTest}
           saveFailed={saveFailed}
           modeLabel={`${t.test.sources[source]} · ${num(duration)} ${t.common.seconds}`}

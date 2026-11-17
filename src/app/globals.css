@@ -4,6 +4,15 @@
 
 /* Theme is chosen by data-theme on <html> (set before paint by an inline script). */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+/* Landing story, wide layout: decided by CSS before first paint (no layout shift when GSAP loads).
+   Must match the GSAP matchMedia condition in features/landing/story.tsx. */
+@custom-variant story-wide {
+  @media (min-width: 900px) and (prefers-reduced-motion: no-preference) {
+    &:where(:root:not([data-motion="reduce"]) *) {
+      @slot;
+    }
+  }
+}
 
 /* ---------------------------------------------------------------------------
    Design tokens (see DESIGN.md). Kitaba names first, shadcn aliases after.

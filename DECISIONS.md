@@ -137,3 +137,37 @@ Choices made while building Kitaba where the brief left room for interpretation.
   - Passwords are limited to 72 UTF-8 bytes (bcrypt's limit) rather than 72 characters.
   - `safeNext` also rejects control characters, which the URL parser strips (`/\t/evil.com` would become `//evil.com`). It then re-parses the path against a fixed origin.
   - Pulled records are compared with key-order-independent JSON, because jsonb reorders keys. Without this, every pull would look like a change.
+
+## Phase 5: leaderboard
+
+- **L1. Opt-in by choosing a nickname.** Nothing about a user is public until they join with a nickname. A `leaderboard_profiles` row *is* the opt-in. Leaving (`leave_leaderboard()`) deletes the nickname and every score at once, so the user is gone from both boards immediately. Rejoining starts from zero. Leaving asks for a confirmation click.
+- **L2. Writes only through `SECURITY DEFINER` functions.** `submit_score()`, `set_leaderboard_nickname()` and `leave_leaderboard()` only ever touch `auth.uid()`. Clients have `select` on their own rows only, with no insert, update or delete grant. The public reads two views, `leaderboard_weekly` and `leaderboard_all_time`. They run as their owner and expose `rank, nickname, wpm, accuracy, achieved_at` only: no user id and no email. Each shows the best score per user, top 100. The weekly board starts on Monday 00:00 UTC.
+- **L3. Plausibility checks (SQL is the authority, `domain/leaderboard/plausibility.ts` mirrors it).** A test checks that both use the same thresholds:
+  - the user has opted in;
+  - the test lasted at least 30 s;
+  - accuracy is at least 90%;
+  - WPM is at most 250;
+  - the WPM follows from the characters and the duration, within max(2, 10%);
+  - at most 1 score per 20 s and 60 per day.
+
+  A per-user advisory lock serialises submissions, so parallel requests cannot slip past the rate limit. The UI says plainly that client-reported scores cannot be made fully cheat-proof.
+- **L4. What competes.** Only the standard timed tests (words and sentences, 30 s or 60 s) are submitted. Custom text could be chosen to be easy, and drills, lessons and the diagnostic are not like-for-like; 15 s tests are below the minimum. The duration sent is the real elapsed time, because a timed test ends early when the text runs out. Nothing is sent for users who have not joined: the client checks the nickname first. The local save never waits for the network. The result line ("sent" or the reason it was refused) appears when the answer arrives, and network errors stay silent.
+- **L5. Nicknames.**
+  - 3–20 characters: Latin letters, digits, space, `_` and `-`, plus the Arabic letters ء–ي. Whitespace runs collapse to one space.
+  - Unique regardless of letter case.
+  - A basic blocked-word list (reserved names, common English and Arabic insults) is matched as substrings after normalisation: lower case, leetspeak (`0→o, 1→i, 3→e, 4→a, 5→s, 7→t, @→a, $→s, !→i`) and separators removed. It is deliberately basic and catches common words, not every insult.
+  - The SQL seed and the TypeScript list are kept identical by a test.
+  - Nicknames are rendered as text inside `<bdi>`, so a mixed-direction name cannot reorder the row.
+- **L6. No offline queue for scores.** A score submitted while offline is simply not sent. Queueing scores would let a stale or replayed result arrive later and would complicate the rate limit, for little benefit.
+
+## Finish
+
+- **F1. Measurements (2026-11-17, production build, landing page, local headless Chrome).** These came from `chrome-devtools-mcp@1.13.0`'s CLI with the T2 privacy flags.
+  - **Lighthouse, mobile and desktop:** Accessibility 100, Best Practices 100, SEO 100.
+  - **Lighthouse Performance: not measured.** This tool's Lighthouse run leaves the performance category out. It also refuses network throttling while the localhost-only URL allowlist is on, and the allowlist was kept.
+  - **Performance traces instead (no network throttling):**
+    - desktop 1280 px: LCP 1.45 s, CLS 0.00;
+    - mobile 412 px with 4× CPU slowdown: LCP 3.72 s, almost all of it render delay, CLS 0.00.
+  - Measuring fixed two problems:
+    - The landing story switched layout only after GSAP had loaded, which caused CLS 0.10. A CSS variant (`story-wide`) now picks the layout before first paint, and GSAP only cross-fades.
+    - Two header controls had accessible names that didn't contain their visible text (WCAG 2.5.3).

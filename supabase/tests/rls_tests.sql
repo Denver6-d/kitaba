@@ -127,8 +127,36 @@ do $$ begin
   exception when insufficient_privilege then null;
   end;
 
-  -- Public views expose nickname/score/date only.
+  -- Nicknames: unique ignoring case, blocked words refused (even disguised), invalid characters refused.
+  perform pg_temp.act_as('00000000-0000-4000-8000-00000000000b');
+  if (public.set_leaderboard_nickname('test_a')) ->> 'status' <> 'taken' then raise exception 'duplicate nickname accepted'; end if;
+  if (public.set_leaderboard_nickname('Sh1t Head')) ->> 'status' <> 'blocked' then raise exception 'blocked nickname accepted'; end if;
+  if (public.set_leaderboard_nickname('<b>hi</b>')) ->> 'status' <> 'chars' then raise exception 'markup nickname accepted'; end if;
+  if (public.set_leaderboard_nickname('ab')) ->> 'status' <> 'length' then raise exception 'short nickname accepted'; end if;
+
+  -- B cannot see A's profile or scores directly, nor the blocked-word list.
+  if (select count(*) from public.leaderboard_profiles) <> 0 then raise exception 'B can read A''s leaderboard profile'; end if;
+  if (select count(*) from public.leaderboard_scores) <> 0 then raise exception 'B can read A''s scores'; end if;
+  begin
+    perform count(*) from public.leaderboard_blocked_words;
+    raise exception 'blocked words readable by clients';
+  exception when insufficient_privilege then null;
+  end;
+
+  -- Anonymous callers cannot submit, join or leave.
   perform pg_temp.act_as(null);
+  begin
+    perform public.submit_score(60, 97, 60, 300);
+    raise exception 'anon can call submit_score';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.set_leaderboard_nickname('Anon_1');
+    raise exception 'anon can call set_leaderboard_nickname';
+  exception when insufficient_privilege then null;
+  end;
+
+  -- Public views expose nickname/score/date only.
   if exists (
     select 1 from information_schema.columns
     where table_schema = 'public' and table_name in ('leaderboard_weekly', 'leaderboard_all_time')
