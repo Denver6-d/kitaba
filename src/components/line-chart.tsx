@@ -54,7 +54,7 @@ export function LineChart({ values, label, height = 160, reference, formatY = (n
             strokeDasharray="4 4"
           />
         )}
-        <polygon points={area} fill="var(--correct-wash)" />
+        {values.length > 1 && <polygon points={area} fill="var(--correct-wash)" />}
         <polyline points={points} fill="none" stroke="var(--correct)" strokeWidth={2.25} strokeLinejoin="round" strokeLinecap="round" />
         {values.length <= 40 &&
           values.map((v, i) => <circle key={i} cx={x(i)} cy={y(v)} r={2.75} fill="var(--sheet)" stroke="var(--correct)" strokeWidth={1.5} />)}

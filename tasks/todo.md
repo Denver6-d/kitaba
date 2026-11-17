@@ -17,10 +17,10 @@ Each task: verify with `npm run typecheck && npm test` (domain) and `npm run bui
 - [x] CHECKPOINT P1: all gates green, code review, commit
 
 ## Phase 2 — Spelling
-- [ ] 12 Word bank ≥ 200
-- [ ] 13 SM-2 + WordRepository
-- [ ] 14 Dictation + review UI
-- [ ] CHECKPOINT P2
+- [x] 12 Word bank ≥ 200
+- [x] 13 SM-2 + WordRepository
+- [x] 14 Dictation + review UI
+- [x] CHECKPOINT P2
 
 ## Phase 3 — Sentences and professional writing
 - [ ] 15 Grader + classifier (≥ 60 tests)

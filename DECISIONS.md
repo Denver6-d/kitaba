@@ -62,3 +62,16 @@ Choices made while building Kitaba where the brief left room for interpretation.
   - On install it precaches every page plus the `/_next/static` assets those pages reference, so guest mode is interactive offline after the first visit.
   - It never intercepts cross-origin requests (Supabase) or `/auth/*`.
   - It is registered in production builds only.
+
+## Phase 2: spelling
+
+- **S1. Only misspelled words get an SM-2 card.** The brief asks for spaced repetition of *misspelled* words. A new word answered correctly gets no card, though its Arabic hint still fades. A word that already has a card is reviewed with every answer. Answer quality:
+  - 5: correct;
+  - 3: correct after revealing the word;
+  - 2: within two letters;
+  - 1: wrong;
+  - 0: empty.
+- **S2. Classic SM-2.** The interval grows by the ease factor in effect *before* the review, and ease never drops below 1.3.
+- **S3. American spelling throughout** (color, favorite, center, neighbor, license), so the bank, the sentence answers and the scenarios agree.
+- **S4. Every spelling word comes with an example sentence** that is spoken on request. It disambiguates sound-alike words (their / there / they're), and the content test checks that each word appears in its own example.
+- **S5. Daily-goal minutes for dictation** use a fixed 15 seconds per word. Per-word timing was not worth extra state.
