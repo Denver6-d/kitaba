@@ -1,5 +1,6 @@
 import { LEVELS, TABLE_NAMES, type ActivityKind, type SyncRecord, type TableName } from "../model";
 import { ACHIEVEMENT_IDS } from "../progress/achievements";
+import { migrateProfileRow } from "./migrate-profile";
 
 /**
  * Schema v1 → v2 (spelling pivot, DECISIONS V3). Pure, so the same rules run
@@ -29,11 +30,15 @@ export function migrateV1Row(table: string, row: Row): Row | null {
     case "achievements":
       return typeof row.id === "string" && ACHIEVEMENT_IDS.has(row.id) ? row : null;
     case "profile": {
+      // v1 → v2 drops the plan and the diagnostic date; v2 → v3 then splits the level in three.
       const level = typeof row.level === "string" && VALID_LEVELS.has(row.level) ? row.level : null;
       const goal = typeof row.dailyGoalMinutes === "number" ? row.dailyGoalMinutes : 10;
-      const out: Row = { id: row.id, updatedAt: row.updatedAt, level, dailyGoalMinutes: goal };
-      if (row.deletedAt !== undefined) out.deletedAt = row.deletedAt;
-      return out;
+      const v2: Row = { id: row.id, updatedAt: row.updatedAt, level, dailyGoalMinutes: goal };
+      if (row.levels !== undefined) v2.levels = row.levels;
+      if (row.levelSource !== undefined) v2.levelSource = row.levelSource;
+      if (row.levelsAt !== undefined) v2.levelsAt = row.levelsAt;
+      if (row.deletedAt !== undefined) v2.deletedAt = row.deletedAt;
+      return migrateProfileRow(v2);
     }
     default:
       return null;

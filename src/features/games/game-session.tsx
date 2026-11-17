@@ -56,6 +56,8 @@ interface Props {
   readonly title: string;
   /** Whether to show the Arabic meaning for a word in listen-like items (hints fade with mastery). */
   readonly showMeaning: (wordId: string) => boolean;
+  /** The learner level this session was built for, shown next to the title. */
+  readonly level?: string | null;
 }
 
 const TICK_MS = 250;
@@ -83,6 +85,7 @@ export function GameSession({
   onFinish,
   title,
   showMeaning,
+  level = null,
 }: Props) {
   const { t, lang, num } = useI18n();
   const [settings] = useSettings();
@@ -339,6 +342,12 @@ export function GameSession({
       <header className="flex flex-wrap items-center justify-between gap-3 text-sm">
         <div className="flex items-center gap-3">
           <span className="font-semibold">{title}</span>
+          {level && (
+            <span className="rounded-full border border-brass-fill/60 px-2.5 py-0.5 text-brass tabular" title={t.levels.inGame}>
+              <span className="sr-only">{t.levels.inGame}: </span>
+              {level}
+            </span>
+          )}
           {!timed && (
             <span className="text-ink-soft tabular">
               {t.game.itemOf(game.index + 1, game.items.length)}

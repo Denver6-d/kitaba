@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { GAME_MODES, LEVELS, type SyncRecord, type TableName } from "@/domain/model";
+import { GAME_MODES, LEVEL_SOURCES, LEVELS, type SyncRecord, type TableName } from "@/domain/model";
+import { migrateProfileRow } from "@/domain/sync/migrate-profile";
 import { migrateV1Tables } from "@/domain/sync/migrate-v1";
 
 /**
@@ -8,7 +9,7 @@ import { migrateV1Tables } from "@/domain/sync/migrate-v1";
  * plant rows that break the app later. Version 1 files (before the spelling
  * pivot) are migrated with the same rules as the local database (DECISIONS V3).
  */
-export const EXPORT_VERSION = 2;
+export const EXPORT_VERSION = 3;
 
 const num = z.number().finite();
 const nonNeg = num.nonnegative();
@@ -32,7 +33,15 @@ export const recordSchemas = {
     })
     .strict(),
   achievements: z.object({ ...base, unlockedAt: nonNeg }).strict(),
-  profile: z.object({ ...base, level: z.enum(LEVELS).nullable(), dailyGoalMinutes: int.max(240) }).strict(),
+  profile: z
+    .object({
+      ...base,
+      levels: z.object({ words: z.enum(LEVELS), sentences: z.enum(LEVELS), tests: z.enum(LEVELS) }).strict(),
+      levelSource: z.enum(LEVEL_SOURCES).nullable(),
+      levelsAt: nonNeg,
+      dailyGoalMinutes: int.max(240),
+    })
+    .strict(),
   sessions: z
     .object({
       ...base,
@@ -67,9 +76,9 @@ export const exportFileSchema = z.object({
   tables: tablesSchema,
 });
 
-const v1FileSchema = z.object({
+const oldFileSchema = z.object({
   app: z.literal("kitaba"),
-  version: z.literal(1),
+  version: z.union([z.literal(1), z.literal(2)]),
   exportedAt: z.number(),
   tables: z.record(z.string(), z.array(z.unknown()).max(MAX_ROWS)),
 });
@@ -92,9 +101,13 @@ export function parseExportFile(json: string): ExportFile {
   } catch {
     throw new Error("invalid-json");
   }
-  const v1 = v1FileSchema.safeParse(raw);
-  if (v1.success) {
-    raw = { app: "kitaba", version: EXPORT_VERSION, exportedAt: v1.data.exportedAt, tables: migrateV1Tables(v1.data.tables) };
+  const old = oldFileSchema.safeParse(raw);
+  if (old.success && old.data.version === 1) {
+    raw = { app: "kitaba", version: EXPORT_VERSION, exportedAt: old.data.exportedAt, tables: migrateV1Tables(old.data.tables) };
+  } else if (old.success) {
+    // v2 → v3 only reshapes the profile (three levels).
+    const profile = (old.data.tables.profile ?? []).map((r) => (r && typeof r === "object" ? migrateProfileRow(r as Record<string, unknown>) : r));
+    raw = { ...old.data, version: EXPORT_VERSION, tables: { ...old.data.tables, profile } };
   }
   const parsed = exportFileSchema.safeParse(raw);
   if (!parsed.success) throw new Error("invalid-format");

@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildSession, levelsUpTo, type GameRequest } from "@/features/games/build-session";
+import { buildSession, type GameRequest } from "@/features/games/build-session";
 import { spellingWordById, spellingWords } from "@/data/words";
 import { ALL_STAGE_IDS, DAILY_MODES, stageDef } from "@/domain/games/campaign";
-import { LEVELS } from "@/domain/model";
+import { LEVELS, sameLevels, type CefrLevel } from "@/domain/model";
+import { levelsByDistance } from "@/domain/levels/pool";
 import { seededRng } from "@/domain/shared/random";
 import { newCard, DAY_MS } from "@/domain/spelling/srs";
 import { createMemoryOutbox } from "@/repositories/local/outbox";
@@ -22,16 +23,6 @@ const wordOf = (wordId: string) => {
   return w;
 };
 
-describe("levelsUpTo", () => {
-  it("allows every level when none is chosen", () => {
-    expect(levelsUpTo(null)).toEqual(LEVELS);
-  });
-  it("includes the chosen level and one above it, never past the top", () => {
-    expect(levelsUpTo("A1")).toEqual(["A1", "A2"]);
-    expect(levelsUpTo("B2")).toEqual(["A1", "A2", "B1", "B2", "C1"]);
-    expect(levelsUpTo("C1")).toEqual(LEVELS);
-  });
-});
 
 describe("buildSession: stages", () => {
   it("returns an empty, untimed session for an unknown stage", async () => {
@@ -39,15 +30,15 @@ describe("buildSession: stages", () => {
     expect(s).toMatchObject({ items: [], stageId: "w99-s1", boss: false, config: { durationMs: null } });
   });
 
-  it("fills a normal stage with its item count from the world's categories and the stage's levels", async () => {
+  it("fills a normal stage with its item count from the world's categories at the learner's words level", async () => {
     const def = stageDef("w6-s2");
     const s = await buildSession({ kind: "stage", id: "w6-s2" }, deps());
     expect(s.items).toHaveLength(def?.items ?? -1);
-    expect(s).toMatchObject({ stageId: "w6-s2", mode: "choice", boss: false, config: { durationMs: null, speedBonus: false } });
+    expect(s).toMatchObject({ stageId: "w6-s2", mode: "choice", boss: false, level: "A2", config: { durationMs: null, speedBonus: false } });
     for (const item of s.items) {
       const w = wordOf(item.wordId);
       expect(def?.world.categories).toContain(w.category);
-      expect(def?.levels).toContain(w.level);
+      expect(w.level).toBe("A2");
     }
   });
 
@@ -80,7 +71,7 @@ describe("buildSession: stages", () => {
     const req: GameRequest = { kind: "free", mode: "listen", level: null, category: null };
     const first = await buildSession(req, d);
     const second = await buildSession(req, { ...d, rng: seededRng(6) });
-    expect(await d.meta.getMeta("bag:free:all:all")).toBeDefined();
+    expect(await d.meta.getMeta("bag:free:A2:all")).toBeDefined();
     const overlap = second.items.filter((i) => first.items.some((f) => f.wordId === i.wordId));
     expect(overlap).toEqual([]);
   });
@@ -109,15 +100,26 @@ describe("buildSession: daily challenge", () => {
     expect(tomorrow.items.map((i) => i.wordId)).not.toEqual(today.items.map((i) => i.wordId));
   });
 
-  it("only uses words up to one level above the learner's level", async () => {
-    const d = deps();
-    await d.repos.profile.save({ level: "A1" });
-    const s = await buildSession({ kind: "daily" }, d);
-    for (const i of s.items) expect(["A1", "A2"]).toContain(wordOf(i.wordId).level);
+  it("uses the learner's tests level", async () => {
+    for (const level of LEVELS) {
+      const d = deps();
+      await d.repos.profile.save({ levels: { words: "A1", sentences: "A1", tests: level } });
+      const s = await buildSession({ kind: "daily" }, d);
+      expect(s.level).toBe(level);
+      for (const i of s.items) expect(wordOf(i.wordId).level).toBe(level);
+    }
   });
 });
 
 describe("buildSession: free play", () => {
+  it("uses the words level when the URL names none", async () => {
+    const d = deps();
+    await d.repos.profile.save({ levels: { words: "C1", sentences: "A1", tests: "A1" } });
+    const s = await buildSession({ kind: "free", mode: "listen", level: null, category: null }, d);
+    expect(s.level).toBe("C1");
+    for (const i of s.items) expect(wordOf(i.wordId).level).toBe("C1");
+  });
+
   it("filters by level and category and plays 10 untimed items", async () => {
     const req: GameRequest = { kind: "free", mode: "listen", level: "A2", category: "silent-letters" };
     const s = await buildSession(req, deps());
@@ -156,5 +158,58 @@ describe("buildSession: review", () => {
     expect((await buildSession({ kind: "review" }, d)).items).toEqual([]);
     await d.repos.words.saveCard({ ...newCard("w-no-such-word", NOW), due: NOW - 1 });
     expect((await buildSession({ kind: "review" }, d)).items).toEqual([]);
+  });
+});
+
+/**
+ * Regression (DECISIONS E1): choosing B1 in the play menu changed nothing,
+ * because the level lived in component state and campaign stages and the
+ * daily challenge never read it.
+ */
+describe("buildSession: stored levels take effect on the next game", () => {
+  const levelsOf = (items: readonly { wordId: string }[]) => new Set(items.map((i) => wordOf(i.wordId).level));
+
+  it("plays the first stage at B1 after the learner chooses B1, not at A1", async () => {
+    const d = deps();
+    const before = await buildSession({ kind: "stage", id: "w1-s1" }, d);
+    expect([...levelsOf(before.items)]).toEqual(["A2"]);
+    await d.repos.profile.save({ levels: sameLevels("B1"), levelSource: "choice" });
+    const after = await buildSession({ kind: "stage", id: "w1-s1" }, d);
+    expect(after.level).toBe("B1");
+    expect([...levelsOf(after.items)]).toEqual(["B1"]);
+  });
+
+  it("uses the tests level for boss stages and the words level for the others", async () => {
+    const d = deps(4);
+    await d.repos.profile.save({ levels: { words: "A1", sentences: "A1", tests: "B2" } });
+    const boss = await buildSession({ kind: "stage", id: "w3-s10" }, d);
+    const normal = await buildSession({ kind: "stage", id: "w3-s1" }, d);
+    expect(boss.level).toBe("B2");
+    expect(normal.level).toBe("A1");
+    expect([...levelsOf(normal.items)]).toEqual(["A1"]);
+  });
+
+  it("fills every stage at every level, widening to the nearest levels when a world is short", async () => {
+    for (const level of LEVELS) {
+      const d = deps(7);
+      await d.repos.profile.save({ levels: sameLevels(level) });
+      for (const id of ALL_STAGE_IDS) {
+        const def = stageDef(id);
+        const s = await buildSession({ kind: "stage", id }, d);
+        if (!def?.timed) expect(s.items, `${id} at ${level}`).toHaveLength(def?.items ?? -1);
+        else expect(s.items.length, `${id} at ${level}`).toBeGreaterThanOrEqual(25);
+        const allowed: CefrLevel[] = levelsByDistance(level).slice(0, 3);
+        for (const i of s.items) expect(allowed).toContain(wordOf(i.wordId).level);
+      }
+    }
+  }, 60_000);
+
+  it("starts a fresh shuffle-bag when the level changes", async () => {
+    const d = deps(8);
+    await buildSession({ kind: "stage", id: "w2-s1" }, d);
+    await d.repos.profile.save({ levels: sameLevels("C1") });
+    const s = await buildSession({ kind: "stage", id: "w2-s1" }, d);
+    expect(levelsOf(s.items).has("C1")).toBe(true);
+    expect(await d.meta.getMeta("bag:stage:w2-s1:A2")).toBeDefined();
   });
 });

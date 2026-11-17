@@ -85,7 +85,7 @@ export function GameRunner({ request, title, emptyText, emptyAction }: { request
     // Arabic hints fade as a word is mastered; sound-alikes keep theirs (the meaning tells them apart).
     const showMeaning = (wordId: string) => spellingWordById.get(wordId)?.category === "homophones" || hintLevel(mastery[wordId] ?? 0) !== "none";
     return (
-      <GameSession key={phase.round} items={phase.session.items} config={phase.session.config} words={spellingWordById} onFinish={onFinish} title={title} showMeaning={showMeaning} />
+      <GameSession key={phase.round} items={phase.session.items} config={phase.session.config} words={spellingWordById} onFinish={onFinish} title={title} showMeaning={showMeaning} level={phase.session.level} />
     );
   }
 

@@ -1,3 +1,4 @@
+import { sameLevels } from "@/domain/model";
 import Dexie from "dexie";
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { describe, expect, it } from "vitest";
@@ -117,22 +118,22 @@ describe.each(backends)("repository contract: %s", (_name, makeStore) => {
 
   it("returns a default profile and saves patches", async () => {
     const { repos } = setup(makeStore);
-    expect((await repos.profile.get()).level).toBeNull();
-    await repos.profile.save({ level: "B2" });
+    expect((await repos.profile.get()).levelSource).toBeNull();
+    await repos.profile.save({ levels: sameLevels("B2"), levelSource: "choice" });
     await repos.profile.save({ dailyGoalMinutes: 15 });
-    expect(await repos.profile.get()).toMatchObject({ level: "B2", dailyGoalMinutes: 15 });
+    expect(await repos.profile.get()).toMatchObject({ levels: sameLevels("B2"), dailyGoalMinutes: 15 });
   });
 
   it("round-trips progress through export → JSON → import (replace)", async () => {
     const a = setup(makeStore);
     await a.repos.games.saveSession(session(), 2);
-    await a.repos.profile.save({ level: "B1" });
+    await a.repos.profile.save({ levels: sameLevels("B1"), levelSource: "choice" });
     const json = JSON.stringify(await a.repos.data.exportAll());
 
     const b = setup(makeStore);
-    await b.repos.profile.save({ level: "A1" });
+    await b.repos.profile.save({ levels: sameLevels("A1"), levelSource: "choice" });
     await b.repos.data.importAll(parseExportFile(json), "replace");
-    expect((await b.repos.profile.get()).level).toBe("B1");
+    expect((await b.repos.profile.get()).levels.words).toBe("B1");
     expect(await b.repos.games.sessions()).toHaveLength(1);
     expect((await b.repos.games.stages())["w1-s1"]?.stars).toBe(2);
   });
@@ -144,19 +145,19 @@ describe.each(backends)("repository contract: %s", (_name, makeStore) => {
 
     const b = setup(makeStore, "b");
     await b.repos.games.saveSession(session({ points: 500, stageId: "w1-s1" }), 1);
-    await b.repos.profile.save({ level: "A2" });
+    await b.repos.profile.save({ levels: sameLevels("A2"), levelSource: "choice" });
     await b.repos.data.importAll(file, "merge");
     expect(await b.repos.games.sessions()).toHaveLength(2);
     expect((await b.repos.games.stages())["w1-s1"]).toMatchObject({ stars: 3, bestPoints: 50 });
     // b's profile was never in the import, so it survives
-    expect((await b.repos.profile.get()).level).toBe("A2");
+    expect((await b.repos.profile.get()).levels.words).toBe("A2");
   });
 
   it("clears all data", async () => {
     const { repos } = setup(makeStore);
-    await repos.profile.save({ level: "A2" });
+    await repos.profile.save({ levels: sameLevels("A2"), levelSource: "choice" });
     await repos.data.clearAll();
-    expect((await repos.profile.get()).level).toBeNull();
+    expect((await repos.profile.get()).levelSource).toBeNull();
   });
 });
 
@@ -210,7 +211,7 @@ describe("parseExportFile", () => {
     expect(f.tables.mastery.map((m) => m.id)).toEqual(["spell:w-people"]);
     expect(f.tables.activity.map((a) => (a as unknown as { kind: string }).kind)).toEqual(["legacy", "spelling"]);
     expect(f.tables.achievements.map((a) => a.id)).toEqual(["streak-3"]);
-    expect(f.tables.profile[0]).toEqual({ id: "me", updatedAt: 5, level: "A2", dailyGoalMinutes: 15 });
+    expect(f.tables.profile[0]).toEqual({ id: "me", updatedAt: 5, levels: sameLevels("A2"), levelSource: "choice", levelsAt: 0, dailyGoalMinutes: 15 });
   });
 });
 
@@ -266,7 +267,7 @@ describe("Dexie v1 → v2 upgrade (existing learners)", () => {
       ["2026-11-02", "spelling", 3],
     ]);
     expect((await repos.achievements.list()).map((a) => a.id)).toEqual(["streak-7"]);
-    expect(await repos.profile.get()).toEqual({ id: "me", updatedAt: 5, level: "B1", dailyGoalMinutes: 20 });
+    expect(await repos.profile.get()).toEqual({ id: "me", updatedAt: 5, levels: sameLevels("B1"), levelSource: "choice", levelsAt: 0, dailyGoalMinutes: 20 });
     expect(db.tables.map((t) => t.name)).not.toContain("results");
     const outbox = await db.outbox.toArray();
     expect(outbox.map((o) => o.key)).toEqual(["activity:a1"]);
@@ -279,11 +280,26 @@ describe("atomic replace import", () => {
   it("leaves existing data untouched when the import fails part-way", async () => {
     const store = createMemoryStore();
     const repos = createRepositories({ store });
-    await repos.profile.save({ level: "A2" });
+    await repos.profile.save({ levels: sameLevels("A2"), levelSource: "choice" });
     const failing = { ...store, bulkPut: async () => Promise.reject(new Error("quota")) };
     const broken = createRepositories({ store: failing });
     const exported = await repos.data.exportAll();
     await expect(broken.data.importAll(exported, "replace")).rejects.toThrow("quota");
-    expect((await repos.profile.get()).level).toBe("A2");
+    expect((await repos.profile.get()).levels.words).toBe("A2");
+  });
+});
+
+describe("parseExportFile: version 2 files (one level)", () => {
+  it("imports a v2 backup and splits its level into three", () => {
+    const f = parseExportFile(
+      JSON.stringify({ app: "kitaba", version: 2, exportedAt: 1, tables: { profile: [{ id: "me", updatedAt: 5, level: "C1", dailyGoalMinutes: 15 }], srs: [] } }),
+    );
+    expect(f.version).toBe(3);
+    expect(f.tables.profile[0]).toEqual({ id: "me", updatedAt: 5, levels: sameLevels("C1"), levelSource: "choice", levelsAt: 0, dailyGoalMinutes: 15 });
+  });
+
+  it("rejects a v3 profile with an invalid level", () => {
+    const bad = { id: "me", updatedAt: 5, levels: { words: "D1", sentences: "A1", tests: "A1" }, levelSource: null, levelsAt: 0, dailyGoalMinutes: 15 };
+    expect(() => parseExportFile(JSON.stringify({ app: "kitaba", version: 3, exportedAt: 1, tables: { profile: [bad] } }))).toThrow("invalid-format");
   });
 });

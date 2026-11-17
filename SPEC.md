@@ -17,6 +17,8 @@ The app answers one question for Arabic speakers: **"can I spell English words c
 - As a learner, I hear a word (American or British voice) and type it. When I'm wrong, I see the correct spelling, my answer with the differences marked, and a one-line rule.
 - As a learner, I play short modes (2–5 minutes): Listen and Spell, Spelling Bee, Fix the Mistake, Missing Letters, Word Scramble and Pick the Right Spelling.
 - As a learner, I progress through 8 worlds × 10 stages, earn 1–3 stars, unlock the next stage, and beat a boss stage at the end of each world.
+- As a new visitor, I choose my level (A1–C1) or take a 3-minute placement test, or skip and start at A2.
+- As a learner, I change my words, sentences and tests levels at any time on the Play page, and the next game uses them.
 - As a returning learner, I keep my daily streak, play the daily challenge and review my own mistakes when they are due.
 - As a learner who wants to compete, I opt in to a weekly leaderboard under a nickname and can leave any time.
 - As a returning user, I sign in with Google, GitHub or email, my guest progress is merged, and I sync across devices.
@@ -26,11 +28,12 @@ The app answers one question for Arabic speakers: **"can I spell English words c
 | Module | Responsibility |
 |---|---|
 | `platform` | Next.js shell, i18n (ar/en, RTL), themes, fonts, hamburger menu, PWA, design tokens, brand constant |
-| `persistence` | Repository interfaces, Dexie (local, schema v2 with migration), export/import (v1 files are migrated on import) |
+| `persistence` | Repository interfaces, Dexie (local, schema v3 with migrations), export/import (v1 and v2 files are migrated on import) |
 | `content` | Validated spelling data (1,591 words, see DECISIONS C1): ≥ 1,500 words (A1–C1, 15 categories), each with an Arabic hint and an example sentence; ≥ 800 dictation sentences; rule explanations |
 | `spelling` | Answer checking (US/UK variants), letter diff, misspelling generator, rule explanations, SM-2 SRS |
 | `games` | Game engine (items, scoring, combo, timer), 7 modes, shuffle-bag selection without repeats |
 | `campaign` | 8 worlds × 10 stages, stars, unlocks, bosses, daily challenge |
+| `levels` | Three stored learner levels (words, sentences/messages, tests), first-visit welcome, adaptive placement test (§6.6) |
 | `progress` | XP, levels, streaks, daily goal, achievements, stats |
 | `accounts` | Supabase auth (Google and GitHub OAuth, email), offline-tolerant sync, first-login merge, sign-out, account deletion |
 | `leaderboard` | Opt-in nickname, weekly spelling score, RPC submission with plausibility checks |
@@ -55,6 +58,7 @@ npm run validate:content     # content validation script (also covered by the te
 | `/play/game?stage=w1-s1` | One campaign stage |
 | `/play/game?daily=1` | Daily challenge |
 | `/play/game?mode=bee&level=B1&category=ie-ei` | Free play in one mode (level and category filters) |
+| `/welcome`, `/welcome?test=1` | First visit: choose a level, take the placement test, or skip; `?test=1` retakes the test (linked from settings) |
 | `/review` | Spaced-repetition review of the learner's own mistakes |
 | `/progress` | Stats, streak, XP and level, achievements, weakest categories |
 | `/leaderboard` | Weekly spelling score (opt-in) |
@@ -92,6 +96,23 @@ One engine (`domain/games/engine.ts`) handles the item list, answers, points (10
 
 Sessions take 2–5 minutes (8–12 items, or a 60 s round). Stars: 1 at ≥ 60% correct, 2 at ≥ 80%, 3 at ≥ 95%. The boss needs ≥ 70% for 1 star. The next stage unlocks at 1 star; the next world unlocks when its boss is cleared. The daily challenge is a seeded mix of 10 items per local day.
 
+### 6.6 Learner levels and placement (phase E)
+The profile stores three levels (`levels: { words, sentences, tests }`, each A1–C1), how they were set (`levelSource`: `choice`, `placement`, `skip`, or `null` before the first choice) and when (`levelsAt`). They sync with the profile (last write wins).
+
+| Level | Drives |
+|---|---|
+| words | free play and the nine normal stages of every world |
+| sentences | free writing and sentence/message dictation (phase F) |
+| tests | the daily challenge and every boss stage |
+
+A session reads the profile each time it is built, so a change on the Play page applies to the very next game. A stage draws from its world's categories **at the learner's level**. It widens to the nearest levels (one below, one above, …) only when fewer words than the stage needs remain. The shuffle-bag key includes the levels used, so a change starts a fresh pass. The game header shows the session's level.
+
+On the first visit (`levelSource = null`), `/play` sends the learner to `/welcome`. There they can choose a level (each comes with a one-line Arabic description), take the placement test, or skip (A2). A signed-in learner on a new device is redirected only after the first sync, so a level stored in the account is not asked for again.
+
+The placement test is 16 "pick the right spelling" items (about 3 minutes). It is adaptive: a staircase moves up after a right answer and down after a wrong one, and the step halves at each reversal. It ends with the level and a one-line explanation. Its result, or the chosen level, sets all three levels. Settings offer "retake the placement test".
+
+Dexie v3 and export v3 reshape the profile. v2 rows (with one `level`) are migrated by one pure function, `migrateProfileRow`. It runs in the Dexie upgrade, on file import, and on cloud rows from older clients.
+
 ### 6.5 Supabase
 Unchanged in principle (DECISIONS A1–A8, L1–L6): RLS on every table, writes only through `SECURITY DEFINER` RPCs, and no service_role key anywhere. OAuth (Google, GitHub) uses `signInWithOAuth` with PKCE. The `redirectTo` is built from the current origin plus `/auth/callback`, and the `next` path is validated by `safeNext`. Provider client IDs and secrets live only in the Supabase dashboard.
 
@@ -101,6 +122,7 @@ Leaderboard: `submit_score(p_points, p_correct, p_total, p_duration_s)` checks o
 1. The removed V1 features have no route, navigation entry, module or test left.
 2. The first character typed in any input is always kept, including the first keystroke of a timed round and the first keystroke on a new item (regression test).
 3. Content: ≥ 1,500 unique words, all 15 categories, all 5 levels, ≥ 800 unique dictation sentences. Every word has an Arabic hint and an example that contains it. Validated by `npm run validate:content` and the test suite.
+4a. The levels chosen on the Play page (words, sentences, tests) are stored, read by every session build, and take effect in the next game (regression tests in `tests/features/build-session.test.ts`).
 4. Seven modes, 80 campaign stages with stars and unlocks, 8 bosses, a daily challenge, XP and levels, a streak.
 5. Spelling inputs: `autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false"`, the right `inputmode`, and they stay visible above the virtual keyboard.
 6. Hamburger menu: keyboard accessible, focus trapped, closes on Esc and on an outside click, RTL and LTR.

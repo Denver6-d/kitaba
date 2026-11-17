@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CalendarCheck, Crown, Flame, Lock, Play } from "lucide-react";
 import { CATEGORY_INFO } from "@/data/rules";
 import { spellingWords } from "@/data/words";
 import { BOSS_STAGE, dailyId, isStageUnlocked, isWorldUnlocked, nextStageToPlay, parseStageId, stageDef, stageId, STAGES_PER_WORLD, WORLDS } from "@/domain/games/campaign";
-import { LEVELS, type CefrLevel, type StageRecord } from "@/domain/model";
+import { LEVELS, type CefrLevel, type ProfileRecord, type StageRecord } from "@/domain/model";
 import { currentStreak, dayKey } from "@/domain/progress/streak";
 import { SPELLING_CATEGORIES } from "@/domain/spelling/categories";
 import { useI18n } from "@/i18n";
@@ -16,25 +17,46 @@ import { Segmented } from "@/components/segmented";
 import { Button } from "@/components/ui/button";
 import { Star } from "@/features/games/results-panel";
 import { FREE_MODES, freePlayHref, type FreeMode } from "@/features/games/parse-request";
+import { LevelsCard } from "@/features/levels/levels-card";
+import { useLevels } from "@/features/levels/use-levels";
+import { useAccount } from "@/features/account/account-provider";
+
+/** A signed-in learner on a new device waits for the first sync before being asked for a level. */
+function useFirstVisit(profile: ProfileRecord | null): boolean {
+  const { user, sync, ready } = useAccount();
+  if (!profile || profile.levelSource !== null || !ready) return false;
+  if (user && sync?.status !== "synced" && sync?.status !== "offline" && sync?.status !== "error") return false;
+  return true;
+}
 
 export default function PlayPage() {
   const { t } = useI18n();
+  const router = useRouter();
   const data = useRepoQuery(async (r) => {
     const [stages, activity, due] = await Promise.all([r.games.stages(), r.activity.list(), r.words.dueCards(Date.now())]);
     return { stages, days: activity.map((a) => a.day), due: due.length };
   });
+  const { profile, setArea } = useLevels();
+  const firstVisit = useFirstVisit(profile.status === "ready" ? profile.data : null);
+  useEffect(() => {
+    if (firstVisit) router.replace("/welcome");
+  }, [firstVisit, router]);
 
   return (
     <Page title={t.play.title} intro={t.play.intro}>
       {data.status === "loading" && <LoadingBlock label={t.common.loading} />}
       {data.status === "error" && <ErrorBlock title={t.common.errorTitle} body={t.common.errorBody} onRetry={data.reload} retryLabel={t.common.retry} />}
-      {data.status === "ready" && (
+      {data.status === "ready" && profile.status === "ready" && !firstVisit && (
         <div className="space-y-14">
-          <Today stages={data.data.stages} days={data.data.days} due={data.data.due} />
+          <div className="space-y-6">
+            <LevelsCard levels={profile.data.levels} onChange={setArea} />
+            <Today stages={data.data.stages} days={data.data.days} due={data.data.due} />
+          </div>
           <Campaign stages={data.data.stages} />
-          <FreePlay />
+          <FreePlay level={profile.data.levels.words} onLevel={(l) => setArea("words", l)} />
         </div>
       )}
+      {(firstVisit || (data.status === "ready" && profile.status === "loading")) && <LoadingBlock label={t.common.loading} />}
     </Page>
   );
 }
@@ -111,9 +133,7 @@ function Campaign({ stages }: { stages: Readonly<Record<string, StageRecord>> })
                   <span className="text-ink-soft">{t.play.world(w.n)} · </span>
                   {w.name[lang]}
                 </h3>
-                <p className="text-sm text-ink-soft">
-                  {w.levels[0]}–{w.levels[w.levels.length - 1]} · {t.play.starsOf(stars, STAGES_PER_WORLD * 3)}
-                </p>
+                <p className="text-sm text-ink-soft">{t.play.starsOf(stars, STAGES_PER_WORLD * 3)}</p>
               </div>
               <p className="text-sm text-hint">{w.categories.map((c) => CATEGORY_INFO[c].label[lang]).join(" · ")}</p>
               {!open && (
@@ -167,14 +187,13 @@ function Campaign({ stages }: { stages: Readonly<Record<string, StageRecord>> })
   );
 }
 
-function FreePlay() {
+function FreePlay({ level, onLevel }: { level: CefrLevel; onLevel: (l: CefrLevel) => Promise<void> }) {
   const { t, lang, num } = useI18n();
   const categoryId = useId();
-  const [level, setLevel] = useState<CefrLevel | "all">("all");
   const [category, setCategory] = useState<string>("all");
-  const lvl = level === "all" ? null : level;
+  const lvl = level;
   const cat = category === "all" ? null : category;
-  const count = spellingWords.filter((w) => (lvl === null || w.level === lvl) && (cat === null || w.category === cat)).length;
+  const count = spellingWords.filter((w) => w.level === lvl && (cat === null || w.category === cat)).length;
   return (
     <section aria-labelledby="free-h" className="space-y-6">
       <div className="space-y-2">
@@ -185,10 +204,10 @@ function FreePlay() {
       </div>
       <div className="flex flex-wrap items-end gap-6">
         <Segmented
-          legend={t.common.level}
+          legend={`${t.levels.areas.words}: ${level}`}
           value={level}
-          onChange={setLevel}
-          options={[{ value: "all" as const, label: t.common.all }, ...LEVELS.map((l) => ({ value: l, label: l }))]}
+          onChange={(l) => void onLevel(l)}
+          options={LEVELS.map((l) => ({ value: l, label: l }))}
         />
         <div className="space-y-1.5">
           <label htmlFor={categoryId} className="block text-sm text-ink-soft">

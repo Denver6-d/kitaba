@@ -10,7 +10,7 @@
 // The registration URL carries the build stamp (?v=...), so every deploy gets a
 // fresh cache and the activate step deletes the previous ones.
 const VERSION = `kitaba-${new URL(self.location.href).searchParams.get("v") || "dev"}`;
-const PAGES = ["/", "/play", "/play/game", "/review", "/progress", "/leaderboard", "/settings", "/privacy", "/account", "/offline"];
+const PAGES = ["/", "/play", "/play/game", "/welcome", "/review", "/progress", "/leaderboard", "/settings", "/privacy", "/account", "/offline"];
 const STATIC_RE = /\/_next\/static\/[^"'\s)]+/g;
 
 self.addEventListener("install", (event) => {

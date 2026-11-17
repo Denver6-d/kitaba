@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { sameLevels } from "@/domain/model";
 import { migrateV1Row, migrateV1Tables, V1_DROPPED_TABLES } from "@/domain/sync/migrate-v1";
 import { TABLE_NAMES } from "@/domain/model";
 
@@ -33,17 +34,17 @@ describe("migrateV1Row", () => {
     expect(migrateV1Row("achievements", { id: "wpm-40", updatedAt: 1, unlockedAt: 1 })).toBeNull();
   });
 
-  it("reduces the profile to level and daily goal, with safe defaults", () => {
+  it("reduces the profile to three levels and the daily goal, with safe defaults", () => {
     expect(migrateV1Row("profile", { id: "me", updatedAt: 5, level: "Z9", plan: ["typing"], diagnosticAt: 1 })).toEqual({
       id: "me",
       updatedAt: 5,
-      level: null,
+      levels: sameLevels("A2"), levelSource: null, levelsAt: 0,
       dailyGoalMinutes: 10,
     });
     expect(migrateV1Row("profile", { id: "me", updatedAt: 5, level: "C1", dailyGoalMinutes: 30, deletedAt: 6 })).toEqual({
       id: "me",
       updatedAt: 5,
-      level: "C1",
+      levels: sameLevels("C1"), levelSource: "choice", levelsAt: 0,
       dailyGoalMinutes: 30,
       deletedAt: 6,
     });

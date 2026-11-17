@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from "dexie";
 import { TABLE_NAMES, type TableMap, type TableName } from "@/domain/model";
 import type { OutboxItem } from "@/domain/sync/outbox";
 import { migrateV1Row, V1_DROPPED_TABLES } from "@/domain/sync/migrate-v1";
+import { migrateProfileRow } from "@/domain/sync/migrate-profile";
 import type { RecordStore } from "../store";
 
 export interface MetaRow {
@@ -70,6 +71,23 @@ export function openDb(options?: ConstructorParameters<typeof Dexie>[1], name = 
           const next = migrateV1Row(item.table, item.record as unknown as Record<string, unknown>);
           if (next === null) delete ref.value;
           else ref.value = { ...item, record: next };
+        });
+    });
+  // v3: three learner levels (words, sentences, tests) on the profile (DECISIONS E3). No index changes.
+  db.version(3)
+    .stores({})
+    .upgrade(async (tx) => {
+      await tx
+        .table("profile")
+        .toCollection()
+        .modify((row: Record<string, unknown>, ref: { value?: unknown }) => {
+          ref.value = migrateProfileRow(row);
+        });
+      await tx
+        .table("outbox")
+        .toCollection()
+        .modify((item: OutboxItem, ref: { value?: unknown }) => {
+          if (item.table === "profile") ref.value = { ...item, record: migrateProfileRow(item.record as unknown as Record<string, unknown>) };
         });
     });
   return db;

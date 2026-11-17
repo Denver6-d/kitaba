@@ -115,6 +115,58 @@ export const en: Dictionary = {
     streak: (n: number) => (n === 0 ? "Start your streak today" : n === 1 ? "1 day in a row" : `${n} days in a row`),
     dueBadge: (n: number) => `${n} to review`,
   },
+  levels: {
+    title: "Your levels",
+    intro: "Each part has its own level. A change applies to your very next game.",
+    areas: { words: "Words", sentences: "Sentences and messages", tests: "Tests" } as Record<string, string>,
+    areaHelp: {
+      words: "Word games and journey stages",
+      sentences: "Free writing and dictation of sentences and messages",
+      tests: "The daily challenge and each world's challenge stage",
+    } as Record<string, string>,
+    desc: {
+      A1: "Short everyday words: numbers, colours, family, food.",
+      A2: "Daily-life words and the commonest silent and double letters.",
+      B1: "Study and work words, word endings and the ie/ei traps.",
+      B2: "Longer, abstract words, prefixes and suffixes, British vs American.",
+      C1: "The hardest words, formal vocabulary and sound-alikes.",
+    } as Record<string, string>,
+    inGame: "Level of this round",
+    saved: "Saved. Your next game uses it.",
+    retake: "Retake the placement test",
+    retakeHint: "A short spelling test (about 3 minutes) that sets your words, sentences and tests levels again.",
+    choose: "Choose my level myself",
+  },
+  welcome: {
+    title: "Where should you start?",
+    intro: "Choose your level yourself, or let a short spelling test find it. You can change it any time on the Play page.",
+    choose: "I choose my level",
+    chooseDesc: "Know your level? Pick it, from A1 to C1.",
+    test: "Test my level",
+    testDesc: "16 questions in about 3 minutes. Questions get harder after a right answer and easier after a wrong one.",
+    skip: "Skip for now (start at A2)",
+    pickTitle: "Choose your level",
+    useLevel: (l: string) => `Start at ${l}`,
+    setAll: (l: string) => `Your words, sentences and tests levels are set to ${l}. You can change each one on the Play page.`,
+  },
+  placement: {
+    title: "Placement test",
+    question: "Pick the right spelling",
+    meaning: "Meaning",
+    progress: (n: number, total: number) => `Question ${n} of ${total}`,
+    correct: "Correct",
+    wrong: (w: string) => `Correct spelling: ${w}`,
+    resultTitle: (l: string) => `Your level: ${l}`,
+    explain: (at: { level: string; correct: number; total: number } | null, above: { level: string; correct: number; total: number } | null, level: string) =>
+      at === null
+        ? `We suggest starting at ${level} and moving up when it feels easy.`
+        : above === null
+          ? `You spelled ${at.correct} of ${at.total} ${at.level} words correctly.`
+          : `You spelled ${at.correct} of ${at.total} ${at.level} words correctly, and ${above.correct} of ${above.total} at ${above.level}.`,
+    startPlaying: "Start playing",
+    quit: "End the test",
+    noWords: "No new question could be prepared. We'll use your answers so far.",
+  },
   game: {
     listen: "Listen",
     slow: "Slower",

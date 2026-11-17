@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { createDexieStore, openDb } from "@/repositories/local/db";
 import { createDexieOutbox } from "@/repositories/local/outbox";
 import { createRepositories } from "@/repositories/create";
+import { sameLevels } from "@/domain/model";
 
 /** More Dexie v1 → v2 upgrade cases (the main one lives in contract.test.ts). */
 
@@ -36,10 +37,10 @@ describe("Dexie v1 → v2 upgrade, more cases", () => {
     await v1Db(indexedDB, "empty");
     const db = openDb({ indexedDB, IDBKeyRange }, "empty");
     const repos = createRepositories({ store: createDexieStore(db) });
-    expect(await repos.profile.get()).toMatchObject({ id: "me", level: null });
+    expect(await repos.profile.get()).toMatchObject({ id: "me", levelSource: null, levels: sameLevels("A2") });
     await repos.games.saveSession({ mode: "listen", stageId: "w1-s1", items: 10, correct: 9, points: 90, maxCombo: 5, seconds: 60, at: 1, missed: [] }, 2);
     expect(await repos.games.sessions()).toHaveLength(1);
-    expect(db.verno).toBe(2);
+    expect(db.verno).toBe(3);
     db.close();
   });
 
@@ -57,7 +58,7 @@ describe("Dexie v1 → v2 upgrade, more cases", () => {
     const db = openDb({ indexedDB, IDBKeyRange }, "outbox");
     const items = await createDexieOutbox(db).list(100);
     expect(items.map((i) => i.key).sort()).toEqual(["mastery:spell:w-a", "profile:me"]);
-    expect(items.find((i) => i.key === "profile:me")?.record).toEqual({ id: "me", updatedAt: 1, level: "B2", dailyGoalMinutes: 25 });
+    expect(items.find((i) => i.key === "profile:me")?.record).toEqual({ id: "me", updatedAt: 1, levels: sameLevels("B2"), levelSource: "choice", levelsAt: 0, dailyGoalMinutes: 25 });
     db.close();
   });
 
@@ -87,6 +88,45 @@ describe("Dexie v1 → v2 upgrade, more cases", () => {
     const db = openDb({ indexedDB, IDBKeyRange }, "twice");
     const activity = await createRepositories({ store: createDexieStore(db) }).activity.list();
     expect(activity.map((a) => [a.kind, a.xp])).toEqual([["legacy", 20]]);
+    db.close();
+  });
+});
+
+describe("Dexie v2 → v3 upgrade (three learner levels)", () => {
+  async function v2Db(indexedDB: IDBFactory, name: string, fill: (db: Dexie) => Promise<void>) {
+    const { V1_DROPPED_TABLES } = await import("@/domain/sync/migrate-v1");
+    const old = new Dexie(name, { indexedDB, IDBKeyRange });
+    old.version(1).stores(V1_STORES);
+    old.version(2).stores({ ...Object.fromEntries(V1_DROPPED_TABLES.map((t) => [t, null])), sessions: "id, at, mode, updatedAt", stages: "id, updatedAt" });
+    await old.open();
+    await fill(old);
+    old.close();
+  }
+
+  it("turns a v2 level into all three levels, in the table and in the outbox", async () => {
+    const indexedDB = new IDBFactory();
+    await v2Db(indexedDB, "v2", async (old) => {
+      await old.table("profile").put({ id: "me", updatedAt: 7, level: "B1", dailyGoalMinutes: 15 });
+      await old.table("outbox").put({ key: "profile:me", table: "profile", record: { id: "me", updatedAt: 7, level: "B1", dailyGoalMinutes: 15 } });
+      await old.table("stages").put({ id: "w1-s1", updatedAt: 1, stars: 2, bestPoints: 80, clearedAt: 1 });
+    });
+    const db = openDb({ indexedDB, IDBKeyRange }, "v2");
+    const repos = createRepositories({ store: createDexieStore(db) });
+    const expected = { id: "me", updatedAt: 7, levels: sameLevels("B1"), levelSource: "choice", levelsAt: 0, dailyGoalMinutes: 15 };
+    expect(await repos.profile.get()).toEqual(expected);
+    expect((await createDexieOutbox(db).list(10))[0]?.record).toEqual(expected);
+    expect((await repos.games.stages())["w1-s1"]?.stars).toBe(2);
+    expect(db.verno).toBe(3);
+    db.close();
+  });
+
+  it("leaves a v2 learner with no level on the welcome screen (no source)", async () => {
+    const indexedDB = new IDBFactory();
+    await v2Db(indexedDB, "v2-none", async (old) => {
+      await old.table("profile").put({ id: "me", updatedAt: 7, level: null, dailyGoalMinutes: 10 });
+    });
+    const db = openDb({ indexedDB, IDBKeyRange }, "v2-none");
+    expect(await createRepositories({ store: createDexieStore(db) }).profile.get()).toMatchObject({ levelSource: null, levels: sameLevels("A2") });
     db.close();
   });
 });

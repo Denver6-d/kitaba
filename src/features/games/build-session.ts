@@ -7,8 +7,8 @@ import type { GameConfig, GameItem, ItemMode } from "@/domain/games/engine";
 import { drawFromBag, returnToBag, type BagState } from "@/domain/games/shuffle-bag";
 import { buildItems } from "@/domain/games/session";
 import type { CefrLevel, GameMode } from "@/domain/model";
-import { LEVELS } from "@/domain/model";
 import { dayKey } from "@/domain/progress/streak";
+import { poolAtLevel } from "@/domain/levels/pool";
 import { seededRng, shuffle, type Rng } from "@/domain/shared/random";
 import type { Accent } from "@/domain/spelling/check";
 import type { OutboxStore } from "@/repositories/local/outbox";
@@ -30,6 +30,8 @@ export interface BuiltSession {
   readonly boss: boolean;
   /** Mastery per word id when the session was built (Arabic hint fading). */
   readonly mastery: Readonly<Record<string, number>>;
+  /** The learner level the words were chosen for (null for review). Shown in the game header. */
+  readonly level: CefrLevel | null;
 }
 
 const UNTIMED: GameConfig = { durationMs: null, speedBonus: false };
@@ -40,8 +42,12 @@ const FREE_ITEMS = 10;
 const REVIEW_MAX = 15;
 /** Spare words so a word that cannot make an item in a mode can be skipped. */
 const SPARE = 6;
+/** A timed stage needs a pool this big (the content validator checks every world and level). */
+export const STAGE_MIN_TIMED = 25;
+/** A one-category free play widens past the level only when fewer words than this are left. */
+const FREE_MIN_CATEGORY = 8;
 
-const bankSpellings: ReadonlySet<string> = new Set(spellingWords.flatMap((w) => (w.uk ? [w.word, w.uk] : [w.word])));
+export const bankSpellings: ReadonlySet<string> = new Set(spellingWords.flatMap((w) => (w.uk ? [w.word, w.uk] : [w.word])));
 
 const BAG_PREFIX = "bag:";
 
@@ -71,9 +77,6 @@ async function drawAndBuild(
   return items;
 }
 
-export const levelsUpTo = (level: CefrLevel | null): readonly CefrLevel[] =>
-  level === null ? LEVELS : LEVELS.slice(0, Math.min(LEVELS.length, LEVELS.indexOf(level) + 2));
-
 export async function buildSession(
   req: GameRequest,
   deps: { readonly repos: Repositories; readonly meta: OutboxStore; readonly accent: Accent; readonly rng: Rng; readonly now: number },
@@ -88,38 +91,54 @@ async function buildItemsFor(
   deps: { readonly repos: Repositories; readonly meta: OutboxStore; readonly accent: Accent; readonly rng: Rng; readonly now: number },
 ): Promise<Omit<BuiltSession, "mastery">> {
   const ctx = { accent: deps.accent, rng: deps.rng, bankSpellings };
+  // Read the stored levels on every build, so a level changed in the menu applies to the very next game.
+  const { levels } = req.kind === "review" ? { levels: null } : await deps.repos.profile.get();
   switch (req.kind) {
     case "stage": {
       const def = stageDef(req.id);
-      if (!def) return { items: [], config: UNTIMED, stageId: req.id, mode: "listen", boss: false };
-      const pool = spellingWords.filter((w) => def.world.categories.includes(w.category) && def.levels.includes(w.level));
+      if (!def || !levels) return { items: [], config: UNTIMED, stageId: req.id, mode: "listen", boss: false, level: null };
+      // Bosses are tests; the other stages are word games (DECISIONS E2).
+      const level = def.boss ? levels.tests : levels.words;
       const count = def.timed ? BEE_WORDS : def.items;
-      const items = await drawAndBuild(deps.meta, `stage:${def.id}`, pool, count + SPARE, deps.rng, (words) => buildItems(def.modes, words, ctx, count));
+      const inWorld = spellingWords.filter((w) => def.world.categories.includes(w.category));
+      const { pool, levels: used } = poolAtLevel(inWorld, level, def.timed ? STAGE_MIN_TIMED : count + SPARE);
+      // The level is part of the bag key: changing it starts a fresh pass at once.
+      const key = `stage:${def.id}:${used.join("")}`;
+      const items = await drawAndBuild(deps.meta, key, pool, count + SPARE, deps.rng, (words) => buildItems(def.modes, words, ctx, count));
       const mode: GameMode = Array.isArray(def.modes) ? "mixed" : (def.modes as GameMode);
-      return { items, config: def.timed ? BEE : UNTIMED, stageId: def.id, mode, boss: def.boss };
+      return { items, config: def.timed ? BEE : UNTIMED, stageId: def.id, mode, boss: def.boss, level };
     }
     case "daily": {
-      // Everyone gets the same words on the same day for a given level choice.
+      // Everyone at the same tests level gets the same words on the same day.
       const day = dayKey(new Date(deps.now));
-      const profile = await deps.repos.profile.get();
-      const levels = levelsUpTo(profile.level);
-      const rng = seededRng(seedFrom(`${day}:${levels.join("")}`));
-      const pool = spellingWords.filter((w) => levels.includes(w.level));
+      const level = levels?.tests ?? "A2";
+      const rng = seededRng(seedFrom(`${day}:${level}`));
+      const { pool } = poolAtLevel(spellingWords, level, 60);
       const words = shuffle(pool, rng).slice(0, DAILY_MODES.length + SPARE);
-      return { items: buildItems(DAILY_MODES, words, { ...ctx, rng }, DAILY_MODES.length), config: UNTIMED, stageId: dailyId(day), mode: "mixed", boss: false };
+      return {
+        items: buildItems(DAILY_MODES, words, { ...ctx, rng }, DAILY_MODES.length),
+        config: UNTIMED,
+        stageId: dailyId(day),
+        mode: "mixed",
+        boss: false,
+        level,
+      };
     }
     case "free": {
-      const pool = spellingWords.filter((w) => (req.level === null || w.level === req.level) && (req.category === null || w.category === req.category));
+      // An explicit level in the URL wins; otherwise the learner's words level.
+      const level = req.level ?? levels?.words ?? "A2";
       const timed = req.mode === "bee";
       const count = timed ? BEE_WORDS : FREE_ITEMS;
-      const key = `free:${req.level ?? "all"}:${req.category ?? "all"}`;
+      const inCategory = spellingWords.filter((w) => req.category === null || w.category === req.category);
+      const { pool, levels: used } = poolAtLevel(inCategory, level, req.category === null ? count + SPARE : FREE_MIN_CATEGORY);
+      const key = `free:${used.join("")}:${req.category ?? "all"}`;
       const items = await drawAndBuild(deps.meta, key, pool, count + SPARE, deps.rng, (words) => buildItems(req.mode as ItemMode, words, ctx, count));
-      return { items, config: timed ? BEE : UNTIMED, stageId: null, mode: req.mode, boss: false };
+      return { items, config: timed ? BEE : UNTIMED, stageId: null, mode: req.mode, boss: false, level };
     }
     case "review": {
       const due = await deps.repos.words.dueCards(deps.now);
       const words = due.flatMap((c) => spellingWordById.get(c.wordId) ?? []).slice(0, REVIEW_MAX);
-      return { items: buildItems("review", words, ctx, words.length), config: UNTIMED, stageId: null, mode: "review", boss: false };
+      return { items: buildItems("review", words, ctx, words.length), config: UNTIMED, stageId: null, mode: "review", boss: false, level: null };
     }
   }
 }

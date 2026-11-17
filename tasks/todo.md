@@ -23,3 +23,10 @@
 - [x] Google + GitHub OAuth, safe redirects, tests; README OAuth steps in Arabic
 - [x] Bigger body text, lighter secondary text, opaque header, wide landing, empty states, copy
 - [x] Final report + Arabic manual test checklist (tasks/manual-test-checklist-ar.md)
+
+## Phase E: levels and placement
+- [x] Root cause of "choosing B1 changes nothing" (DECISIONS E1) and regression tests
+- [x] Three stored, synced levels (words, sentences, tests); Dexie v3, export v3, cloud rows migrated
+- [x] Stages, bosses, daily and free play read the stored levels on every build; level shown in the game header
+- [x] /welcome: choose a level, adaptive placement test (16 items), skip (A2); /play redirects on first visit
+- [x] Levels card on /play (change any level, applies to the next game); "retake the placement test" in settings

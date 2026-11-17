@@ -8,3 +8,6 @@ See SPEC.md (V2) and DECISIONS.md (Pivot section). One commit per phase; lint, t
 | B | Content: ≥ 1,500 words in 15 categories (A1–C1) with Arabic hints and example sentences, ≥ 800 dictation sentences, validator script, shuffle-bag |
 | C | Campaign map (8 × 10, stars, unlocks, bosses), daily challenge, every mode polished, celebration, weekly leaderboard, Arabic hint fading |
 | D | Hamburger menu, bottom bar, responsive layout and mobile inputs, Google and GitHub OAuth, design fixes, landing page, copy, README (Arabic OAuth steps), final checks, manual test checklist |
+| E | Level bug fix, three stored levels (words, sentences, tests), first-visit welcome, adaptive placement test, Dexie/export v3 |
+| F | Sentences and messages (spelling only): free writing, sentence and message dictation, spell checker (nspell, lazy), confusables, review deck, history |
+| G | Reviews (frontend-design, code-reviewer, test-engineer), browser and Lighthouse checks, Arabic manual checklist, final report |

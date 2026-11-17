@@ -53,12 +53,35 @@ export interface AchievementRecord extends SyncRecord {
   readonly unlockedAt: number;
 }
 
+/**
+ * The learner's three levels (DECISIONS E2): word games (free play and campaign
+ * stages), sentences and messages, and tests (daily challenge and boss stages).
+ */
+export interface LearnerLevels {
+  readonly words: CefrLevel;
+  readonly sentences: CefrLevel;
+  readonly tests: CefrLevel;
+}
+
+export type LevelArea = keyof LearnerLevels;
+export const LEVEL_AREAS: readonly LevelArea[] = ["words", "sentences", "tests"];
+
+/** How the levels were set. null = never: the welcome screen is shown. */
+export const LEVEL_SOURCES = ["choice", "placement", "skip"] as const;
+export type LevelSource = (typeof LEVEL_SOURCES)[number];
+
+export const DEFAULT_LEVEL: CefrLevel = "A2";
+
 /** id = "me". */
 export interface ProfileRecord extends SyncRecord {
-  /** The learner's chosen comfort level for free play (null = all levels). */
-  readonly level: CefrLevel | null;
+  readonly levels: LearnerLevels;
+  readonly levelSource: LevelSource | null;
+  /** When the levels were last set by a choice or the placement test (0 = never). */
+  readonly levelsAt: number;
   readonly dailyGoalMinutes: number;
 }
+
+export const sameLevels = (l: CefrLevel): LearnerLevels => ({ words: l, sentences: l, tests: l });
 
 /** One finished game (append-only). */
 export interface SessionRecord extends SyncRecord {
@@ -100,6 +123,8 @@ export const TABLE_NAMES: readonly TableName[] = ["srs", "mastery", "activity", 
 export const DEFAULT_PROFILE: ProfileRecord = {
   id: "me",
   updatedAt: 0,
-  level: null,
+  levels: sameLevels(DEFAULT_LEVEL),
+  levelSource: null,
+  levelsAt: 0,
   dailyGoalMinutes: 10,
 };

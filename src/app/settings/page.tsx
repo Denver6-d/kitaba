@@ -1,7 +1,8 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { Download, Upload, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { ClipboardCheck, Download, Upload, Trash2 } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { useSettings } from "@/lib/settings-store";
 import { TEXT_SCALES } from "@/lib/settings";
@@ -79,6 +80,24 @@ export default function SettingsPage() {
           <div className="divide-y divide-rule border-y border-rule">
             <Toggle label={t.settings.readableFont} hint={t.settings.readableFontHint} checked={s.readableFont} onChange={(readableFont) => update({ readableFont })} />
             <Toggle label={t.settings.sounds} hint={t.settings.soundsHint} checked={s.sounds} onChange={(sounds) => update({ sounds })} />
+          </div>
+        </section>
+
+        <section aria-labelledby="levels-h" className="space-y-3">
+          <h2 id="levels-h" className="text-xl font-semibold">
+            {t.levels.title}
+          </h2>
+          <p className="text-ink-soft">{t.levels.retakeHint}</p>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild variant="outline" className="h-11 gap-2">
+              <Link href="/welcome?test=1">
+                <ClipboardCheck className="size-4" aria-hidden="true" />
+                {t.levels.retake}
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" className="h-11">
+              <Link href="/play">{t.levels.choose}</Link>
+            </Button>
           </div>
         </section>
 

@@ -1,3 +1,4 @@
+import { sameLevels } from "@/domain/model";
 import { describe, expect, it } from "vitest";
 import { parseServerTime, SyncEngine, type SyncSnapshot } from "@/features/account/sync-engine";
 import { createMemoryOutbox } from "@/repositories/local/outbox";
@@ -67,12 +68,26 @@ describe("SyncEngine against a fake server", () => {
     const { remote } = fakeServer();
     const a = device(remote, "a", 1000);
     const b = device(remote, "b", 5000);
-    await a.write(() => a.repos.profile.save({ level: "A2", dailyGoalMinutes: 15 }));
+    await a.write(() => a.repos.profile.save({ levels: sameLevels("A2"), levelSource: "choice", dailyGoalMinutes: 15 }));
     await a.engine.syncNow();
     expect(await a.outbox.count()).toBe(0);
     await b.engine.syncNow();
-    expect((await b.repos.profile.get()).level).toBe("A2");
+    expect((await b.repos.profile.get()).levels.words).toBe("A2");
     expect(a.snapshots.at(-1)).toEqual({ status: "synced", pending: 0 });
+  });
+
+  it("syncs all three learner levels and the latest change wins", async () => {
+    const { remote } = fakeServer();
+    const a = device(remote, "a", 1000);
+    const b = device(remote, "b", 5000);
+    await a.write(() => a.repos.profile.save({ levels: { words: "B1", sentences: "A2", tests: "B2" }, levelSource: "placement" }));
+    await a.engine.syncNow();
+    await b.engine.syncNow();
+    expect(await b.repos.profile.get()).toMatchObject({ levels: { words: "B1", sentences: "A2", tests: "B2" }, levelSource: "placement" });
+    await b.write(() => b.repos.profile.save({ levels: { words: "C1", sentences: "A2", tests: "B2" } }));
+    await b.engine.syncNow();
+    await a.engine.syncNow();
+    expect((await a.repos.profile.get()).levels.words).toBe("C1");
   });
 
   it("resolves a conflict by last write wins on both devices", async () => {
@@ -120,7 +135,7 @@ describe("SyncEngine against a fake server", () => {
     const server = fakeServer();
     const a = device(server.remote, "a", 1000);
     server.setOffline(true);
-    await a.write(() => a.repos.profile.save({ level: "B1" }));
+    await a.write(() => a.repos.profile.save({ levels: sameLevels("B1"), levelSource: "choice" }));
     await a.engine.syncNow();
     expect(await a.outbox.count()).toBe(1);
     expect(a.snapshots.at(-1)?.status).toBe("error");
@@ -135,7 +150,7 @@ describe("SyncEngine against a fake server", () => {
   it("merging local progress into an account uploads everything once", async () => {
     const { remote, rows } = fakeServer();
     const a = device(remote, "a", 1000);
-    await a.repos.profile.save({ level: "A1" }); // written before sign-in: not queued
+    await a.repos.profile.save({ levels: sameLevels("A1"), levelSource: "choice" }); // written before sign-in: not queued
     await a.repos.mastery.set("x", 2);
     expect(await a.outbox.count()).toBe(0);
     await a.engine.enqueueAllLocal();

@@ -240,3 +240,46 @@ Choices made while building Kitaba where the brief left room for interpretation.
 - **O3. Open redirect through dot segments (critical, fixed).** `/.//evil.com` passed the raw-string checks in `safeNext`, and the URL parser normalised it to `//evil.com`. The callback page would then have navigated a signed-in user off-site. `safeNext` now re-checks the normalised path. Both final reviewers found this independently, and it is covered by `tests/lib/safe-next-dots.test.ts`.
 - **O4.** The OAuth buttons re-enable after the browser's Back button (bfcache) and after a thrown error. `access_denied` in either `error` or `error_code` counts as a cancel. The README now allow-lists `/auth/callback**` (the app adds `?next=`) and explains Google's Testing vs In-production publishing status.
 - **N5.** The landing round keeps its first item stable through hydration, moves focus to Next after an answer and back to the first option after Next, and fades in with CSS from the first paint. GSAP was removed: it was only used for that reveal and flashed already-painted content. `motion` still drives the star celebration. The phone bottom bar stays visible under pinch-zoom (only an unzoomed viewport shrink means a keyboard).
+
+## Phase E: learner levels and placement
+
+- **E1. Level bug (root cause).** "Choosing B1 in the games menu changes nothing." There were two causes, both confirmed in the code:
+  1. **Not stored.** The level picker on `/play` was `useState("all")` inside the free-play section. It reset every time `/play` mounted, so after one game the choice was gone.
+  2. **Not read.** Only the free-play cards passed the level on in their URL. The big "Play" button and every stage node start campaign stages, whose word pool came from the world's fixed level list (stages 1–3 of world 1 are A1 only). The daily challenge read `profile.level`, which no screen ever wrote, so it was always null.
+
+  So a learner who chose B1 and then pressed "Play" or opened the daily challenge always got beginner words.
+
+  **Fix:** the levels now live in the profile, which is stored and synced. `buildSession` reads the profile on every build, so nothing is stale. Stages, bosses, the daily challenge and free play all use the stored levels.
+
+  **Regression tests:**
+  - choosing B1 changes the very next build of stage w1-s1 from A2 words to B1 words;
+  - bosses follow the tests level;
+  - every stage fills at every level;
+  - a level change starts a fresh shuffle-bag.
+- **E2. Three levels and what each drives (owner's choice).**
+  - **Words:** free play and the nine normal stages of every world.
+  - **Sentences:** the sentences and messages section (phase F).
+  - **Tests:** the daily challenge and the boss stages.
+
+  Campaign stages now use the learner's level instead of the world's fixed range (owner's choice). A world is a family of spelling problems, and the level picks the words. When a world has too few words at a level (for example ie/ei at A1), the pool widens to the nearest levels, easier first (`poolAtLevel`).
+
+  - The daily challenge is the same for everyone at the same tests level on a given day.
+  - The free-play level control is the words level itself, so there is one source of truth. The "all levels" option was removed.
+  - The world cards no longer show a fixed level range, because it no longer applies.
+- **E3. Storage and migration.**
+  - **Profile v3:** `levels { words, sentences, tests }`, `levelSource` (choice, placement, skip, or null = never set) and `levelsAt`.
+  - **Dexie v3:** no index change, only an upgrade that reshapes the profile and pending outbox writes.
+  - **Export files:** now version 3. v1 and v2 files still import.
+  - **One migration function:** the pure, idempotent `migrateProfileRow` does the v2 → v3 step everywhere. That includes cloud rows written by an older client, which `parseRow` migrates instead of dropping.
+  - **Existing levels:** a v2 level (only the V1 diagnostic could set it) becomes all three levels with source "choice", so the learner is not asked again. No level means A2 with source null, so the welcome screen shows once.
+  - **Supabase: no SQL change.** The profile is one jsonb row in `progress_records` and syncs with last-write-wins like before. A sync test shows the levels reaching a second device, with the later change winning.
+- **E4. Placement test.**
+  - **Format:** 16 "pick the right spelling" items. They need no audio, so they work without an on-device voice. At about 10 seconds each, the test takes about 3 minutes.
+  - **Adaptive staircase:** it starts at A2 and moves up one level after a right answer and down one after a wrong one. The step halves at each change of direction, never below half a level.
+  - **Result:** the highest level answered at ≥ 60% over at least two items, or A1 when no level qualifies. The one-line explanation gives the tally at that level and at the one above.
+  - **Excluded words:** British/American pairs, because the right answer depends on the chosen variant.
+  - **Tested:** simulated learners of every true level are placed exactly (unit tests).
+  - The result is a starting point, not a certificate. Every level can be changed later.
+- **E5. First visit.** `/play` redirects to `/welcome` while `levelSource` is null.
+  - The landing page keeps its playable round, so "play within 10 seconds" still holds, and "Skip for now" sets A2 in one tap.
+  - A signed-in learner is redirected only after the first sync (or when sync is offline or in error), so a new device does not ask for a level the account already has.
