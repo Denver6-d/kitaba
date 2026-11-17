@@ -53,7 +53,14 @@ export function RepositoriesProvider({ children }: { children: ReactNode }) {
   const [revision, setRevision] = useState(0);
   const invalidate = useCallback(() => setRevision((r) => r + 1), []);
 
-  useEffect(() => observed.subscribe(() => invalidate()), [observed, invalidate]);
+  useEffect(() => {
+    const offWrite = observed.subscribe(() => invalidate());
+    const offClear = observed.subscribeClear(invalidate);
+    return () => {
+      offWrite();
+      offClear();
+    };
+  }, [observed, invalidate]);
 
   const value = useMemo<RepoContextValue>(
     () => ({

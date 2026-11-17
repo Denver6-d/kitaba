@@ -57,5 +57,6 @@ export function createDexieStore(db: KitabaDb): RecordStore {
         await Promise.all([...TABLE_NAMES, "outbox", "meta"].map((n) => db.table(n).clear()));
       });
     },
+    atomic: (work) => db.transaction("rw", [...TABLE_NAMES, "outbox", "meta"], work),
   };
 }

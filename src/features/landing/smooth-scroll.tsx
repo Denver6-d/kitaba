@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
-import { prefersReducedMotion } from "@/lib/settings";
+import { useReducedMotion } from "@/lib/use-hydrated";
 
 /**
  * Lenis smooth scrolling, on the landing page only (never on typing screens).
  * Loaded on demand and skipped entirely with reduced motion.
  */
 export function SmoothScroll() {
+  // Re-evaluated when the OS or in-app motion setting changes.
+  const reduced = useReducedMotion();
   useEffect(() => {
-    if (prefersReducedMotion()) return;
+    if (reduced) return;
     let destroy = () => {};
     let cancelled = false;
     void (async () => {
@@ -35,6 +37,6 @@ export function SmoothScroll() {
       cancelled = true;
       destroy();
     };
-  }, []);
+  }, [reduced]);
   return null;
 }

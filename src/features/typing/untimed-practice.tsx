@@ -28,12 +28,15 @@ export function UntimedPractice({
   const save = useSaveTypingResult();
   const [finished, setFinished] = useState<FinishedSession | null>(null);
   const [outcome, setOutcome] = useState<SaveTestOutcome | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const onFinish = useCallback(
     (s: FinishedSession) => {
       setFinished(s);
       onComplete?.(s);
-      void save(s, source, 0).then(setOutcome);
+      save(s, source, 0)
+        .then(setOutcome)
+        .catch(() => setSaveFailed(true));
     },
     [save, source, onComplete],
   );
@@ -44,9 +47,11 @@ export function UntimedPractice({
         session={finished}
         outcome={outcome}
         modeLabel={modeLabel}
+        saveFailed={saveFailed}
         onAgain={() => {
           setFinished(null);
           setOutcome(null);
+          setSaveFailed(false);
           onAgain();
         }}
       />

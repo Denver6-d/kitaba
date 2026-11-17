@@ -44,7 +44,7 @@ const result = (wpm: number, accuracy = 95, modeKey = "words:30"): NewTestResult
   rawWpm: wpm + 2,
   accuracy,
   consistency: 80,
-  chars: wpm * 2.5,
+  chars: Math.round(wpm * 2.5),
   errors: 1,
   layoutMismatches: 0,
   samples: [wpm],
@@ -173,5 +173,46 @@ describe("parseExportFile", () => {
   it("accepts a minimal valid file and fills missing tables", () => {
     const f = parseExportFile(JSON.stringify({ app: "kitaba", version: 1, exportedAt: 1, tables: {} }));
     expect(f.tables.results).toEqual([]);
+  });
+});
+
+describe("parseExportFile strictness", () => {
+  const file = (tables: unknown) => JSON.stringify({ app: "kitaba", version: 1, exportedAt: 1, tables });
+
+  it("rejects rows with missing or mistyped fields", () => {
+    expect(() => parseExportFile(file({ keystats: [{ id: "k", updatedAt: 1, at: 1 }] }))).toThrow("invalid-format");
+    expect(() => parseExportFile(file({ results: [{ id: "r", updatedAt: 1, wpm: "fast" }] }))).toThrow("invalid-format");
+  });
+  it("rejects prototype-polluting keys in key stats", () => {
+    const json = file({ keystats: [{ id: "k", updatedAt: 1, at: 1, stats: { __proto__: { hits: 1, misses: 0 } } }] }).replace(
+      '"stats":{}',
+      '"stats":{"__proto__":{"hits":1,"misses":0}}',
+    );
+    // Either rejected outright, or the key is dropped: never stored, never polluting.
+    let stored: unknown = null;
+    try {
+      stored = parseExportFile(json).tables.keystats[0];
+    } catch (e) {
+      expect((e as Error).message).toBe("invalid-format");
+    }
+    if (stored) expect(Object.hasOwn((stored as { stats: object }).stats, "__proto__")).toBe(false);
+    expect(({} as Record<string, unknown>)["hits"]).toBeUndefined();
+  });
+  it("rejects unknown tables and extra fields", () => {
+    expect(() => parseExportFile(file({ secrets: [] }))).toThrow("invalid-format");
+    expect(() => parseExportFile(file({ mastery: [{ id: "m", updatedAt: 1, mastery: 1, extra: true }] }))).toThrow("invalid-format");
+  });
+});
+
+describe("atomic replace import", () => {
+  it("leaves existing data untouched when the import fails part-way", async () => {
+    const store = createMemoryStore();
+    const repos = createRepositories({ store });
+    await repos.profile.save({ level: "A2" });
+    const failing = { ...store, bulkPut: async () => Promise.reject(new Error("quota")) };
+    const broken = createRepositories({ store: failing });
+    const exported = await repos.data.exportAll();
+    await expect(broken.data.importAll(exported, "replace")).rejects.toThrow("quota");
+    expect((await repos.profile.get()).level).toBe("A2");
   });
 });

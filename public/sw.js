@@ -7,7 +7,9 @@
  * - Hashed build assets (/_next/static): cache first (they never change).
  * - Other same-origin assets (icons, manifest): stale-while-revalidate.
  */
-const VERSION = "kitaba-v1";
+// The registration URL carries the build stamp (?v=...), so every deploy gets a
+// fresh cache and the activate step deletes the previous ones.
+const VERSION = `kitaba-${new URL(self.location.href).searchParams.get("v") || "dev"}`;
 const PAGES = [
   "/",
   "/practice",

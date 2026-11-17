@@ -258,6 +258,6 @@ function styleNotes(input: string): StyleNote[] {
   if (!/[.!?]["')\]]*$/.test(text)) notes.push("end-punctuation");
   if (/(^|[^A-Za-z'])i(?=$|[^A-Za-z]|')/.test(text)) notes.push("lowercase-i");
   const words = text.toLowerCase().split(/[^a-z']+/);
-  if (words.some((w) => w in APOSTROPHE_LESS)) notes.push("missing-apostrophe");
+  if (words.some((w) => Object.hasOwn(APOSTROPHE_LESS, w))) notes.push("missing-apostrophe");
   return notes;
 }

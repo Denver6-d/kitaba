@@ -220,3 +220,13 @@ describe("gradeSentence: style notes (do not affect correctness)", () => {
     expect(gradeSentence("I am a student.", ["I am a student."]).notes).toEqual([]);
   });
 });
+
+describe("prototype-named tokens", () => {
+  it("treats words like 'constructor' as ordinary words", () => {
+    expect(normalize("constructor toString")).toBe("constructor tostring");
+    const r = gradeSentence("The constructor is here.", ["The constructor is here."]);
+    expect(r.correct).toBe(true);
+    expect(r.notes).not.toContain("missing-apostrophe");
+    expect(sameBase("constructor", "hasownproperty")).toBe(false);
+  });
+});

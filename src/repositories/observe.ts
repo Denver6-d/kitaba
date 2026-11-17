@@ -8,7 +8,13 @@ export type WriteListener = (table: TableName, records: readonly SyncRecord[]) =
  * views, and the sync engine uses it to queue changes for the cloud.
  * The repositories never know they are being observed.
  */
-export function observeStore(store: RecordStore): { store: RecordStore; subscribe: (l: WriteListener) => () => void; emitClear: () => void } {
+export interface ObservedStore {
+  readonly store: RecordStore;
+  readonly subscribe: (l: WriteListener) => () => void;
+  readonly subscribeClear: (l: () => void) => () => void;
+}
+
+export function observeStore(store: RecordStore): ObservedStore {
   const listeners = new Set<WriteListener>();
   const clearListeners = new Set<() => void>();
   const emit = (table: TableName, records: readonly SyncRecord[]) => {
@@ -30,13 +36,15 @@ export function observeStore(store: RecordStore): { store: RecordStore; subscrib
         await store.clear();
         for (const l of clearListeners) l();
       },
+      atomic: (work) => store.atomic(work),
     },
     subscribe(l) {
       listeners.add(l);
       return () => listeners.delete(l);
     },
-    emitClear() {
-      for (const l of clearListeners) l();
+    subscribeClear(l) {
+      clearListeners.add(l);
+      return () => clearListeners.delete(l);
     },
   };
 }

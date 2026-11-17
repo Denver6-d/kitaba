@@ -73,7 +73,7 @@ export function TypingRun({ target, durationSec, onFinish, onRestart, ghost, seg
   const caret = snapshot.typed.length;
   const nextChar = target[caret] ?? "";
   const nextKey = keyForChar(nextChar);
-  const lastMismatch = [...snapshot.log].reverse().find((k) => k.kind === "layout-mismatch");
+  const lastMismatch = snapshot.layoutWarning ? snapshot.log.findLast((k) => k.kind === "layout-mismatch") : undefined;
   const segment = segments ? segmentAt(segments, caret) : undefined;
   const meaning = segment && meaningFor ? meaningFor(segment.id) : null;
 

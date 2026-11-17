@@ -12,6 +12,11 @@ export interface RecordStore {
   bulkPut<T extends TableName>(table: T, records: readonly TableMap[T][]): Promise<void>;
   /** Removes every record in every table (local data reset). */
   clear(): Promise<void>;
+  /**
+   * Runs `work` so that either all of its writes land or none do (where the
+   * backend supports it). `work` must only use this store, no other async I/O.
+   */
+  atomic<T>(work: () => Promise<T>): Promise<T>;
 }
 
 /** In-memory backend used by tests and as a fallback when IndexedDB is unavailable (e.g. some private modes). */
@@ -42,6 +47,16 @@ export function createMemoryStore(): RecordStore {
     },
     async clear() {
       tables.clear();
+    },
+    async atomic(work) {
+      const snapshot = new Map([...tables].map(([k, v]) => [k, new Map(v)]));
+      try {
+        return await work();
+      } catch (e) {
+        tables.clear();
+        for (const [k, v] of snapshot) tables.set(k, v);
+        throw e;
+      }
     },
   };
 }

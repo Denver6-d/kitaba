@@ -61,6 +61,12 @@ export function useTypingSession({ target, durationSec, onFinish }: Options) {
   const dispatch = useCallback(
     (input: TypingInput) => {
       if (statusRef.current === "finished") return;
+      // Keystrokes after the deadline (before the next timer tick) must not count.
+      const start = engineRef.current.startedAt;
+      if (durationSec !== null && start !== null && input.t - start >= durationSec * 1000) {
+        finish(start + durationSec * 1000);
+        return;
+      }
       const next = applyInput(engineRef.current, input);
       if (next === engineRef.current) return;
       engineRef.current = next;
@@ -71,7 +77,7 @@ export function useTypingSession({ target, durationSec, onFinish }: Options) {
       }
       if (isFinished(next)) finish(next.lastAt ?? input.t);
     },
-    [finish],
+    [finish, durationSec],
   );
 
   useEffect(() => {

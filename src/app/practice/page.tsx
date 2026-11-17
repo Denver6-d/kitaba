@@ -28,6 +28,7 @@ export default function PracticePage() {
   const [nonce, setNonce] = useState(0);
   const [finished, setFinished] = useState<FinishedSession | null>(null);
   const [outcome, setOutcome] = useState<SaveTestOutcome | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const key = modeKey(source, duration);
   const profile = useRepoQuery((r) => r.profile.get());
@@ -46,13 +47,14 @@ export default function PracticePage() {
   const newTest = useCallback(() => {
     setFinished(null);
     setOutcome(null);
+    setSaveFailed(false);
     setNonce((n) => n + 1);
   }, []);
 
   const onFinish = useCallback(
     (session: FinishedSession) => {
       setFinished(session);
-      void (async () => {
+      (async () => {
         const result = await save(session, source, duration);
         setOutcome(result);
         // Sentences typed without a mistake count toward fading their Arabic hint.
@@ -65,7 +67,7 @@ export default function PracticePage() {
             await repos.sentences.setMastery(k, nextMastery(current, ok));
           }
         }
-      })();
+      })().catch(() => setSaveFailed(true));
     },
     [save, source, duration, text, mastery, repos],
   );
@@ -83,6 +85,7 @@ export default function PracticePage() {
           session={finished}
           outcome={outcome}
           onAgain={newTest}
+          saveFailed={saveFailed}
           modeLabel={`${t.test.sources[source]} · ${num(duration)} ${t.common.seconds}`}
         />
       ) : (

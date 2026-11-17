@@ -5,6 +5,7 @@ import type { TypingInput } from "@/domain/typing/engine";
 import { playClick } from "@/lib/sound";
 
 const SENTINEL = " ";
+const SMART_PUNCTUATION: Readonly<Record<string, string>> = { "‘": "'", "’": "'", "“": '"', "”": '"' };
 
 /**
  * Captures typing from a transparent <textarea>. Using the `input` event (and
@@ -29,6 +30,10 @@ export function useKeyCapture(
     let last = SENTINEL;
     let lastKey: { code: string; shift: boolean; at: number } | null = null;
     let composing = false;
+    const resetToSentinel = () => {
+      el.value = SENTINEL;
+      last = SENTINEL;
+    };
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -56,22 +61,26 @@ export function useKeyCapture(
       for (let i = 0; i < last.length - p; i += 1) dispatch({ kind: "backspace", t });
       const inserted = value.slice(p);
       const key = lastKey && t - lastKey.at < 80 && inserted.length === 1 ? lastKey : null;
-      for (const char of inserted) {
-        if (char === "\n") continue;
+      for (const raw of inserted) {
+        if (raw === "\n") continue;
+        // iOS ignores autocorrect=off for smart punctuation; map it back to ASCII.
+        const char = SMART_PUNCTUATION[raw] ?? raw;
         dispatch(key ? { kind: "char", char, code: key.code, shift: key.shift, t } : { kind: "char", char, t });
       }
       last = value;
-      if (!composing && (value.length === 0 || value.length > 48)) {
-        el.value = SENTINEL;
-        last = SENTINEL;
-      }
+      // Outside an IME composition, return to the sentinel after every input so the
+      // textarea never holds characters the engine rejected (e.g. Arabic-layout
+      // keystrokes). A later Backspace then always means "delete one engine character".
+      if (!composing) resetToSentinel();
     };
+
 
     const onCompStart = () => {
       composing = true;
     };
     const onCompEnd = () => {
       composing = false;
+      resetToSentinel();
     };
     // The sentinel space lets a mobile keyboard send backspace even when we have consumed all text.
     const keepCaretAtEnd = () => el.setSelectionRange(el.value.length, el.value.length);

@@ -56,7 +56,7 @@ function expandToken(token: string): string {
         return IS_CONTRACTIONS.has(head) ? `${head} is` : token; // otherwise possessive
     }
   }
-  const bare = APOSTROPHE_LESS[token];
+  const bare = Object.hasOwn(APOSTROPHE_LESS, token) ? APOSTROPHE_LESS[token] : undefined;
   if (bare) return bare;
   const n = /^\d+$/.test(token) ? NUMBERS[Number(token)] : undefined;
   return n ?? token;

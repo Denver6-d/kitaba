@@ -7,7 +7,11 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
 ];
 
+/** One stamp per build: names the service-worker cache so old caches are dropped on deploy. */
+const BUILD_STAMP = process.env.KITABA_BUILD_STAMP ?? new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14);
+
 const nextConfig: NextConfig = {
+  env: { NEXT_PUBLIC_BUILD_STAMP: BUILD_STAMP },
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,

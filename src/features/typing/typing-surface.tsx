@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
+import { memo, useId, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
 
 interface WordProps {
   readonly word: string;
@@ -64,6 +64,7 @@ export function TypingSurface({ target, typed, ghostPos, focused, idle, inputRef
     return out;
   }, [target]);
 
+  const textId = useId();
   const innerRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLSpanElement>(null);
   const ghostRef = useRef<HTMLSpanElement>(null);
@@ -76,13 +77,14 @@ export function TypingSurface({ target, typed, ghostPos, focused, idle, inputRef
     const index = Math.min(typed.length, target.length - 1);
     const span = inner.querySelector<HTMLSpanElement>(`[data-i="${index}"]`);
     if (!span) return;
-    const lineHeight = span.offsetHeight || 1;
+    // The line box (2.4em), not the inline span's content height.
+    const lineHeight = parseFloat(getComputedStyle(inner).lineHeight) || span.offsetHeight || 1;
     const atEnd = typed.length >= target.length;
     const x = span.offsetLeft + (atEnd ? span.offsetWidth : 0);
-    const y = span.offsetTop;
-    caret.style.transform = `translate(${x}px, ${y}px)`;
-    caret.style.height = `${lineHeight}px`;
-    const line = Math.round(y / lineHeight);
+    const line = Math.floor((span.offsetTop + span.offsetHeight / 2) / lineHeight);
+    const y = line * lineHeight;
+    caret.style.transform = `translate(${x}px, ${y + lineHeight * 0.18}px)`;
+    caret.style.height = `${lineHeight * 0.64}px`;
     const offset = Math.max(0, line - 1) * lineHeight;
     inner.style.transform = `translateY(${-offset}px)`;
   }, [typed, target]);
@@ -97,9 +99,11 @@ export function TypingSurface({ target, typed, ghostPos, focused, idle, inputRef
     }
     const span = inner.querySelector<HTMLSpanElement>(`[data-i="${Math.min(ghostPos, target.length - 1)}"]`);
     if (!span) return;
+    const lineHeight = parseFloat(getComputedStyle(inner).lineHeight) || span.offsetHeight || 1;
+    const line = Math.floor((span.offsetTop + span.offsetHeight / 2) / lineHeight);
     ghost.style.opacity = "1";
-    ghost.style.height = `${span.offsetHeight}px`;
-    ghost.style.transform = `translate(${span.offsetLeft}px, ${span.offsetTop}px)`;
+    ghost.style.height = `${lineHeight * 0.64}px`;
+    ghost.style.transform = `translate(${span.offsetLeft}px, ${line * lineHeight + lineHeight * 0.18}px)`;
   }, [ghostPos, target]);
 
   return (
@@ -129,11 +133,15 @@ export function TypingSurface({ target, typed, ghostPos, focused, idle, inputRef
           />
         </div>
       </div>
+      {/* The visual text is aria-hidden (one span per letter); screen readers get it whole. */}
+      <p id={textId} className="sr-only">
+        {target}
+      </p>
 
       <textarea
         ref={inputRef}
         aria-label={label}
-        aria-describedby={describedBy}
+        aria-describedby={describedBy ? `${textId} ${describedBy}` : textId}
         autoCapitalize="off"
         autoComplete="off"
         autoCorrect="off"

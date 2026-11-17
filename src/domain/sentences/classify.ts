@@ -29,6 +29,10 @@ export const VERBS: ReadonlySet<string> = new Set(
   ).split(" "),
 );
 
+/** Own-property lookup (never reads Object.prototype, e.g. for the token "constructor"). */
+const own = (table: Readonly<Record<string, string>>, key: string): string | undefined =>
+  Object.hasOwn(table, key) ? table[key] : undefined;
+
 /** Irregular verb forms → base form. */
 const IRREGULAR_VERBS: Readonly<Record<string, string>> = {
   went: "go", gone: "go", goes: "go",
@@ -106,7 +110,7 @@ export const IRREGULAR_PLURALS: Readonly<Record<string, string>> = {
 /** Candidate base forms of a word (over-generating is fine; we only test for overlap). */
 export function stems(word: string): Set<string> {
   const out = new Set<string>([word]);
-  const irregular = IRREGULAR_VERBS[word] ?? IRREGULAR_PLURALS[word];
+  const irregular = own(IRREGULAR_VERBS, word) ?? own(IRREGULAR_PLURALS, word);
   if (irregular) out.add(irregular);
   if (word.endsWith("ies") && word.length > 4) out.add(`${word.slice(0, -3)}y`);
   if (word.endsWith("ied") && word.length > 4) out.add(`${word.slice(0, -3)}y`);
@@ -135,19 +139,19 @@ export function isSVariant(a: string, b: string): boolean {
   if (short.endsWith("y") && long === `${short.slice(0, -1)}ies`) return true;
   if (short.endsWith("y") && long === `${short}s`) return true; // studys (misspelt) vs study(ies)
   if (long.endsWith("s") && stems(long).has(short)) return true;
-  return IRREGULAR_PLURALS[long] === short || IRREGULAR_PLURALS[short] === long;
+  return own(IRREGULAR_PLURALS, long) === short || own(IRREGULAR_PLURALS, short) === long;
 }
 
 export function isIrregularPluralPair(a: string, b: string): boolean {
-  return IRREGULAR_PLURALS[a] === b || IRREGULAR_PLURALS[b] === a || stemsHaveIrregularPlural(a, b);
+  return own(IRREGULAR_PLURALS, a) === b || own(IRREGULAR_PLURALS, b) === a || stemsHaveIrregularPlural(a, b);
 }
 
 function stemsHaveIrregularPlural(a: string, b: string): boolean {
   // e.g. "childs" (wrong) vs "children": both reduce to "child", and one side is an irregular plural
-  const plural = IRREGULAR_PLURALS[a] ? a : IRREGULAR_PLURALS[b] ? b : null;
+  const plural = own(IRREGULAR_PLURALS, a) ? a : own(IRREGULAR_PLURALS, b) ? b : null;
   if (!plural) return false;
   const other = plural === a ? b : a;
-  return stems(other).has(IRREGULAR_PLURALS[plural] ?? "");
+  return stems(other).has(own(IRREGULAR_PLURALS, plural) ?? "");
 }
 
 /** Levenshtein distance between two strings. */

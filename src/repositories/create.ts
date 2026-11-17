@@ -179,14 +179,17 @@ export function createRepositories({ store, now = Date.now, newId = () => crypto
         };
       },
       async importAll(file, mode) {
-        if (mode === "replace") await store.clear();
-        for (const table of TABLE_NAMES) {
-          const incoming = (file.tables[table] ?? []) as TableMap[typeof table][];
-          if (incoming.length === 0) continue;
-          const local = await store.all(table);
-          const { toLocal } = mergeTable(table, local, incoming);
-          if (toLocal.length > 0) await store.bulkPut(table, toLocal);
-        }
+        // One atomic unit: a failure part-way never leaves a half-cleared database.
+        await store.atomic(async () => {
+          if (mode === "replace") await store.clear();
+          for (const table of TABLE_NAMES) {
+            const incoming = (file.tables[table] ?? []) as TableMap[typeof table][];
+            if (incoming.length === 0) continue;
+            const local = mode === "replace" ? [] : await store.all(table);
+            const { toLocal } = mergeTable(table, local, incoming);
+            if (toLocal.length > 0) await store.bulkPut(table, toLocal);
+          }
+        });
       },
       async clearAll() {
         await store.clear();

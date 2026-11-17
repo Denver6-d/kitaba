@@ -17,9 +17,10 @@ interface Props {
   readonly outcome: SaveTestOutcome | null;
   readonly onAgain: () => void;
   readonly modeLabel: string;
+  readonly saveFailed?: boolean;
 }
 
-export function ResultsPanel({ session, outcome, onAgain, modeLabel }: Props) {
+export function ResultsPanel({ session, outcome, onAgain, modeLabel, saveFailed = false }: Props) {
   const { t, num, pct } = useI18n();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const { metrics, state } = session;
@@ -74,6 +75,11 @@ export function ResultsPanel({ session, outcome, onAgain, modeLabel }: Props) {
             <Stat label={t.results.raw} value={`${num(Math.round(metrics.rawWpm))} ${t.common.wpmShort}`} />
             <Stat label={t.results.errors} value={num(metrics.errors)} />
           </dl>
+          {saveFailed && (
+            <p role="alert" className="rounded-lg bg-[var(--error-wash)] p-3 text-sm text-error">
+              {t.results.saveFailed}
+            </p>
+          )}
           {state.layoutMismatches > 0 && <p className="text-sm text-ink-soft">{t.results.layoutNote(state.layoutMismatches)}</p>}
         </div>
 

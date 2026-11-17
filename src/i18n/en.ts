@@ -122,6 +122,7 @@ export const en: Dictionary = {
     chartLabel: "Speed for each second",
     lowAccuracy: "Accuracy was under 80%, so this does not count as a personal best. Focus on accuracy before speed.",
     weakKeys: "Keys that need practice",
+    saveFailed: "This result could not be saved on your device (storage may be full or private browsing may be on). It is shown here but will not be kept.",
     drillThem: "Practise them",
   },
   learn: {

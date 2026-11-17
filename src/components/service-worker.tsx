@@ -7,7 +7,7 @@ export function ServiceWorkerRegistration() {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
     const register = () => {
-      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+      navigator.serviceWorker.register(`/sw.js?v=${process.env.NEXT_PUBLIC_BUILD_STAMP ?? "dev"}`, { scope: "/" }).catch(() => {
         // Offline support is a progressive enhancement; the site works without it.
       });
     };
