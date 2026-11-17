@@ -141,7 +141,7 @@ export const en: Dictionary = {
   writing: {
     title: "Sentences and messages",
     intro: "Write whole sentences and messages, or type what you hear. We correct spelling only and explain each mistake. We don't correct grammar.",
-    honest: "Spelling only: an English dictionary on your device plus known rules for sound-alike words. It does not check grammar or style, and your text is never sent anywhere.",
+    honest: "Spelling only: an English dictionary on your device plus known rules for sound-alike words. It does not check grammar or style. Checking never sends your text anywhere; if you sign in, your saved texts sync to your account only.",
     freeTitle: "Free writing",
     freeDesc: "A situation in Arabic; you write in English, from one sentence to a long message.",
     dictTitle: "Sentence and message dictation",

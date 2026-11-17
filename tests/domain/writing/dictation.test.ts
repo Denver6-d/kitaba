@@ -5,8 +5,8 @@ import { summarizeWriting } from "@/domain/writing/summary";
 import { americanCandidates, britishToAmerican } from "@/domain/writing/british";
 
 describe("dictationWords", () => {
-  it("drops punctuation and keeps apostrophes, digits and inner hyphens", () => {
-    expect(dictationWords("“Hello,” she said — it’s 5 o'clock, a well-known time!")).toEqual(["Hello", "she", "said", "it's", "5", "o'clock", "a", "well-known", "time"]);
+  it("drops punctuation, keeps apostrophes and digits, and treats hyphens as spaces", () => {
+    expect(dictationWords("“Hello,” she said — it’s 5 o'clock, a well-known time!")).toEqual(["Hello", "she", "said", "it's", "5", "o'clock", "a", "well", "known", "time"]);
   });
 });
 

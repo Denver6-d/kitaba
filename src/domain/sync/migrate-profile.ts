@@ -16,7 +16,9 @@ type Row = Record<string, unknown>;
 const isLevel = (v: unknown): v is CefrLevel => typeof v === "string" && (LEVELS as readonly string[]).includes(v);
 
 export function migrateProfileRow(row: Row): Row {
-  const old = row.levels && typeof row.levels === "object" ? (row.levels as Row) : null;
+  const raw = row.levels && typeof row.levels === "object" && !Array.isArray(row.levels) ? (row.levels as Row) : null;
+  // Levels count as set only when at least one valid level is stored.
+  const old = raw && LEVEL_AREAS.some((a) => isLevel(raw[a])) ? raw : null;
   const fallback: CefrLevel = isLevel(row.level) ? row.level : DEFAULT_LEVEL;
   const levels = Object.fromEntries(LEVEL_AREAS.map((a) => [a, isLevel(old?.[a]) ? old[a] : fallback]));
   const source =
@@ -30,8 +32,11 @@ export function migrateProfileRow(row: Row): Row {
     updatedAt: row.updatedAt,
     levels,
     levelSource: source,
-    levelsAt: typeof row.levelsAt === "number" && row.levelsAt >= 0 ? row.levelsAt : 0,
-    dailyGoalMinutes: typeof row.dailyGoalMinutes === "number" ? row.dailyGoalMinutes : 10,
+    levelsAt: typeof row.levelsAt === "number" && Number.isFinite(row.levelsAt) && row.levelsAt >= 0 ? row.levelsAt : 0,
+    dailyGoalMinutes:
+      typeof row.dailyGoalMinutes === "number" && Number.isInteger(row.dailyGoalMinutes) && row.dailyGoalMinutes >= 0 && row.dailyGoalMinutes <= 240
+        ? row.dailyGoalMinutes
+        : 10,
   };
   if (row.deletedAt !== undefined) out.deletedAt = row.deletedAt;
   return out;

@@ -104,7 +104,7 @@ function Today({ stages, days, due }: { stages: Readonly<Record<string, StageRec
             <CalendarCheck className="size-5 text-brass" aria-hidden="true" />
             {t.play.daily}
           </h2>
-          <p className="text-ink-soft">{dailyDone ? t.play.dailyDone : t.play.dailyIntro}</p>
+          <p>{dailyDone ? t.play.dailyDone : t.play.dailyIntro}</p>
         </div>
         <Button asChild size="lg" variant={dailyDone ? "outline" : "default"} className="h-12 px-6 text-base">
           <Link href="/play/game?daily=1">{dailyDone ? t.game.playAgain : t.play.dailyStart}</Link>

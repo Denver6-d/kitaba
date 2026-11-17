@@ -1,5 +1,5 @@
 import { charDistance } from "../spelling/diff";
-import { americanToBritish, britishToAmerican } from "./british";
+import { britishToAmerican } from "./british";
 import { classifyMistake, type MistakeType } from "./classify";
 import { confusableFix, type ConfusablePair } from "./confusables";
 import { tokenize, type Token } from "./tokenize";
@@ -104,7 +104,7 @@ const matchCase = (typed: string, fix: string) => (isCapitalized(typed) && !isCa
 
 /**
  * Spellings one typical learner slip away from `word`: ie/ei swapped, p/b or
- * v/f swapped, a letter doubled or undoubled. When one of these is a real word
+ * v/f swapped, a letter doubled or undoubled, two letters swapped. When one of these is a real word
  * it is almost always the intended one ("recieve" is "receive", not "relieve").
  */
 export function ruleCandidates(word: string): string[] {
@@ -121,6 +121,9 @@ export function ruleCandidates(word: string): string[] {
     if (to) out.push(w.slice(0, i) + to + w.slice(i + 1));
     if (/[a-z]/.test(c) && w[i + 1] !== c && w[i - 1] !== c) out.push(w.slice(0, i + 1) + c + w.slice(i + 1));
     if (w[i + 1] === c) out.push(w.slice(0, i) + w.slice(i + 1));
+    // Two neighbouring letters swapped (teh → the).
+    const n = w[i + 1];
+    if (n && n !== c) out.push(w.slice(0, i) + n + c + w.slice(i + 2));
   }
   return [...new Set(out)].filter((c) => c !== w);
 }
@@ -134,8 +137,15 @@ function bestSuggestion(word: string, speller: Speller, cache: Map<string, strin
   const key = word.toLowerCase();
   if (cache.has(key)) return cache.get(key) ?? null;
   const fromRules = ruleCandidates(key).filter((c) => speller.correct(c));
+  // Common learner words one letter away (recive → receive, wich → which), which nspell may rank below rarer words.
+  const fromBank = key.length >= 3 ? [...bank].filter((b) => Math.abs(b.length - key.length) <= 1 && charDistance(key, b) === 1) : [];
   const options = speller.suggest(key).filter((s) => s.split(" ").length <= 2);
-  const ranked = [...fromRules.map((s) => ({ s, score: -2 + (bank.has(s) ? -1 : 0) })), ...options.slice(0, 8).map((s) => ({ s, score: charDistance(key, s.toLowerCase()) + (bank.has(s.toLowerCase()) ? -0.5 : 0) }))];
+  const ranked = [
+    ...fromRules.map((s) => ({ s, score: -2 + (bank.has(s) ? -1 : 0) })),
+    // A missing or wrong vowel or double letter is the likeliest slip (recive → receive rather than recipe).
+    ...fromBank.map((s) => ({ s, score: -1.5 + (["vowel", "double"].includes(classifyMistake(key, s)) ? -0.3 : 0) })),
+    ...options.slice(0, 8).map((s) => ({ s, score: charDistance(key, s.toLowerCase()) + (bank.has(s.toLowerCase()) ? -0.5 : 0) })),
+  ];
   let best: string | null = null;
   let bestScore = Infinity;
   for (const r of ranked) {
@@ -207,11 +217,18 @@ export function checkText(text: string, opts: CheckOptions): TextCheck {
   const checkWord = (word: string, t: Token): { suggestion: string | null; kind: IssueKind; type: MistakeType } | null => {
     const lower = word.toLowerCase();
     if (word === "i") return { suggestion: "I", kind: "spelling", type: "capital" };
-    if (isAllCaps(word) || personal.has(lower) || KNOWN_NAMES.has(lower)) return null;
+    // Loanwords with accents (café, naïve) are not English-dictionary words to correct.
+    if (/[^\x00-\x7F]/.test(word)) return null;
+    // Possessive 's: names, the learner's own words and British forms are looked up without it (Kareem's, neighbour's).
+    const possessive = /'s$/i.test(word) ? "'s" : "";
+    const base = possessive ? lower.slice(0, -2) : lower;
+    if (isAllCaps(word) || personal.has(lower) || personal.has(base) || KNOWN_NAMES.has(base)) return null;
     if (isWord(word)) {
+      // A British learner gets a note only for bank words with a known British form (color → colour), never for
+      // words that are also different British words (check/cheque, story/storey, program/programme).
       if (accent === "uk" && !isCapitalized(word)) {
-        const uk = americanToBritish(lower, ukForms);
-        if (uk) return { suggestion: uk, kind: "note", type: "british" };
+        const uk = ukForms.get(base);
+        if (uk) return { suggestion: uk + possessive, kind: "note", type: "british" };
       }
       return null;
     }
@@ -221,20 +238,21 @@ export function checkText(text: string, opts: CheckOptions): TextCheck {
     if (contraction) return { suggestion: matchCase(word, contraction), kind: "spelling", type: "apostrophe" };
     const split = SPLITS[lower];
     if (split) return { suggestion: matchCase(word, split), kind: "spelling", type: "split" };
-    const american = britishToAmerican(lower, isWord);
-    if (american) return accent === "uk" ? null : { suggestion: matchCase(word, american), kind: "note", type: "british" };
+    const american = britishToAmerican(base, isWord);
+    if (american) return accent === "uk" ? null : { suggestion: matchCase(word, american + possessive), kind: "note", type: "british" };
     if (isCapitalized(word)) {
-      if (isWord(lower)) return null;
+      if (isWord(lower) || (possessive !== "" && isWord(capitalize(base)))) return null;
       // A capitalised unknown word inside a sentence is a name (Kareem, Zarqa), unless it is a misspelled day or month.
-      if (!t.sentenceStart || namesInText.has(word)) {
-        const s = calendarMatch(lower) ?? bestSuggestion(lower, speller, cache, bank);
-        if (s && CALENDAR.has(s) && charDistance(lower, s.toLowerCase()) <= 2) return { suggestion: s, kind: "spelling", type: classifyMistake(lower, s.toLowerCase()) };
-        return null;
+      if (!t.sentenceStart || namesInText.has(word) || namesInText.has(capitalize(base))) {
+        const c = calendarMatch(base);
+        return c ? { suggestion: c + possessive, kind: "spelling", type: classifyMistake(base, c.toLowerCase()) } : null;
       }
-      // First word of a sentence: flag it only when a close real word exists (Recieve → Receive).
-      const s = calendarMatch(lower) ?? bestSuggestion(lower, speller, cache, bank);
-      if (!s || charDistance(lower, s.toLowerCase()) > 2) return null;
-      return { suggestion: matchCase(word, s), kind: "spelling", type: classifyMistake(lower, s) };
+      // First word of a sentence: flag it only for a typical learner slip (ie/ei, p/b, v/f, a double or swapped
+      // letter) or a day or month, so a name such as Majd or Tabuk is never "corrected" into maid or taboo.
+      const s = calendarMatch(base) ?? bestSuggestion(base, speller, cache, bank);
+      const common = s !== null && (CALENDAR.has(s) || ruleCandidates(base).includes(s.toLowerCase()));
+      if (!s || !common || charDistance(base, s.toLowerCase()) > 2) return null;
+      return { suggestion: matchCase(word, s + possessive), kind: "spelling", type: classifyMistake(base, s) };
     }
     // monday → Monday: right letters, missing capital.
     if (isWord(capitalize(word))) return { suggestion: capitalize(word), kind: "spelling", type: "capital" };
@@ -244,6 +262,8 @@ export function checkText(text: string, opts: CheckOptions): TextCheck {
 
   tokens.forEach((t, i) => {
     const parts = t.text.split("-");
+    // A hyphenated word the learner added as a whole (al-Ahsa) is fine.
+    if (parts.length > 1 && personal.has(t.text.toLowerCase())) return;
     if (parts.length > 1) {
       // well-known, twenty-one: check each part; report the whole token once.
       const fixes = parts.map((p) => (p.length > 1 ? checkWord(p, { ...t, sentenceStart: false }) : null));

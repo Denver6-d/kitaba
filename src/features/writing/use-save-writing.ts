@@ -11,12 +11,18 @@ import { bankIdBySpelling } from "./bank";
 
 /** SM-2 quality for a word misspelled in writing: a plain miss (DECISIONS S1). */
 const MISS_QUALITY = 1;
+/** The zod limit on a card's note (export.ts). */
+const CONTEXT_MAX = 400;
 
 export interface SavedWriting {
   readonly xp: number;
   /** Words added to (or brought forward in) the review deck. */
   readonly reviewed: number;
   readonly levelUp: number | null;
+  /** The history record, so it can be amended when the learner adds a word to their dictionary. */
+  readonly recordId: string;
+  /** Cards this check created (lower-cased misspelling → card id); they are removed again if the word was a name. */
+  readonly newCards: Readonly<Record<string, string>>;
 }
 
 /** The review-card id for a misspelled word: the bank's id when the bank has it, otherwise "x-<word>". */
@@ -25,11 +31,20 @@ export function writingCardId(right: string): string {
   return bankIdBySpelling.get(lower) ?? `x-${lower.replace(/[^a-z'-]/g, "")}`;
 }
 
-/** Finds the sentence of `text` that contains `word`, for the review card's note. */
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** `word` as a whole word (so "wich" does not match inside "sandwich"). */
+const wholeWord = (word: string) => new RegExp(`(?<![A-Za-z'])${escapeRe(word)}(?![A-Za-z])`, "i");
+
+/** Finds the sentence of `text` that contains `word` as a whole word, for the review card's note. */
 export function sentenceWith(text: string, word: string): string {
+  const re = wholeWord(word);
   const sentences = text.split(/(?<=[.!?])\s+|\n+/);
-  const hit = sentences.find((s) => s.toLowerCase().includes(word.toLowerCase())) ?? "";
-  return hit.trim().slice(0, 400);
+  return (sentences.find((s) => re.test(s)) ?? "").trim();
+}
+
+/** The sentence with the misspelling replaced by the right spelling (whole word only), capped for storage. */
+export function correctedSentence(text: string, wrong: string, right: string): string {
+  return sentenceWith(text, wrong).replace(wholeWord(wrong), right).slice(0, CONTEXT_MAX);
 }
 
 /**
@@ -54,7 +69,7 @@ export function useSaveWriting() {
       const { summary } = input;
       const now = Date.now();
       const xpBefore = (await repos.activity.list()).reduce((n, a) => n + a.xp, 0);
-      await repos.writing.save({
+      const record = await repos.writing.save({
         mode: input.mode,
         sourceId: input.sourceId,
         level: input.level,
@@ -67,6 +82,7 @@ export function useSaveWriting() {
         missed: summary.practice.map((m) => ({ wrong: m.wrong, right: m.right, type: m.type })),
       });
       let reviewed = 0;
+      const newCards: Record<string, string> = {};
       for (const m of summary.practice) {
         if (!m.right || m.right.includes(" ") || m.type === "capital") continue;
         const id = writingCardId(m.right);
@@ -74,16 +90,17 @@ export function useSaveWriting() {
         const next = applyAnswer(existing, id, MISS_QUALITY, now);
         if (!next) continue;
         // The note is the sentence it came from, with the word spelled right (review may speak it).
-        const context = input.reference ? sentenceWith(input.reference, m.right) : sentenceWith(input.text, m.wrong).replace(m.wrong, m.right);
+        const context = input.reference ? sentenceWith(input.reference, m.right).slice(0, CONTEXT_MAX) : correctedSentence(input.text, m.wrong, m.right);
         const own = id.startsWith("x-");
         await repos.words.saveCard({ ...next, ...(own ? { word: m.right.toLowerCase() } : {}), ...(context ? { context } : {}) });
+        if (!existing) newCards[m.wrong.toLowerCase()] = id;
         reviewed += 1;
       }
       await repos.activity.log("writing", input.seconds, summary.xp);
       await checkAchievements();
       const before = levelInfo(xpBefore).level;
       const after = levelInfo(xpBefore + summary.xp).level;
-      return { xp: summary.xp, reviewed, levelUp: after > before ? after : null };
+      return { xp: summary.xp, reviewed, levelUp: after > before ? after : null, recordId: record.id, newCards };
     },
     [repos, checkAchievements],
   );

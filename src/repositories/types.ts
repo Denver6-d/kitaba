@@ -25,6 +25,8 @@ export interface WordRepository {
   saveCard(card: Omit<SrsCardRecord, "id" | "updatedAt">): Promise<void>;
   allCards(): Promise<SrsCardRecord[]>;
   dueCards(now: number): Promise<SrsCardRecord[]>;
+  /** Removes a card (tombstone, so the removal syncs). Used when a flagged word turns out to be a name. */
+  forgetCard(wordId: string): Promise<void>;
 }
 
 /** Per-item mastery (Arabic hint fading). Keys look like "spell:<wordId>". */
@@ -70,6 +72,8 @@ export interface WritingRepository {
   save(w: NewWriting): Promise<WritingRecord>;
   /** Newest first. */
   list(): Promise<WritingRecord[]>;
+  /** Updates the score of a saved text (a flagged word was added to the learner's dictionary). */
+  amend(id: string, patch: Pick<WritingRecord, "mistakes" | "accuracy" | "stars" | "missed">): Promise<void>;
 }
 
 /** The learner's own words, never flagged by the spelling checker. Synced. */

@@ -68,11 +68,11 @@ end $$;
 
 -- Phase F tables (migration 20261118000001) are accepted, still only for the caller.
 select public.upsert_progress('[{"table_name":"writings","id":"w1","data":{"id":"w1","updatedAt":1},"updated_at":1},{"table_name":"dictionary","id":"padel","data":{"id":"padel","updatedAt":1,"word":"padel"},"updated_at":1}]'::jsonb);
-do $ begin
+do $$ begin
   if (select count(*) from public.progress_records where table_name in ('writings', 'dictionary') and user_id = auth.uid()) <> 2 then
     raise exception 'writings/dictionary rows were not stored for the caller';
   end if;
-end $;
+end $$;
 
 -- B sees nothing of A's and cannot change or delete it.
 select pg_temp.act_as('00000000-0000-4000-8000-00000000000b');

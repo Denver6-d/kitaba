@@ -21,11 +21,12 @@ export interface Token {
   readonly prev: string | null;
 }
 
-const WORD_RE = /[A-Za-z]+(?:['’][A-Za-z]+)*(?:-[A-Za-z]+(?:['’][A-Za-z]+)*)*(?:['’](?![A-Za-z]))?/g;
-const SKIP_CHUNK_RE = /\d|@|:\/\/|^www\./i;
+const WORD_RE = /[A-Za-zÀ-ÖØ-öø-ÿ]+(?:['’][A-Za-z]+)*(?:-[A-Za-z]+(?:['’][A-Za-z]+)*)*(?:['’](?![A-Za-z]))?/g;
+/** Chunks that are never spelling: digits (21st, 3pm), e-mail, URLs, dotted abbreviations (i.e., e.g., a.m.). */
+const SKIP_CHUNK_RE = /\d|@|:\/\/|^www\.|^\(?(?:[a-z]\.){2,}/i;
 
 /** Abbreviations whose full stop does not end a sentence. */
-const ABBREVIATIONS = new Set(["mr", "mrs", "ms", "dr", "st", "prof", "mt", "jr", "sr", "vs", "etc", "e.g", "i.e", "no"]);
+const ABBREVIATIONS = new Set(["mr", "mrs", "ms", "dr", "st", "prof", "mt", "jr", "sr", "vs", "etc", "e.g", "i.e", "a.m", "p.m"]);
 
 export const straighten = (s: string): string => s.replace(/[‘’ʼ`]/g, "'");
 

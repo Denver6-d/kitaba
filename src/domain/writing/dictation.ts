@@ -23,21 +23,26 @@ export interface DictationResult {
   readonly correct: number;
   /** Misspelled, missing and extra words. */
   readonly mistakes: number;
-  /** correct / words, 0–1. */
+  /** correct / (words + extra words), 0–1: typing extra words lowers it too. */
   readonly accuracy: number;
 }
 
-/** Words as they are compared: straight apostrophes, letters, digits and inner hyphens only. */
+/**
+ * Words as they are compared: straight apostrophes, letters and digits. Hyphens
+ * count as spaces, so "well-known" typed as "well known" is not a mistake.
+ */
 export function dictationWords(text: string): string[] {
   return straighten(text)
+    .replace(/(?<=[A-Za-z])-(?=[A-Za-z])/g, " ")
     .split(/\s+/)
     .map((w) => w.replace(/^[^A-Za-z0-9']+|[^A-Za-z0-9']+$/g, "").replace(/^'+|'+$/g, ""))
     .filter((w) => w.length > 0);
 }
 
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
-/** colour for color: accepted, with a note. */
-const britishOf = (typed: string, word: string) => americanCandidates(typed).includes(word.toLowerCase());
+/** colour for color (or color for colour): the other variant is accepted, with a note. */
+const britishOf = (typed: string, word: string) =>
+  americanCandidates(typed).includes(word.toLowerCase()) || americanCandidates(word).includes(typed.toLowerCase());
 
 export function compareDictation(expected: string, typed: string): DictationResult {
   const e = dictationWords(expected);
@@ -88,5 +93,6 @@ export function compareDictation(expected: string, typed: string): DictationResu
     }
   }
   const correct = segments.filter((s) => s.kind === "ok").length;
-  return { segments, words: n, correct, mistakes: segments.length - correct, accuracy: n === 0 ? 0 : correct / n };
+  const extra = segments.filter((s) => s.kind === "extra").length;
+  return { segments, words: n, correct, mistakes: segments.length - correct, accuracy: n + extra === 0 ? 0 : correct / (n + extra) };
 }

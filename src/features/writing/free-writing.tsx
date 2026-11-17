@@ -16,9 +16,17 @@ import { drawNext } from "./draw";
 import { MarkedText } from "./marked-text";
 import { MistakeDetail } from "./mistake-detail";
 import { checkSpelling, preloadSpeller } from "./spell-client";
-import { sentenceWith, useSaveWriting, type SavedWriting } from "./use-save-writing";
+import { correctedSentence, useSaveWriting, type SavedWriting } from "./use-save-writing";
 import { WritingSummaryPanel } from "./writing-summary";
 import { WritingTextarea } from "./writing-textarea";
+
+/** Summary of a check, leaving out words the learner added to their own dictionary. */
+function rescore(check: TextCheck, hidden: ReadonlySet<string>): WritingSummary {
+  const mistakes = check.issues
+    .filter((i) => isMistake(i) && !hidden.has(i.word.toLowerCase()))
+    .map((i) => ({ wrong: i.word, right: i.suggestion, type: i.type }));
+  return summarizeWriting(check.words, mistakes);
+}
 
 type Phase =
   | { readonly kind: "loading" }
@@ -48,6 +56,8 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [round, setRound] = useState(0);
   const startedAt = useRef(0);
+  /** The last text that was saved and scored: checking it again unchanged earns no XP and no new review miss. */
+  const lastSaved = useRef<{ text: string; saved: SavedWriting } | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLHeadingElement>(null);
 
@@ -65,6 +75,7 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
       setText("");
       setSelected(null);
       setPhase({ kind: "writing" });
+      lastSaved.current = null;
       startedAt.current = Date.now();
     });
     return () => {
@@ -91,13 +102,47 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
       setPhase({ kind: "load-error" });
       return;
     }
-    const mistakes = check.issues.filter(isMistake).map((i) => ({ wrong: i.word, right: i.suggestion, type: i.type }));
-    const summary = summarizeWriting(check.words, mistakes);
+    const summary = rescore(check, new Set());
+    const previous = lastSaved.current;
+    if (previous && previous.text === text) {
+      setPhase({ kind: "result", text, check, summary, saved: previous.saved, saveFailed: false });
+      return;
+    }
     setPhase({ kind: "result", text, check, summary, saved: null, saveFailed: false });
     const seconds = Math.max(1, Math.round((Date.now() - startedAt.current) / 1000));
-    save({ mode: "free", sourceId: scenario.id, level, text, summary, seconds })
-      .then((saved) => setPhase((p) => (p.kind === "result" ? { ...p, saved } : p)))
-      .catch(() => setPhase((p) => (p.kind === "result" ? { ...p, saveFailed: true } : p)));
+    const sourceId = scenario.id;
+    save({ mode: "free", sourceId, level, text, summary, seconds })
+      .then((saved) => {
+        lastSaved.current = { text, saved };
+        setPhase((p) => (p.kind === "result" && p.text === text ? { ...p, saved } : p));
+      })
+      .catch(() => setPhase((p) => (p.kind === "result" && p.text === text ? { ...p, saveFailed: true } : p)));
+  };
+
+  /**
+   * A flagged word the learner adds to their dictionary (a name, a real word) stops counting:
+   * the score is recomputed, the saved record amended and the review card it created removed.
+   */
+  const onAdded = (word: string) => {
+    if (phase.kind !== "result") return;
+    const lower = word.toLowerCase();
+    const nextHidden = new Set([...hidden, lower]);
+    setHidden(nextHidden);
+    setSelected(null);
+    const summary = rescore(phase.check, nextHidden);
+    setPhase({ ...phase, summary });
+    const saved = phase.saved;
+    if (!saved) return;
+    const card = saved.newCards[lower];
+    if (card) void repos.words.forgetCard(card).catch(() => undefined);
+    void repos.writing
+      .amend(saved.recordId, {
+        mistakes: summary.mistakes,
+        accuracy: summary.accuracy,
+        stars: summary.stars,
+        missed: summary.practice.map((m) => ({ wrong: m.wrong, right: m.right, type: m.type })),
+      })
+      .catch(() => undefined);
   };
 
   if (phase.kind === "loading") return <LoadingBlock label={t.common.loading} />;
@@ -148,11 +193,8 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
             <MistakeDetail
               key={`${current.start}`}
               accent={settings.accent}
-              m={{ ...current, context: sentenceWith(phase.text, current.word).replace(current.word, current.suggestion ?? current.word) }}
-              onAdded={(w) => {
-                setHidden((h) => new Set([...h, w.toLowerCase()]));
-                setSelected(null);
-              }}
+              m={{ ...current, context: current.suggestion ? correctedSentence(phase.text, current.word, current.suggestion) : undefined }}
+              onAdded={onAdded}
             />
           )}
         </section>
@@ -206,10 +248,13 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
           <Button type="submit" size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" disabled={words === 0 || phase.kind === "checking"}>
             {phase.kind === "checking" ? t.writing.checking : t.writing.check}
           </Button>
-          <span className="text-sm text-ink-soft tabular" aria-live="polite">
-            {t.writing.wordCount(words)}
-          </span>
-          <button type="button" className="ms-auto min-h-11 text-sm text-ink-soft underline underline-offset-4" onClick={() => setRound((r) => r + 1)}>
+          <span className="text-sm text-ink-soft tabular">{t.writing.wordCount(words)}</span>
+          <button
+            type="button"
+            disabled={phase.kind === "checking"}
+            className="ms-auto min-h-11 text-sm text-ink-soft underline underline-offset-4 disabled:opacity-50"
+            onClick={() => setRound((r) => r + 1)}
+          >
             {t.writing.another}
           </button>
         </div>

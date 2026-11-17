@@ -90,7 +90,8 @@ export function Dictation({ level }: { level: CefrLevel }) {
   const onCheck = () => {
     const diff = compareDictation(full, typed);
     const wrong = diff.segments.flatMap((s) => (s.kind === "wrong" ? [{ wrong: s.typed, right: s.word, type: s.type }] : []));
-    const summary = summarizeWriting(diff.words, wrong, diff.mistakes);
+    const extra = diff.segments.filter((s) => s.kind === "extra").length;
+    const summary = summarizeWriting(diff.words + extra, wrong, diff.mistakes);
     setResult({ typed, diff, summary, saved: null, saveFailed: false });
     const seconds = Math.max(1, Math.round((Date.now() - startedAt.current) / 1000));
     save({ mode: "dictation", sourceId: item.id, level, text: typed, reference: full, summary, seconds })

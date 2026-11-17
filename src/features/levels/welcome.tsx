@@ -110,7 +110,7 @@ export function Welcome({ startWithTest = false, onSkip }: { startWithTest?: boo
         >
           <ClipboardCheck className="size-7 text-brass" aria-hidden="true" />
           <span className="text-xl font-semibold">{t.welcome.test}</span>
-          <span className="text-ink-soft">{t.welcome.testDesc}</span>
+          <span>{t.welcome.testDesc}</span>
         </button>
       </div>
       <button

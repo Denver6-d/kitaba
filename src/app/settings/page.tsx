@@ -128,6 +128,7 @@ export default function SettingsPage() {
               accept="application/json,.json"
               className="sr-only"
               id="import-file"
+              aria-label={t.settings.import}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) void onImport(f);

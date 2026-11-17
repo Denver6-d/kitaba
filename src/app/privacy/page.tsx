@@ -18,7 +18,7 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
         title: "على جهازك (دائمًا)",
         items: [
           "نتائج جولات الإملاء: النمط، وعدد الكلمات الصحيحة، والنقاط، وأطول سلسلة، والمدة، ومعرّفات الكلمات التي أخطأت فيها (لا نحفظ ما كتبته حرفيًا).",
-          "في قسم الجمل والرسائل: النص الذي كتبته (حتى 4000 حرف) ودقته وأخطاؤه، لتراه في «رسائلي السابقة»، والكلمات التي أضفتها إلى قاموسك. التدقيق الإملائي يعمل داخل متصفحك بقاموس محمّل من هذا الموقع، ولا يُرسَل نصك إلى أي مكان.",
+          "في قسم الجمل والرسائل: النص الذي كتبته (حتى 4000 حرف) ودقته وأخطاؤه، لتراه في «رسائلي السابقة»، والكلمات التي أضفتها إلى قاموسك. التدقيق الإملائي يعمل داخل متصفحك بقاموس محمّل من هذا الموقع، فلا يُرسَل نصك لفحصه. إن سجّلت الدخول، تُزامَن نصوصك المحفوظة مع حسابك مثل بقية تقدّمك.",
           "مستوياتك الثلاثة (الكلمات، والجمل والرسائل، والاختبارات) وطريقة تحديدها.",
           "أفضل نتيجة ونجوم كل مرحلة، وبطاقات المراجعة المتباعدة للكلمات التي أخطأت فيها.",
           "أيام التمرين ونقاط الخبرة، والإنجازات، ومستواك المفضّل وهدفك اليومي.",
@@ -71,7 +71,7 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
           "Spelling round results: the mode, words right, points, best streak, duration, and the ids of words you missed (what you typed is not kept).",
           "The best result and stars per stage, and spaced-review cards for words you missed.",
           "Practice days and XP, achievements, your three levels (words, sentences and messages, tests) and how they were set, and your daily goal.",
-          "In Sentences and messages: the text you wrote (up to 4,000 characters), its accuracy and mistakes, shown under \"My past messages\", and the words you added to your own dictionary. The spell checker runs inside your browser with a dictionary loaded from this site; your text is never sent anywhere.",
+          "In Sentences and messages: the text you wrote (up to 4,000 characters), its accuracy and mistakes, shown under \"My past messages\", and the words you added to your own dictionary. The spell checker runs inside your browser with a dictionary loaded from this site, so your text is never sent anywhere to be checked. If you sign in, your saved texts sync to your account like the rest of your progress.",
           "Settings (language, theme, text size, American or British English…) in localStorage, plus the order of upcoming words so they don't repeat.",
           "All of this lives in an IndexedDB database in your browser. Nothing is sent anywhere unless you sign in.",
         ],

@@ -1,4 +1,4 @@
-import type { AchievementRecord, StageRecord, SyncRecord, TableMap, TableName } from "../model";
+import type { AchievementRecord, ProfileRecord, StageRecord, SyncRecord, TableMap, TableName } from "../model";
 
 /**
  * Merge rules for sync (DECISIONS A4, V3):
@@ -31,6 +31,15 @@ export function mergeRecord<T extends TableName>(
     const l = local as unknown as AchievementRecord;
     const r = remote as unknown as AchievementRecord;
     if (l.unlockedAt !== r.unlockedAt) return l.unlockedAt < r.unlockedAt ? local : remote;
+  }
+  if (table === "profile") {
+    const winner = lww(local, remote) as unknown as ProfileRecord;
+    const loser = (winner === (local as unknown) ? remote : local) as unknown as ProfileRecord;
+    // The newer row wins, but chosen levels are never replaced by "not chosen yet" (a device that has
+    // not set them, or an older client without levels); between two choices the later one wins.
+    const keepLevels = (winner.levelSource === null && loser.levelSource !== null) || (loser.levelSource !== null && loser.levelsAt > winner.levelsAt);
+    if (keepLevels) return { ...winner, levels: loser.levels, levelSource: loser.levelSource, levelsAt: loser.levelsAt } as unknown as TableMap[T];
+    return winner as unknown as TableMap[T];
   }
   return lww(local, remote);
 }

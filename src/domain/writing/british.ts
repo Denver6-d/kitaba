@@ -35,6 +35,17 @@ const PAIRS: Readonly<Record<string, string>> = {
   mould: "mold",
   moustache: "mustache",
   sceptical: "skeptical",
+  maths: "math",
+  learnt: "learned",
+  spelt: "spelled",
+  dreamt: "dreamed",
+  cosy: "cozy",
+  enrolment: "enrollment",
+  fulfilment: "fulfillment",
+  woollen: "woolen",
+  paediatric: "pediatric",
+  defence: "defense",
+  offence: "offense",
 };
 
 /** Suffix rules, British → American. Order matters: the longest patterns come first. */
@@ -72,11 +83,3 @@ export function britishToAmerican(word: string, isWord: (w: string) => boolean):
   return null;
 }
 
-/** The British form of an American word, when a known pair or the bank lists one. */
-export function americanToBritish(word: string, ukForms: ReadonlyMap<string, string>): string | null {
-  const w = word.toLowerCase();
-  const fromBank = ukForms.get(w);
-  if (fromBank) return fromBank;
-  for (const [uk, us] of Object.entries(PAIRS)) if (us === w) return uk;
-  return null;
-}

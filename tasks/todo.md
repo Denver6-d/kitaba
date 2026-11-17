@@ -39,3 +39,9 @@
 - [x] Tap-to-explain detail, summary (accuracy, types, words to practise), stars, XP, celebration
 - [x] Mistakes to SM-2 (bank cards reused, own-word cards with their sentence); review plays them
 - [x] History in My progress; Dexie v4, Supabase migration 3, RLS tests; privacy page
+
+## Phase G: checks and report
+- [x] frontend-design pass, code-reviewer and test-engineer reviews; every confirmed finding fixed with a regression test (DECISIONS G1)
+- [x] 360/390/768/1280 px × light/dark × RTL/LTR sweep: no horizontal scroll (G2)
+- [x] Lighthouse: Accessibility, Best Practices and SEO 100 on nine pages, mobile and desktop (G3)
+- [x] Arabic manual checklist: level choice, placement, changing levels, free writing, message dictation, mistakes to review

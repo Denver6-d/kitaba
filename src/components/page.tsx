@@ -18,8 +18,8 @@ export function Page({ title, intro, children, width = "wide", actions }: { titl
 
 export function LoadingBlock({ label }: { label: string }) {
   return (
-    <div role="status" aria-live="polite" className="flex items-center gap-3 py-12 text-ink-soft">
-      <span className="size-2 animate-pulse rounded-full bg-brass-fill" aria-hidden="true" />
+    <div role="status" aria-live="polite" className="flex min-h-[60vh] items-start gap-3 py-12 text-ink-soft">
+      <span className="mt-2.5 size-2 animate-pulse rounded-full bg-brass-fill" aria-hidden="true" />
       {label}
     </div>
   );

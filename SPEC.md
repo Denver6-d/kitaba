@@ -127,10 +127,10 @@ Dexie v3 and export v3 reshape the profile. v2 rows (with one `level`) are migra
   - Rule-based common confusables (your/you're, their/there/they're, its/it's, to/too, then/than, lose/loose, affect/effect, accept/except, quite/quiet, were/where, could of).
   - British spellings recognised by rule and accepted with a note.
   - Names, numbers, acronyms, e-mail addresses and URLs are skipped. Capitalised unknown words inside a sentence are names, except misspelled days and months.
-  - Learners can add a word to their own dictionary.
+  - Learners can add a word to their own dictionary. This rescores the text, amends the saved record and removes the review card that check created. Checking unchanged text again earns nothing new.
   - Every flagged word gets a type (double letter, ie/ei, silent letter, vowel, p/b, v/f, confusable, British/American, apostrophe, capital, letter order, ending, two words, other) with a one-line Arabic explanation.
   - It never claims to check grammar.
-- **Dictation:** on-device speech (en-US/en-GB from settings), normal or slow speed, replay, and sentence by sentence for messages (plus "listen to the whole message"). Without a voice, the learner can show and hide the current sentence. The answer is compared word by word (case and punctuation ignored), with misspellings paired with the intended word, plus missing and extra words.
+- **Dictation:** on-device speech (en-US/en-GB from settings), normal or slow speed, replay, and sentence by sentence for messages (plus "listen to the whole message"). Without a voice, the learner can show and hide the current sentence. The answer is compared word by word (case and punctuation ignored; a hyphen equals a space; the other spelling variant is accepted), with misspellings paired with the intended word, plus missing and extra words. Accuracy is correct words / (words in the text + extra words).
 - **Feedback:** tap a highlighted word to see the right spelling with a letter diff, the reason, a listen button, an example, and "add to my dictionary". The summary shows spelling accuracy, mistakes by type, words to practise, stars (1 at ≥ 60%, 2 at ≥ 80%, 3 at ≥ 95%, at least 3 words) and XP (1 per correct word up to 60, plus 5 per star), with the stage-clear celebration.
 - **Review:** each misspelled word gets an SM-2 card. It reuses the bank card when the word is in the bank, or gets an `x-<word>` card noting the sentence it came from. Review plays both kinds.
 - **History:** "My progress" lists the last 20 texts with accuracy and mistakes.

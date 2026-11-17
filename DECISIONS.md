@@ -354,3 +354,57 @@ Choices made while building Kitaba where the brief left room for interpretation.
 - **F9. Navigation.**
   - "Sentences" joins the core destinations (the header from 768 px and a fifth bottom tab on phones).
   - The bottom bar hides on `/write/free` and `/write/dictation`, which have their own sticky action, as the game screen does.
+
+## Phase G: reviews, checks and fixes (2026-11-18)
+
+- **G1. Two independent reviews of phases E and F.** A code reviewer and a test engineer ran as separate agents. They were report-only, and both probed the checker with the real dictionary. Every confirmed finding below was fixed and has a regression test (`tests/domain/writing/review-fixes.test.ts`, plus updates in the existing suites).
+  - **Confusable rules flagged correct English** (both reviewers found this). Examples: "Call me when you're home.", "They're friends.", "See you later then.", "I was younger then.", "We have to fast.", "from hot to cold", "not loose", "We all accept…", "all of you except Omar", "a quiet small town", "It's way too hot.", "should of course", "tell you where Ahmed lives", "Is there going to be…?".
+    - The fixes narrow every rule to patterns that are wrong in practice:
+      - "then" is flagged only when something follows it;
+      - "to → too" never fires after "from" or an adjective;
+      - "quiet → quite" only fires right after a form of "be";
+      - "where → were" needs a following word from a short list;
+      - names after "where" and nouns such as home, family and friends after "you're/they're" are left alone.
+    - 22 correct sentences are now tested to stay quiet, and the clear errors are still caught.
+  - **Names at the start of a sentence** (Majd → maid, Yazan → Kazan, Tabuk → taboo) were flagged, and every flag became a review card. The first word of a sentence is now flagged only for a typical learner slip (ie/ei, p/b, v/f, a doubled, missing or swapped letter) or a misspelled day or month. A capitalised word mid-sentence is checked only against days and months, which also saves the slow `suggest` call.
+  - **"Add to my dictionary" did not undo the damage.** It now:
+    - recomputes the score;
+    - amends the saved history record (`writing.amend`);
+    - removes the review card that check created (`words.forgetCard`, a tombstone, so the removal syncs).
+  - **Checking unchanged text again earned XP again and added another SM-2 miss.** The same text is now shown with its earlier result and nothing is saved.
+  - **Review notes.** The sentence lookup matched substrings ("wich" inside "sandwich") and capped the note *before* replacing the word, so a note could exceed the 400-character schema limit and make an export fail to import. Lookup and replacement now work on whole words, and the cap applies last.
+  - **Privacy copy.** "Your text is never sent anywhere" was false for signed-in learners, whose saved texts sync. The page and the writing screens now say that checking never sends the text, and that saved texts sync to the learner's own account when signed in.
+  - **SQL.** The new RLS test block had lost its `$$` dollar quotes (String.replace treats `$$` as `$`), so the script would stop there. Fixed.
+  - **British learners were told to "correct" check, story and program** (cheque/storey/programme depend on the meaning). The reverse lookup of the British pairs was removed. Notes now come only from the word bank's British forms, minus meaning-dependent words (check, story, program, tire, draft, curb, practice, license, meter).
+  - **British forms with endings.** "neighbour's" and "mum's" were counted as mistakes, and "mum's" was even "corrected" to "bum's". Possessive `'s` is now set aside before the name, personal-dictionary and British lookups. These irregular British words were also added: maths, learnt, spelt, dreamt, cosy, enrolment, fulfilment, woollen, paediatric, defence, offence.
+  - **Tokenizer.**
+    - Accented loanwords (café, naïve) were cut in two; they are now one token and are not flagged.
+    - The "i" of "i.e." was flagged as a lower-case I; dotted abbreviations are now skipped.
+    - "no." no longer counts as an abbreviation, so the next sentence start is recognised ("I said no. Becuase…" is now caught).
+  - **Suggestions.** "recive" now gives "receive" (not revive or recipe), "teh" gives "the", and "wich" gives "which". Word-bank words one letter away are preferred, with a small bonus for vowel and double-letter slips, and letter swaps count as rule candidates.
+  - **Dictation.** Extra words did not lower the accuracy; accuracy is now correct / (words + extra words), on screen and in the history. A hyphen and a space count the same ("well known" for "well-known"). The other spelling variant is accepted both ways.
+  - **Profile.**
+    - An empty or invalid `levels` object no longer counts as "chosen".
+    - An invalid daily goal is repaired, so a migrated row always passes the export schema.
+    - Merging two profiles no longer lets a newer row without levels (an older client, or a device that never chose) wipe chosen levels. Between two choices, the later `levelsAt` wins.
+  - **Smaller fixes.**
+    - "Another situation" is disabled while a check runs, and a late result never lands on the next task.
+    - The live word count no longer announces every word to screen readers.
+  - **Placement robustness.** A learner guessing among four options lands on A1 in at least 90% of 500 seeded runs (tested).
+  - **Not changed.** For a placement test of 16 items, a learner who gets 50% right by chance can still reach a high level in a few percent of runs. That is acceptable for a starting point that can be changed at any time, and the UI says so.
+- **G2. Browser checks (production build, local headless Chrome through the pinned `chrome-devtools-mcp@1.13.0` CLI with the T2 privacy flags).** The MCP server did not connect in this session, so its CLI was used.
+  - **Responsive sweep.** 10 pages (`/`, `/welcome`, `/play`, a stage, `/write`, `/write/free`, `/write/dictation`, `/review`, `/progress`, `/settings`) at 360, 390, 768 and 1280 px, in light and dark, Arabic and English: 160 page loads.
+    - **No horizontal scroll anywhere.** Each page was opened in a same-origin window of the exact width. Frames are refused on purpose by `X-Frame-Options: DENY`, which was kept.
+    - **Touch targets.** The only target under 44 px was the 18 px settings switch, whose `::after` already extends the hit area to 46 px.
+  - **Flows checked by script, with no console errors:**
+    - first visit → `/welcome`;
+    - placement test (16 items, then the result with its explanation and focus on the heading);
+    - changing the words level to B1, after which the next stage shows the "B1" badge;
+    - free writing (seven mistakes and two British notes found in 124 ms with the dictionary preloaded; after the review fixes, names and "later then" are not flagged, and adding a word rescored 89% → 94%);
+    - message dictation with the word diff and the no-voice fallback.
+- **G3. Lighthouse (navigation mode, mobile and desktop):** Accessibility 100, Best Practices 100 and SEO 100 on all nine pages audited (`/`, `/welcome`, `/play`, `/write`, `/write/free`, `/write/dictation`, `/review`, `/progress`, `/settings`). The first run found three problems, all fixed:
+  - ink-soft text on the brass wash measured 4.46:1 on `/welcome` (the same pairing existed on `/play`'s daily card); both now use full ink;
+  - a `<dl>` on `/progress` had a link as a direct child; the tile now uses a stretched link inside its `<dd>`;
+  - the import file input on `/settings` had no label.
+
+  Layout shift was also measured (not a requested category). The loading block now reserves the height of the content it is replaced by, so CLS dropped from 0.29 to 0.02 on `/play` (mobile), from 0.29 to 0.01 on `/progress`, and from 0.17 to under 0.01 on `/write/free`. The highest value left is 0.10 on `/review` (mobile). Lighthouse Performance itself was not measured, as in F1.

@@ -239,7 +239,16 @@ function Tile({ label, value, small, progress, href }: { label: string; value: s
   const body = (
     <>
       <dt className="text-sm text-ink-soft">{label}</dt>
-      <dd className={`mt-1 font-semibold tabular ${small ? "text-base" : "text-2xl"}`}>{value}</dd>
+      <dd className={`mt-1 font-semibold tabular ${small ? "text-base" : "text-2xl"}`}>
+        {href ? (
+          // A stretched link: the whole tile is clickable, and the <dl> keeps only <div>, <dt> and <dd>.
+          <Link href={href} aria-label={`${label}: ${value}`} className="after:absolute after:inset-0 after:rounded-xl">
+            {value}
+          </Link>
+        ) : (
+          value
+        )}
+      </dd>
       {progress !== undefined && (
         <div className="mt-2 h-1 rounded-full bg-rule" aria-hidden="true">
           <div className="h-full rounded-full bg-brass-fill" style={{ width: `${Math.round(progress * 100)}%` }} />
@@ -248,9 +257,7 @@ function Tile({ label, value, small, progress, href }: { label: string; value: s
     </>
   );
   return href ? (
-    <Link href={href} className="block rounded-xl border border-rule p-4 transition-colors hover:border-rule-strong">
-      {body}
-    </Link>
+    <div className="relative rounded-xl border border-rule p-4 transition-colors has-[a:hover]:border-rule-strong">{body}</div>
   ) : (
     <div className="rounded-xl border border-rule p-4">{body}</div>
   );

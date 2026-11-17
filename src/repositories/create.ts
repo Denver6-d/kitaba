@@ -62,6 +62,12 @@ export function createRepositories({ store, now = Date.now, newId = () => crypto
           .filter((c) => c.due <= at)
           .sort((a, b) => a.due - b.due);
       },
+      async forgetCard(wordId) {
+        const card = await store.get("srs", wordId);
+        if (!card || card.deletedAt !== undefined) return;
+        const t = now();
+        await store.put("srs", { ...card, updatedAt: t, deletedAt: t });
+      },
     },
 
     mastery: {
@@ -146,6 +152,11 @@ export function createRepositories({ store, now = Date.now, newId = () => crypto
       },
       async list() {
         return live(await store.all("writings")).sort((a, b) => b.at - a.at);
+      },
+      async amend(id, patch) {
+        const current = alive(await store.get("writings", id));
+        if (!current) return;
+        await store.put("writings", { ...current, ...patch, missed: patch.missed.slice(0, WRITING_MISSED_MAX), updatedAt: now() });
       },
     },
 

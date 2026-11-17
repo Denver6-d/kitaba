@@ -136,13 +136,26 @@ describe("migrateProfileRow (v2 → v3)", () => {
     const v3 = { id: "me", updatedAt: 3, levels: { words: "C1", sentences: "B1", tests: "A1" }, levelSource: "placement", levelsAt: 9, dailyGoalMinutes: 10 };
     expect(migrateProfileRow(v3)).toEqual(v3);
     expect(migrateProfileRow(migrateProfileRow(v3))).toEqual(v3);
+    // No valid level stored: treated as never set, so the welcome screen shows.
     expect(migrateProfileRow({ ...v3, levels: { words: "Z9" }, levelSource: "hack", levelsAt: -1 })).toMatchObject({
       levels: { words: "A2", sentences: "A2", tests: "A2" },
-      levelSource: "choice",
+      levelSource: null,
       levelsAt: 0,
     });
   });
   it("keeps a tombstone", () => {
     expect(migrateProfileRow({ id: "me", updatedAt: 3, deletedAt: 4 })).toMatchObject({ deletedAt: 4 });
+  });
+});
+
+describe("placement robustness", () => {
+  it("places a learner guessing among four options (25%) at A1 almost always", () => {
+    const rng = seededRng(42);
+    let a1 = 0;
+    const runs = 500;
+    for (let r = 0; r < runs; r += 1) {
+      if (placementResult(run(() => rng() < 0.25)).level === "A1") a1 += 1;
+    }
+    expect(a1 / runs).toBeGreaterThanOrEqual(0.9);
   });
 });
