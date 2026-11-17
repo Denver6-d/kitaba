@@ -27,18 +27,25 @@ function subscribeVoices(cb: () => void): () => void {
 /** The chosen voice's URI (a stable string, safe as an external-store snapshot). */
 const voiceUriSnapshot = () => (supported() ? (pickEnglishVoice(window.speechSynthesis.getVoices())?.voiceURI ?? "") : "");
 
+/** Shared across mounts so each new word does not wait again. */
+let waitedOnce = false;
+
 export function useSpeech() {
   const hydrated = useHydrated();
   const voiceUri = useSyncExternalStore(subscribeVoices, voiceUriSnapshot, () => "");
-  const [waited, setWaited] = useState(false);
+  const [waited, setWaited] = useState(waitedOnce);
 
   // Some browsers never fire voiceschanged when there are no voices: stop waiting after 1.5 s.
   useEffect(() => {
-    const id = window.setTimeout(() => setWaited(true), 1500);
-    return () => {
-      window.clearTimeout(id);
-      if (supported()) window.speechSynthesis.cancel();
-    };
+    if (waitedOnce) return;
+    const id = window.setTimeout(() => {
+      waitedOnce = true;
+      setWaited(true);
+    }, 1500);
+    return () => window.clearTimeout(id);
+  }, []);
+  useEffect(() => () => {
+    if (supported()) window.speechSynthesis.cancel();
   }, []);
 
   const status: SpeechStatus = !hydrated ? "checking" : !supported() ? "unsupported" : voiceUri ? "ready" : waited ? "no-voice" : "checking";

@@ -37,11 +37,15 @@ export function DictationCard({ word, onAnswer, onNext, showFeedback = true, sho
   const nextRef = useRef<HTMLButtonElement>(null);
   const id = useId();
 
+  // Sound-alike words are spoken with their example sentence, or they would be a guess.
+  const spoken = word.category === "homophones" ? `${word.word}. ${word.example}` : word.word;
+  const [announcement, setAnnouncement] = useState("");
+
   // Speak automatically when a new word appears (after the voice list is ready).
   useEffect(() => {
-    if (status === "ready") speak(word.word);
+    if (status === "ready") speak(spoken);
     inputRef.current?.focus();
-  }, [status, word.word, speak]);
+  }, [status, spoken, speak]);
 
   useEffect(() => {
     if (!revealing) return;
@@ -61,17 +65,23 @@ export function DictationCard({ word, onAnswer, onNext, showFeedback = true, sho
       return;
     }
     setResult(r);
-    window.setTimeout(() => nextRef.current?.focus(), 0);
+    setAnnouncement(r.correct ? t.spelling.correct : `${t.spelling.wrong} ${word.word}`);
+    // Give the live region a moment before focus moves, so the verdict is read out.
+    window.setTimeout(() => nextRef.current?.focus(), 400);
   };
 
   const canSpeak = status === "ready";
 
   return (
     <div className="sheet space-y-5 p-6 sm:p-8">
+      {/* Always mounted, so screen readers announce the verdict when its text changes. */}
+      <p className="sr-only" aria-live="polite">
+        {announcement}
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         {canSpeak ? (
           <>
-            <Button size="lg" onClick={() => speak(word.word)} className="h-11 gap-2 px-5">
+            <Button size="lg" onClick={() => speak(spoken)} className="h-11 gap-2 px-5">
               <Volume2 className="size-5" aria-hidden="true" />
               {t.spelling.listen}
             </Button>
@@ -152,7 +162,7 @@ export function DictationCard({ word, onAnswer, onNext, showFeedback = true, sho
       </form>
 
       {result && (
-        <div role="status" className="space-y-3">
+        <div className="space-y-3">
           {result.correct ? (
             <p className="font-semibold text-correct">{t.spelling.correct}</p>
           ) : (

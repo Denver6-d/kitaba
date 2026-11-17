@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import type { SpellingWord } from "@/data/schema";
-import { daysUntil, newCard, qualityFor, review } from "@/domain/spelling/srs";
+import { applyAnswer, daysUntil, qualityFor } from "@/domain/spelling/srs";
 import { hintLevel, nextMastery } from "@/domain/progress/hints";
 import { xpFor } from "@/domain/progress/levels";
 import { useI18n } from "@/i18n";
@@ -12,11 +12,13 @@ import { Button } from "@/components/ui/button";
 import { useAchievementCheck } from "@/features/rewards/use-achievement-check";
 import { DictationCard, type DictationAnswer } from "./dictation-card";
 
+/** A dictation item takes roughly 15 seconds; used for the daily-goal minutes. */
 const SECONDS_PER_WORD = 15;
 
 /**
- * A run through a list of words. Misspelled words get an SM-2 card; words that
- * already have a card are reviewed. Correct answers on new words need no card.
+ * A run through a list of words. The SM-2 rules live in domain/spelling/srs.ts
+ * (applyAnswer): misses create or lapse a card, due cards are reviewed, and
+ * early practice never inflates an interval.
  */
 export function SpellingSession({ words, onDone }: { words: readonly SpellingWord[]; onDone?: () => void }) {
   const { t, num } = useI18n();
@@ -25,26 +27,24 @@ export function SpellingSession({ words, onDone }: { words: readonly SpellingWor
   const mastery = useRepoQuery((r) => r.sentences.allMastery());
   const [index, setIndex] = useState(0);
   const [correct, setCorrect] = useState(0);
-  const [nextReview, setNextReview] = useState<number | null>(null);
+  // Keyed by word so a slow save can never label the next word.
+  const [nextReview, setNextReview] = useState<{ wordId: string; days: number } | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const word = words[index];
 
   const onAnswer = useCallback(
     async (w: SpellingWord, a: DictationAnswer) => {
       const now = Date.now();
-      const q = qualityFor({ ...a, word: w.word });
       if (a.correct) setCorrect((c) => c + 1);
       const existing = await repos.words.card(w.id);
-      if (existing || !a.correct) {
-        const next = review(existing ?? newCard(w.id, now), q, now);
+      const next = applyAnswer(existing, w.id, qualityFor({ ...a, word: w.word }), now);
+      if (next) {
         await repos.words.saveCard(next);
-        setNextReview(daysUntil(next.due, now));
-      } else {
-        setNextReview(null);
+        setNextReview({ wordId: w.id, days: daysUntil(next.due, now) });
       }
       const key = `spell:${w.id}`;
       await repos.sentences.setMastery(key, nextMastery(mastery.status === "ready" ? (mastery.data[key] ?? 0) : 0, a.correct && !a.revealed));
-      // A dictation item takes roughly 15 seconds; used for the daily-goal minutes.
       await repos.activity.log("spelling", SECONDS_PER_WORD, xpFor({ kind: "spelling", correct: a.correct }));
       await checkAchievements();
     },
@@ -70,6 +70,7 @@ export function SpellingSession({ words, onDone }: { words: readonly SpellingWor
   }
 
   const m = mastery.status === "ready" ? (mastery.data[`spell:${word.id}`] ?? 0) : 0;
+  const review = nextReview && nextReview.wordId === word.id ? nextReview.days : null;
 
   return (
     <div className="space-y-3">
@@ -84,16 +85,21 @@ export function SpellingSession({ words, onDone }: { words: readonly SpellingWor
       <div className="h-1 rounded-full bg-rule" aria-hidden="true">
         <div className="h-full rounded-full bg-brass-fill" style={{ width: `${(index / words.length) * 100}%` }} />
       </div>
+      {saveFailed && (
+        <p role="alert" className="rounded-lg bg-[var(--error-wash)] p-3 text-sm text-error">
+          {t.results.saveFailed}
+        </p>
+      )}
       <DictationCard
         key={word.id}
         word={word}
-        showMeaning={hintLevel(m) !== "none"}
-        onAnswer={(a) => void onAnswer(word, a)}
-        onNext={() => {
-          setNextReview(null);
-          setIndex((i) => i + 1);
+        // Sound-alike words cannot be told apart by ear, so their meaning always shows.
+        showMeaning={word.category === "homophones" || hintLevel(m) !== "none"}
+        onAnswer={(a) => {
+          onAnswer(word, a).catch(() => setSaveFailed(true));
         }}
-        extra={nextReview !== null ? <p className="text-sm text-hint">{t.spelling.nextReview(nextReview)}</p> : null}
+        onNext={() => setIndex((i) => i + 1)}
+        extra={review !== null ? <p className="text-sm text-hint">{t.spelling.nextReview(review)}</p> : null}
       />
     </div>
   );

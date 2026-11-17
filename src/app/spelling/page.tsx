@@ -34,8 +34,10 @@ export default function SpellingPage() {
     const pool = spellingWords.filter(
       (w) => (level === "all" || w.level === level) && (category === "all" || w.category === category),
     );
-    const fresh = pool.filter((w) => !known.has(w.id));
-    return shuffle(fresh.length >= SESSION_SIZE ? fresh : pool, seededRng(seed + session)).slice(0, SESSION_SIZE);
+    const rng = seededRng(seed + session);
+    const fresh = shuffle(pool.filter((w) => !known.has(w.id)), rng);
+    const practised = shuffle(pool.filter((w) => known.has(w.id)), rng);
+    return [...fresh, ...practised].slice(0, SESSION_SIZE);
     // Words are chosen when a session starts; later card updates must not reshuffle it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
@@ -50,7 +52,14 @@ export default function SpellingPage() {
         <div className="space-y-10">
           <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-rule p-5">
             <div>
-              <h2 className="font-semibold">{t.spelling.review}</h2>
+              <h2 className="flex items-center gap-2 font-semibold">
+                {t.spelling.review}
+                {dueCount > 0 && (
+                  <span className="grid min-w-6 place-items-center rounded-full bg-brass-fill px-1.5 text-xs font-bold text-[#14302e] tabular" aria-hidden="true">
+                    {num(dueCount)}
+                  </span>
+                )}
+              </h2>
               <p className="text-sm text-ink-soft">{t.spelling.dueCount(dueCount)}</p>
             </div>
             <Button asChild variant={dueCount > 0 ? "default" : "outline"} className="h-10">
@@ -89,7 +98,7 @@ export default function SpellingPage() {
                 ))}
               </select>
             </div>
-            <Button size="lg" className="h-11 px-6" onClick={() => setSession((s) => (s ?? 0) + 1)}>
+            <Button size="lg" className="h-11 px-6" disabled={cards.status === "loading"} onClick={() => setSession((s) => (s ?? 0) + 1)}>
               {t.common.start}
             </Button>
           </section>

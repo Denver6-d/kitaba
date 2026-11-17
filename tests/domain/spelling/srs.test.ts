@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DAY_MS, newCard, qualityFor, review, daysUntil, MIN_EASE } from "@/domain/spelling/srs";
+import { applyAnswer, DAY_MS, newCard, qualityFor, review, daysUntil, MIN_EASE } from "@/domain/spelling/srs";
 
 const NOW = Date.UTC(2026, 10, 17, 9);
 
@@ -56,8 +56,8 @@ describe("qualityFor", () => {
   it("grades a clean correct answer 5", () => {
     expect(qualityFor({ correct: true, revealed: false, answer: "friend", word: "friend" })).toBe(5);
   });
-  it("grades a correct answer after revealing the word 3", () => {
-    expect(qualityFor({ correct: true, revealed: true, answer: "friend", word: "friend" })).toBe(3);
+  it("grades a correct answer after revealing the word (no voice available) 4", () => {
+    expect(qualityFor({ correct: true, revealed: true, answer: "friend", word: "friend" })).toBe(4);
   });
   it("grades a near miss 2 and a far miss 1", () => {
     expect(qualityFor({ correct: false, revealed: false, answer: "freind", word: "friend" })).toBe(2);
@@ -72,5 +72,24 @@ describe("daysUntil", () => {
   it("rounds up to whole days and never goes below 0", () => {
     expect(daysUntil(NOW + DAY_MS * 1.2, NOW)).toBe(2);
     expect(daysUntil(NOW - 5, NOW)).toBe(0);
+  });
+});
+
+describe("applyAnswer", () => {
+  it("creates a card only for a missed new word", () => {
+    expect(applyAnswer(undefined, "w", 5, NOW)).toBeNull();
+    expect(applyAnswer(undefined, "w", 1, NOW)?.due).toBe(NOW + DAY_MS);
+  });
+  it("reviews a due card normally", () => {
+    const due = { ...newCard("w", NOW), reps: 2, interval: 6, due: NOW - 1 };
+    expect(applyAnswer(due, "w", 5, NOW)?.interval).toBe(15);
+  });
+  it("does not inflate the interval of a card practised early", () => {
+    const early = { ...newCard("w", NOW), reps: 2, interval: 6, due: NOW + 3 * DAY_MS };
+    expect(applyAnswer(early, "w", 5, NOW)).toBeNull();
+  });
+  it("still records a lapse when a card practised early is missed", () => {
+    const early = { ...newCard("w", NOW), reps: 2, interval: 6, due: NOW + 3 * DAY_MS };
+    expect(applyAnswer(early, "w", 1, NOW)?.lapses).toBe(1);
   });
 });

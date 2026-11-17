@@ -40,11 +40,27 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Maps a dictation answer to an SM-2 quality score. */
 export function qualityFor(a: { correct: boolean; revealed: boolean; answer: string; word: string }): number {
-  if (a.correct) return a.revealed ? 3 : 5;
+  // Revealing the word is only offered when no English voice exists, so it is
+  // the device's limitation, not a weak answer: 4, not 3 (which would erode ease).
+  if (a.correct) return a.revealed ? 4 : 5;
   if (a.answer.trim() === "") return 0;
   return charDistance(a.answer.trim().toLowerCase(), a.word) <= 2 ? 2 : 1;
 }
 
 export function daysUntil(due: number, now: number): number {
   return Math.max(0, Math.ceil((due - now) / DAY_MS));
+}
+
+/**
+ * What an answer does to a word's card.
+ * - No card: a miss creates one; a correct answer needs none (the word is known).
+ * - Due card: a normal SM-2 review.
+ * - Card not yet due (practised early): a miss still counts as a lapse, but a
+ *   correct answer leaves the schedule alone, so early practice cannot inflate intervals.
+ */
+export function applyAnswer(card: SrsCard | undefined, wordId: string, quality: number, now: number): SrsCard | null {
+  const correct = quality >= 3;
+  if (!card) return correct ? null : review(newCard(wordId, now), quality, now);
+  if (card.due > now && correct) return null;
+  return review(card, quality, now);
 }
