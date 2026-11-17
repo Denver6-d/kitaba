@@ -99,3 +99,30 @@ Choices made while building Kitaba where the brief left room for interpretation.
   The content test checks that every model answer passes its own checklist.
 - **R1. Achievements are derived** from stored progress by pure rules (`domain/progress/achievements.ts`). Correct dictations are counted from activity XP because activity records do not store the verdict. A new unlock shows a quiet toast, never confetti.
 - **R2. Certificate and share image.** The certificate is a print-CSS A4 landscape page. The learner's name stays in the page and is not stored. The share image is drawn on a `<canvas>` with the same next/font faces (read from their CSS variables) and shared through the Web Share API, falling back to a download.
+
+## Phase 4: accounts and sync
+
+- **A1. Guest-first.** The app reads only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. If either is missing or malformed, `isSupabaseConfigured()` is false and no client is ever created. The account page shows "not configured" and everything else works locally. There is no service_role key anywhere. Account deletion uses a `SECURITY DEFINER` function that can only delete `auth.uid()`.
+- **A2. Browser-only auth with PKCE.** `@supabase/ssr`'s `createBrowserClient` keeps the session in cookies. Email links land on a client page, `/auth/callback`, which completes the code exchange (`detectSessionInUrl`) and then follows a `next` path that must be same-site (`safeNext`, tested against open redirects). Magic links and reset links must be opened in the same browser that requested them; the UI says so.
+  - Password reset answers the same way whether or not the address exists, so it can't be used to discover accounts.
+  - A server-side `proxy` is not needed because no server code reads the session.
+- **A3. One generic table.** Progress is stored as `public.progress_records(user_id, table_name, id, data jsonb, updated_at, deleted_at, server_updated_at)`.
+  - Every record type is already validated by strict zod schemas on read (shared with file import), so a typed SQL schema per table would duplicate them.
+  - RLS on the table allows select, insert, update and delete only where `user_id = auth.uid()`.
+  - Rows are capped at 64 KB, and the table name is constrained to known values.
+- **A4. Conflict rule: last-write-wins per record (D3, `domain/sync/merge.ts`).**
+  - The server upsert RPC (`upsert_progress`) only overwrites when the incoming `updated_at` is at least the stored one, so a stale device cannot clobber newer data.
+  - Ghosts keep the faster run and achievements keep the earliest unlock. When such a rule picks the older record, it is re-stamped `remote.updatedAt + 1` before upload, so the server's guard accepts it (`reconcilePulled`, tested).
+  - Pulls use the server clock (`server_updated_at`) as a cursor, with a 5-second overlap so rows committed out of order are not missed. Re-merging a row is idempotent.
+- **A5. First sign-in never overwrites silently (`decideFirstSync`, tested).**
+  - If the device is already linked to the account, sync normally.
+  - If the device has no progress, adopt the account's data.
+  - Otherwise ask: **merge** (every local record is queued and merged with the rules above), or **keep separate**. "Keep separate" first downloads a JSON backup of the local data, then replaces it with the account's data.
+  - Signing out keeps local progress on the device as guest data and unlinks it.
+- **A6. Offline tolerance.**
+  - Local writes are queued in a Dexie `outbox` table, de-duplicated per record (newest wins).
+  - The queue is pushed in batches of 200 when online, on the `online` event, when the tab becomes visible, every 60 s, and shortly after each write.
+  - Failures back off exponentially (1 s to 60 s).
+  - A small header indicator shows synced, syncing, offline with pending count, or error.
+  - The sync engine is tested against an in-memory server with the same last-write-wins semantics: two devices, conflicts, append-only union, ghost rule, offline queueing.
+- **A7. Supabase verification is manual.** The Supabase `RecordStore` cannot be unit-tested without a network. It implements the same interface as the tested backends, and `supabase/tests/` has an RLS checklist and SQL assertions to run in the SQL editor.

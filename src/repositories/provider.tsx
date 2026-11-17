@@ -3,14 +3,18 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createRepositories } from "./create";
 import { createDexieStore, openDb, type KitabaDb } from "./local/db";
+import { createDexieOutbox, createMemoryOutbox, type OutboxStore } from "./local/outbox";
 import { observeStore, type WriteListener } from "./observe";
 import { createMemoryStore, type RecordStore } from "./store";
 import type { Repositories } from "./types";
 
 interface RepoContextValue {
   readonly repos: Repositories;
-  /** Low-level store (used by the sync engine only). */
+  /** Observed store: writes through it are announced (UI refresh, sync queue). */
   readonly store: RecordStore;
+  /** The same data without the observer, for the sync engine's own writes. */
+  readonly baseStore: RecordStore;
+  readonly outbox: OutboxStore;
   readonly db: KitabaDb | null;
   /** Increments after every write; components re-query when it changes. */
   readonly revision: number;
@@ -24,6 +28,7 @@ const RepoContext = createContext<RepoContextValue | null>(null);
 
 interface LocalBackend {
   readonly store: RecordStore;
+  readonly outbox: OutboxStore;
   readonly db: KitabaDb | null;
   readonly persistent: boolean;
 }
@@ -32,10 +37,10 @@ function createLocal(): LocalBackend {
   try {
     if (typeof indexedDB === "undefined") throw new Error("no indexeddb");
     const db = openDb();
-    return { store: createDexieStore(db), db, persistent: true };
+    return { store: createDexieStore(db), outbox: createDexieOutbox(db), db, persistent: true };
   } catch {
     // Private modes without IndexedDB still work for the session.
-    return { store: createMemoryStore(), db: null, persistent: false };
+    return { store: createMemoryStore(), outbox: createMemoryOutbox(), db: null, persistent: false };
   }
 }
 
@@ -46,7 +51,7 @@ function createLocal(): LocalBackend {
 export function RepositoriesProvider({ children }: { children: ReactNode }) {
   // Lazy initial state: runs once per environment (memory on the server, IndexedDB in the browser).
   const [backend] = useState<LocalBackend>(() =>
-    typeof window === "undefined" ? { store: createMemoryStore(), db: null, persistent: false } : createLocal(),
+    typeof window === "undefined" ? { store: createMemoryStore(), outbox: createMemoryOutbox(), db: null, persistent: false } : createLocal(),
   );
   const observed = useMemo(() => observeStore(backend.store), [backend]);
   const repos = useMemo(() => createRepositories({ store: observed.store }), [observed]);
@@ -66,6 +71,8 @@ export function RepositoriesProvider({ children }: { children: ReactNode }) {
     () => ({
       repos,
       store: observed.store,
+      baseStore: backend.store,
+      outbox: backend.outbox,
       db: backend.db,
       revision,
       onWrite: observed.subscribe,

@@ -30,11 +30,11 @@ Each task: verify with `npm run typecheck && npm test` (domain) and `npm run bui
 - [x] CHECKPOINT P3
 
 ## Phase 4 — Accounts and sync
-- [ ] 19 Migrations + RLS + RPCs
-- [ ] 20 Supabase client + auth UI
-- [ ] 21 Merge + outbox + sync + indicator + merge dialog
-- [ ] 22 Privacy, export, delete
-- [ ] CHECKPOINT P4 (+ security review)
+- [x] 19 Migrations + RLS + RPCs
+- [x] 20 Supabase client + auth UI
+- [x] 21 Merge + outbox + sync + indicator + merge dialog
+- [x] 22 Privacy, export, delete
+- [x] CHECKPOINT P4 (+ security review)
 
 ## Phase 5 — Leaderboard
 - [ ] 23 Leaderboard SQL + RLS tests
