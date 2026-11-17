@@ -22,6 +22,8 @@ export function ScenarioWriter({ id }: { id: string }) {
   const [text, setText] = useState("");
   const [results, setResults] = useState<CheckResult[] | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
+  // The text last reviewed: re-checking it unchanged does not save again (no XP farming).
+  const [reviewedText, setReviewedText] = useState<string | null>(null);
   const fieldId = useId();
   if (!scenario) return null;
 
@@ -37,6 +39,8 @@ export function ScenarioWriter({ id }: { id: string }) {
   const review = () => {
     const r = checkMessage(text, scenario);
     setResults(r);
+    if (text === reviewedText) return;
+    setReviewedText(text);
     const passed = r.filter((c) => c.passed).length;
     (async () => {
       await repos.scenarios.saveAttempt({ scenarioId: scenario.id, text, passed, total: r.length, at: Date.now() });
@@ -79,7 +83,10 @@ export function ScenarioWriter({ id }: { id: string }) {
             <textarea
               id={fieldId}
               value={text}
-              onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
+              onChange={(e) => {
+                setText(e.target.value.slice(0, MAX_CHARS));
+                setResults(null); // results describe the reviewed text, not the edited one
+              }}
               dir="ltr"
               lang="en"
               rows={14}

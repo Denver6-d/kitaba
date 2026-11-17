@@ -1,9 +1,10 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Lightbulb } from "lucide-react";
 import type { Sentence } from "@/data/schema";
 import { gradeSentence, type GradeResult } from "@/domain/sentences/grader";
+import { acceptedAnswers } from "@/data/sentences";
 import { ERROR_NAMES, explain, NOTE_TEXT } from "@/domain/sentences/explanations";
 import type { HintLevel } from "@/domain/progress/hints";
 import { useI18n } from "@/i18n";
@@ -31,21 +32,32 @@ export function SentenceCard({ sentence, hint, onGraded, onNext }: Props) {
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [announce, setAnnounce] = useState("");
+  const hintRef = useRef<HTMLParagraphElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
   const id = useId();
   const model = sentence.en[0] ?? "";
   const other = lang === "ar" ? "en" : "ar";
 
   const check = () => {
     if (result || value.trim() === "") return;
-    const r = gradeSentence(value, sentence.en);
+    const r = gradeSentence(value, acceptedAnswers(sentence));
     setResult(r);
     onGraded(r, value);
+    const v = r.correct ? t.sentences.correct : r.score >= 0.8 ? t.sentences.almost : t.sentences.keepGoing;
+    setAnnounce(`${v}. ${t.sentences.model}: ${sentence.en.includes(r.best) ? r.best : model}`);
+    // Let the live region speak before focus moves to the Next button.
+    window.setTimeout(() => nextRef.current?.focus(), 500);
   };
 
   const verdict = result ? (result.correct ? t.sentences.correct : result.score >= 0.8 ? t.sentences.almost : t.sentences.keepGoing) : null;
 
   return (
     <div className="sheet space-y-6 p-6 sm:p-8">
+      {/* Always mounted: screen readers announce the verdict when its text changes. */}
+      <p className="sr-only" aria-live="polite">
+        {announce}
+      </p>
       <div className="space-y-2">
         <p className="text-sm text-ink-soft">
           {t.sentences.prompt} <span className="ms-1 rounded bg-muted px-1.5 py-0.5 text-xs">{sentence.level}</span>
@@ -58,11 +70,16 @@ export function SentenceCard({ sentence, hint, onGraded, onNext }: Props) {
       {hint !== "none" && !result && (
         <div className="min-h-8">
           {showHint ? (
-            <p dir="ltr" lang="en" className="font-mono text-hint" aria-live="polite">
+            <p ref={hintRef} tabIndex={-1} dir="ltr" lang="en" className="font-mono text-hint outline-none">
               {maskedHint(model, hint)}
             </p>
           ) : (
-            <button type="button" onClick={() => setShowHint(true)} className="inline-flex items-center gap-1.5 text-sm text-hint underline-offset-4 hover:underline">
+            <button
+              type="button"
+              onClick={() => {
+                setShowHint(true);
+                window.setTimeout(() => hintRef.current?.focus(), 0);
+              }} className="inline-flex items-center gap-1.5 text-sm text-hint underline-offset-4 hover:underline">
               <Lightbulb className="size-4" aria-hidden="true" />
               {hint === "full" ? t.sentences.hintFull : t.sentences.hintPartial}
             </button>
@@ -120,7 +137,7 @@ export function SentenceCard({ sentence, hint, onGraded, onNext }: Props) {
       </form>
 
       {result && (
-        <section aria-live="polite" className="space-y-5">
+        <section className="space-y-5">
           <p className={`flex items-baseline gap-3 text-lg font-semibold ${result.correct ? "text-correct" : result.score >= 0.8 ? "text-brass" : "text-error"}`}>
             {verdict}
             <span className="text-sm font-normal text-ink-soft tabular">{pct(result.score * 100)}</span>
@@ -179,14 +196,14 @@ export function SentenceCard({ sentence, hint, onGraded, onNext }: Props) {
           <div className="space-y-1 rounded-lg bg-muted p-4">
             <p className="text-xs text-ink-soft">{t.sentences.model}</p>
             <p dir="ltr" lang="en" className="font-mono text-lg">
-              {result.best}
+              {sentence.en.includes(result.best) ? result.best : model}
             </p>
             {sentence.en.length > 1 && (
               <>
                 <p className="pt-2 text-xs text-ink-soft">{t.sentences.otherAnswers}</p>
                 <ul dir="ltr" lang="en" className="font-mono text-sm text-ink-soft">
                   {sentence.en
-                    .filter((a) => a !== result.best)
+                    .filter((a) => a !== (sentence.en.includes(result.best) ? result.best : model))
                     .map((a) => (
                       <li key={a}>{a}</li>
                     ))}
@@ -195,7 +212,7 @@ export function SentenceCard({ sentence, hint, onGraded, onNext }: Props) {
             )}
           </div>
 
-          <Button onClick={onNext} size="lg" className="h-11 px-6" autoFocus>
+          <Button ref={nextRef} onClick={onNext} size="lg" className="h-11 px-6">
             {t.sentences.next}
           </Button>
         </section>

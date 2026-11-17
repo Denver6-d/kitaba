@@ -12,9 +12,9 @@ export const scenarios: readonly Scenario[] = [
     minWords: 40,
     maxWords: 130,
     mustMention: [
-      { labelAr: "اليوم أو التاريخ", labelEn: "the day or date", anyOf: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "tomorrow", "date"] },
+      { labelAr: "اليوم أو التاريخ", labelEn: "the day or date", anyOf: ["@day", "@date", "date"] },
       { labelAr: "السبب", labelEn: "the reason", anyOf: ["because", "reason", "appointment", "family", "personal"] },
-      { labelAr: "من سيغطي عملك", labelEn: "who will cover your work", anyOf: ["cover", "colleague", "finish", "finished", "handle", "reply", "available"] },
+      { labelAr: "من سيغطي عملك", labelEn: "who will cover your work", anyOf: ["cover", "colleague", "handle", "take care of", "available", "instead of me"] },
     ],
     modelAnswer: `Dear Mr. Khalid,
 
@@ -87,8 +87,8 @@ Youssef`,
     maxWords: 150,
     mustMention: [
       { labelAr: "اعتذار", labelEn: "an apology", anyOf: ["sorry", "apologize", "apologise", "apologies"] },
-      { labelAr: "موعد الوصول", labelEn: "when it will arrive", anyOf: ["arrive", "delivered", "delivery", "tomorrow", "monday", "tuesday", "wednesday", "thursday", "friday"] },
-      { labelAr: "رقم الطلب", labelEn: "the order number", anyOf: ["order"] },
+      { labelAr: "موعد الوصول", labelEn: "when it will arrive", anyOf: ["arrive", "deliver", "delivery", "@day", "@date"] },
+      { labelAr: "رقم الطلب", labelEn: "the order number", anyOf: ["@number", "order number"] },
     ],
     modelAnswer: `Dear Mr. Ahmed,
 
@@ -113,7 +113,7 @@ Customer Service Team`,
     maxWords: 120,
     mustMention: [
       { labelAr: "الطلب السابق", labelEn: "the earlier request", anyOf: ["sent", "request", "last week", "previous", "earlier"] },
-      { labelAr: "الخطوة التالية", labelEn: "the next step", anyOf: ["next step", "update", "news", "decision", "hear"] },
+      { labelAr: "الخطوة التالية", labelEn: "the next step", anyOf: ["next step", "update", "news", "decision", "hear from you", "let me know"] },
     ],
     modelAnswer: `Hello Mr. Tariq,
 
@@ -137,7 +137,7 @@ Nadia Fawzi`,
     maxWords: 110,
     mustMention: [
       { labelAr: "اعتذار", labelEn: "an apology", anyOf: ["sorry", "apologize", "apologise", "apologies"] },
-      { labelAr: "موعد جديد", labelEn: "a new time", anyOf: ["tomorrow", "monday", "tuesday", "wednesday", "thursday", "friday", "time", "reschedule", "o'clock", "a.m", "p.m"] },
+      { labelAr: "موعد جديد", labelEn: "a new time", anyOf: ["@day", "@date", "@time", "reschedule"] },
     ],
     modelAnswer: `Dear Hana,
 
@@ -161,7 +161,7 @@ Karim`,
     maxWords: 120,
     mustMention: [
       { labelAr: "هدف الاجتماع", labelEn: "the purpose", anyOf: ["discuss", "project", "plan", "talk about", "review"] },
-      { labelAr: "وقت مقترح", labelEn: "a suggested time", anyOf: ["monday", "tuesday", "wednesday", "thursday", "friday", "a.m", "p.m", "o'clock", "time"] },
+      { labelAr: "وقت مقترح", labelEn: "a suggested time", anyOf: ["@day", "@date", "@time"] },
     ],
     modelAnswer: `Dear Mr. Nabil,
 
@@ -208,7 +208,7 @@ Reem Mansour`,
     maxWords: 90,
     mustMention: [
       { labelAr: "المشكلة", labelEn: "the problem", anyOf: ["problem", "how to", "cannot", "can't", "don't know", "help"] },
-      { labelAr: "وقت مقترح", labelEn: "a suggested time", anyOf: ["today", "tomorrow", "monday", "tuesday", "wednesday", "thursday", "friday", "time", "a.m", "p.m", "minutes"] },
+      { labelAr: "وقت مقترح", labelEn: "a suggested time", anyOf: ["@day", "@time", "minutes", "after lunch"] },
     ],
     modelAnswer: `Hi Ali,
 

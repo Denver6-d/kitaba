@@ -14,6 +14,7 @@ export interface ShareResultProps {
 
 const W = 1200;
 const H = 630;
+const PAD = 80;
 
 /** Reads a next/font family name from its CSS variable so canvas text uses the same faces. */
 function fontFamily(variable: string, fallback: string): string {
@@ -21,16 +22,31 @@ function fontFamily(variable: string, fallback: string): string {
   return v ? `${v}, ${fallback}` : fallback;
 }
 
+interface Texts {
+  readonly lang: "ar" | "en";
+  readonly wpm: string;
+  readonly wpmLabel: string;
+  readonly accuracyLine: string;
+  readonly mode: string;
+  readonly caption: string;
+}
+
 /** Draws the result card on a canvas (no library). */
-async function renderResultImage(p: ShareResultProps & { lang: "ar" | "en"; caption: string; accuracyLabel: string; wpmLabel: string }): Promise<Blob> {
-  await document.fonts.ready;
+async function renderResultImage(x: Texts): Promise<Blob> {
+  const display = fontFamily("--font-literata", "Georgia, serif");
+  const arabic = fontFamily("--font-cairo", "sans-serif");
+  const ui = x.lang === "ar" ? arabic : fontFamily("--font-hanken", "system-ui, sans-serif");
+  const fonts = [`500 220px ${display}`, `600 34px ${arabic}`, `500 44px ${ui}`, `400 30px ${ui}`];
+  // fonts.ready alone does not load faces the page has not used yet.
+  await Promise.all(fonts.map((f) => document.fonts.load(f, x.lang === "ar" ? "كتابة 0" : "Kitaba 0").catch(() => [])));
+
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("no-canvas");
-  const display = fontFamily("--font-literata", "Georgia, serif");
-  const ui = fontFamily(p.lang === "ar" ? "--font-cairo" : "--font-hanken", "system-ui, sans-serif");
+  const rtl = x.lang === "ar";
+  const startX = rtl ? W - PAD : PAD;
 
   ctx.fillStyle = "#14302e";
   ctx.fillRect(0, 0, W, H);
@@ -39,11 +55,14 @@ async function renderResultImage(p: ShareResultProps & { lang: "ar" | "en"; capt
   ctx.lineWidth = 1;
   for (let y = 90; y < H; y += 70) {
     ctx.beginPath();
-    ctx.moveTo(80, y);
-    ctx.lineTo(W - 80, y);
+    ctx.moveTo(PAD, y);
+    ctx.lineTo(W - PAD, y);
     ctx.stroke();
   }
 
+  // Logo: nib + wordmark, always top-left.
+  ctx.direction = "ltr";
+  ctx.textAlign = "left";
   ctx.fillStyle = "#c8962e";
   ctx.beginPath();
   ctx.moveTo(98, 70);
@@ -54,43 +73,49 @@ async function renderResultImage(p: ShareResultProps & { lang: "ar" | "en"; capt
   ctx.closePath();
   ctx.fill();
   ctx.fillStyle = "#eef1ec";
-  ctx.font = `600 34px ${fontFamily("--font-cairo", "sans-serif")}`;
-  ctx.textAlign = "left";
-  ctx.fillText("كتابة Kitaba", 140, 115);
+  ctx.font = fonts[1] ?? "";
+  ctx.fillText("كتابة · Kitaba", 140, 115);
 
-  ctx.font = `500 220px ${display}`;
-  ctx.fillText(String(Math.round(p.wpm)), 80, 400);
-  const numWidth = ctx.measureText(String(Math.round(p.wpm))).width;
+  // The number is always read left to right.
+  ctx.font = fonts[0] ?? "";
+  const numberWidth = ctx.measureText(x.wpm).width;
+  const numberX = rtl ? W - PAD - numberWidth : PAD;
+  ctx.fillText(x.wpm, numberX, 400);
   ctx.fillStyle = "#c8962e";
-  ctx.fillRect(84, 430, Math.max(160, numWidth), 6);
-
+  ctx.fillRect(numberX + 4, 430, Math.max(160, numberWidth), 6);
   ctx.fillStyle = "#9db0ab";
-  ctx.font = `500 40px ${ui}`;
-  ctx.fillText(p.wpmLabel, 100 + numWidth, 400);
+  ctx.font = fonts[2] ?? "";
+  ctx.direction = rtl ? "rtl" : "ltr";
+  ctx.textAlign = rtl ? "right" : "left";
+  ctx.fillText(x.wpmLabel, rtl ? numberX - 20 : numberX + numberWidth + 20, 400);
 
+  // Text lines on the reading side, each with its own direction.
   ctx.fillStyle = "#eef1ec";
-  ctx.font = `500 44px ${ui}`;
-  ctx.fillText(`${p.accuracyLabel}: ${p.accuracy.toFixed(1)}%`, 80, 520);
+  ctx.fillText(x.accuracyLine, startX, 510);
   ctx.fillStyle = "#9db0ab";
-  ctx.font = `400 32px ${ui}`;
-  ctx.fillText(p.mode, 80, 570);
-
-  ctx.textAlign = "right";
-  ctx.direction = p.lang === "ar" ? "rtl" : "ltr";
-  ctx.fillText(p.caption, W - 80, 570);
+  ctx.font = fonts[3] ?? "";
+  ctx.fillText(x.mode, startX, 556);
+  ctx.fillText(x.caption, startX, 598);
 
   return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("no-blob"))), "image/png"));
 }
 
 /** Creates the image client-side, then shares it (Web Share API) or downloads it. */
 export function ShareResultButton({ wpm, accuracy, mode }: ShareResultProps) {
-  const { t, lang } = useI18n();
+  const { t, lang, num, pct } = useI18n();
   const [busy, setBusy] = useState(false);
 
   const share = async () => {
     setBusy(true);
     try {
-      const blob = await renderResultImage({ wpm, accuracy, mode, lang, caption: t.share.caption, accuracyLabel: t.common.accuracy, wpmLabel: t.common.wpmShort });
+      const blob = await renderResultImage({
+        lang,
+        wpm: num(Math.round(wpm)),
+        wpmLabel: t.common.wpmShort,
+        accuracyLine: `${t.common.accuracy}: ${pct(accuracy, 1)}`,
+        mode,
+        caption: t.share.caption,
+      });
       const file = new File([blob], `kitaba-${Math.round(wpm)}wpm.png`, { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: "Kitaba", text: t.share.caption });
@@ -98,7 +123,7 @@ export function ShareResultButton({ wpm, accuracy, mode }: ShareResultProps) {
         downloadBlob(blob, file.name);
       }
     } catch {
-      // Cancelled share sheets throw AbortError; nothing to report.
+      // A cancelled share sheet throws AbortError; nothing to report.
     } finally {
       setBusy(false);
     }

@@ -1,22 +1,22 @@
-/* Print layout for the certificate: A4 landscape, only the certificate, true colours. */
+/* Print layout for the certificate: A4 landscape, only the certificate.
+   Every rule is scoped with :has(.certificate), so this stylesheet (which stays
+   loaded after client-side navigation) never affects printing other pages. */
 @media print {
   @page {
     size: A4 landscape;
     margin: 10mm;
   }
-  html,
-  body {
+  html:has(.certificate),
+  body:has(.certificate) {
     background: #ffffff !important;
   }
-  header,
-  footer,
-  .no-print {
+  body:has(.certificate) > header,
+  body:has(.certificate) > footer,
+  body:has(.certificate) .no-print,
+  body:has(.certificate) main > div > header {
     display: none !important;
   }
-  main > div > header {
-    display: none !important;
-  }
-  main > div {
+  body:has(.certificate) main > div {
     padding: 0 !important;
     max-width: none !important;
   }

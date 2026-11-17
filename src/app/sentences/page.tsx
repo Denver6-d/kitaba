@@ -28,31 +28,37 @@ export default function SentencesPage() {
   const [filter, setFilter] = useState<LevelFilter | null>(null);
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState(0);
+  const [saveFailed, setSaveFailed] = useState(false);
+  // Mastery changed during this session (the stored map is only read once, for ordering).
+  const [sessionMastery, setSessionMastery] = useState<Record<string, number>>({});
 
   // Default filter: the learner's diagnostic level (or all).
   const level: LevelFilter = filter ?? (profile.status === "ready" ? (profile.data.level ?? "all") : "all");
 
   // Order is fixed when the filter changes: least-practised sentences first, shuffled within a tier.
   const order = useMemo(() => {
-    if (mastery.status !== "ready") return null;
+    // Wait for the profile too, so the default level does not flip and remount the card.
+    if (mastery.status !== "ready" || profile.status === "loading") return null;
     const pool = sentences.filter((s) => level === "all" || s.level === level);
     const m = mastery.data;
     const tier = (id: string) => Math.min(3, m[`sentence:${id}`] ?? 0);
     return shuffle(pool, seededRng(seed + level.length)).sort((a, b) => tier(a.id) - tier(b.id));
     // Re-ordering on every mastery change would move the sentence the learner is answering.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [level, seed, mastery.status]);
+  }, [level, seed, mastery.status, profile.status]);
 
   const current = order ? order[index % order.length] : undefined;
   const key = current ? `sentence:${current.id}` : "";
-  const m = mastery.status === "ready" ? (mastery.data[key] ?? 0) : 0;
+  const m = sessionMastery[key] ?? (mastery.status === "ready" ? (mastery.data[key] ?? 0) : 0);
 
   const onGraded = useCallback(
     async (r: GradeResult, input: string) => {
       if (!current) return;
       setDone((d) => d + 1);
       await repos.sentences.saveAttempt({ sentenceId: current.id, input, score: r.score, errors: r.errors.map((e) => e.type), at: Date.now() });
-      await repos.sentences.setMastery(key, nextMastery(m, r.correct));
+      const next = nextMastery(m, r.correct);
+      setSessionMastery((prev) => ({ ...prev, [key]: next }));
+      await repos.sentences.setMastery(key, next);
       await repos.activity.log("sentence", SECONDS_PER_SENTENCE, xpFor({ kind: "sentence", score: r.score }));
       await checkAchievements();
     },
@@ -80,9 +86,16 @@ export default function SentencesPage() {
           <p className="text-sm text-ink-soft tabular">{t.sentences.progress(done, order?.length ?? 0).replace(/\d+/g, (d) => num(Number(d)))}</p>
         </div>
         {current ? (
-          <SentenceCard key={`${current.id}-${index}`} sentence={current} hint={hintLevel(m)} onGraded={(r, i) => void onGraded(r, i)} onNext={() => setIndex((i) => i + 1)} />
+          <SentenceCard key={`${current.id}-${index}`} sentence={current} hint={hintLevel(m)} onGraded={(r, i) => {
+              onGraded(r, i).catch(() => setSaveFailed(true));
+            }} onNext={() => setIndex((i) => i + 1)} />
         ) : (
           <LoadingBlock label={t.common.loading} />
+        )}
+        {saveFailed && (
+          <p role="alert" className="text-sm text-error">
+            {t.results.saveFailed}
+          </p>
         )}
         <p className="text-xs text-ink-soft">{t.sentences.heuristic}</p>
       </div>

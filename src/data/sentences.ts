@@ -6,7 +6,7 @@ import type { Level, Sentence } from "./schema";
  * punctuation are normalised by the grader, so they are not listed twice.
  */
 
-type Row = readonly [ar: string, en: readonly string[], level: Level, topic: string];
+type Row = readonly [ar: string, en: readonly string[], level: Level, topic: string, alsoAccept?: readonly string[]];
 
 const ROWS: readonly Row[] = [
   // ---------------------------------------------------------------- A1
@@ -51,8 +51,8 @@ const ROWS: readonly Row[] = [
   ["الباب مفتوح.", ["The door is open."], "A1", "home"],
   ["النافذة مغلقة.", ["The window is closed.", "The window is shut."], "A1", "home"],
   ["أحتاج إلى مساعدة.", ["I need help."], "A1", "requests"],
-  ["من فضلك تكلّم ببطء.", ["Please speak slowly.", "Speak slowly, please."], "A1", "requests"],
-  ["شكرًا جزيلًا.", ["Thank you very much.", "Thanks a lot."], "A1", "requests"],
+  ["من فضلك تكلّم ببطء.", ["Please speak slowly.", "Speak slowly, please.", "Please speak more slowly."], "A1", "requests"],
+  ["شكرًا جزيلًا.", ["Thank you very much.", "Thanks a lot.", "Thank you so much."], "A1", "requests"],
   ["المتجر مغلق يوم الجمعة.", ["The shop is closed on Friday.", "The store is closed on Friday.", "The shop is closed on Fridays."], "A1", "shopping"],
   ["كم سعر هذا؟", ["How much is this?", "How much does this cost?"], "A1", "shopping"],
   ["لدي سؤال.", ["I have a question."], "A1", "school"],
@@ -72,7 +72,7 @@ const ROWS: readonly Row[] = [
   ["هل أكلت الفطور؟", ["Did you eat breakfast?", "Did you have breakfast?", "Have you had breakfast?"], "A2", "past"],
   ["سافرنا إلى دبي العام الماضي.", ["We traveled to Dubai last year.", "We went to Dubai last year.", "Last year we traveled to Dubai."], "A2", "travel"],
   ["اشتريت قميصًا جديدًا.", ["I bought a new shirt."], "A2", "shopping"],
-  ["كان الفيلم ممتعًا.", ["The movie was interesting.", "The film was interesting.", "The movie was fun."], "A2", "hobbies"],
+  ["كان الفيلم ممتعًا.", ["The movie was interesting.", "The film was interesting.", "The movie was fun.", "The movie was enjoyable."], "A2", "hobbies"],
   ["كانت الحافلة متأخرة.", ["The bus was late."], "A2", "routine"],
   ["كانوا في الحديقة.", ["They were in the park.", "They were in the garden."], "A2", "past"],
   ["سأتصل بك غدًا.", ["I will call you tomorrow."], "A2", "future"],
@@ -84,9 +84,9 @@ const ROWS: readonly Row[] = [
   ["عادةً أشرب القهوة في الصباح.", ["I usually drink coffee in the morning."], "A2", "routine"],
   ["هي دائمًا متأخرة.", ["She is always late."], "A2", "routine"],
   ["لا أشاهد التلفاز كثيرًا.", ["I do not watch TV much.", "I do not watch television much.", "I do not watch TV a lot."], "A2", "hobbies"],
-  ["هل تعيش قريبًا من هنا؟", ["Do you live near here?", "Do you live close to here?"], "A2", "places"],
+  ["هل تعيش قريبًا من هنا؟", ["Do you live near here?", "Do you live close to here?", "Do you live nearby?"], "A2", "places"],
   ["أين تعمل؟", ["Where do you work?"], "A2", "work"],
-  ["ماذا تفعل في عطلة نهاية الأسبوع؟", ["What do you do on the weekend?", "What do you do at the weekend?", "What do you do on weekends?"], "A2", "hobbies"],
+  ["ماذا تفعل في عطلة نهاية الأسبوع؟", ["What do you do on the weekend?", "What do you do on weekends?"], "A2", "hobbies", ["What do you do at the weekend?"]],
   ["لدي موعد مع الطبيب.", ["I have an appointment with the doctor.", "I have a doctor's appointment."], "A2", "health"],
   ["رأسي يؤلمني.", ["I have a headache.", "My head hurts."], "A2", "health"],
   ["يجب أن تشرب ماءً أكثر.", ["You should drink more water."], "A2", "health"],
@@ -116,7 +116,7 @@ const ROWS: readonly Row[] = [
   ["هي تعمل من المنزل.", ["She works from home."], "A2", "work"],
   ["لا تنسَ المظلة.", ["Do not forget the umbrella.", "Do not forget your umbrella."], "A2", "requests"],
   ["المحل مزدحم اليوم.", ["The shop is crowded today.", "The store is busy today.", "The shop is busy today."], "A2", "shopping"],
-  ["ابني في الصف الخامس.", ["My son is in fifth grade.", "My son is in the fifth grade.", "My son is in year five."], "A2", "family"],
+  ["ابني في الصف الخامس.", ["My son is in fifth grade.", "My son is in the fifth grade."], "A2", "family", ["My son is in year five."]],
   ["كانت الامتحانات صعبة.", ["The exams were difficult.", "The exams were hard."], "A2", "school"],
   ["لماذا أنت حزين؟", ["Why are you sad?"], "A2", "feelings"],
   ["أنا خائف من الكلاب.", ["I am afraid of dogs.", "I am scared of dogs."], "A2", "feelings"],
@@ -146,11 +146,11 @@ const ROWS: readonly Row[] = [
   ["الرجل الذي يعمل هنا صديقي.", ["The man who works here is my friend."], "B1", "people"],
   ["هذا هو الكتاب الذي تحدثت عنه.", ["This is the book that I talked about.", "This is the book I talked about.", "This is the book I told you about."], "B1", "things"],
   ["بُني هذا الجسر قبل مئة عام.", ["This bridge was built a hundred years ago.", "This bridge was built one hundred years ago.", "This bridge was built 100 years ago."], "B1", "passive"],
-  ["تُرسل الطلبات عبر الإنترنت.", ["Applications are sent online.", "The applications are sent online."], "B1", "passive"],
+  ["تُرسل الطلبات عبر الإنترنت.", ["Applications are sent online.", "The applications are sent online.", "Applications are submitted online."], "B1", "passive"],
   ["قال إنه متعب.", ["He said that he was tired.", "He said he was tired."], "B1", "reported"],
   ["سألتني أين أعيش.", ["She asked me where I lived.", "She asked me where I live."], "B1", "reported"],
   ["أنا معتاد على الاستيقاظ مبكرًا.", ["I am used to waking up early.", "I am used to getting up early."], "B1", "routine"],
-  ["كنت أعيش في القاهرة.", ["I used to live in Cairo."], "B1", "past"],
+  ["كنت أعيش في القاهرة.", ["I used to live in Cairo.", "I lived in Cairo."], "B1", "past"],
   ["على الرغم من المطر خرجنا.", ["Although it was raining, we went out.", "We went out although it was raining.", "Despite the rain, we went out."], "B1", "linking"],
   ["لم أستطع الحضور لأنني كنت مريضًا.", ["I could not attend because I was sick.", "I could not come because I was ill.", "I could not attend because I was ill."], "B1", "linking"],
   ["أنا مسؤول عن خدمة العملاء.", ["I am responsible for customer service."], "B1", "work"],
@@ -175,12 +175,16 @@ const ROWS: readonly Row[] = [
   ["يرجى الرد قبل يوم الخميس.", ["Please reply before Thursday.", "Please respond before Thursday.", "Please reply by Thursday."], "B1", "email"],
 ];
 
-export const sentences: readonly Sentence[] = ROWS.map(([ar, en, level, topic], i) => ({
+export const sentences: readonly Sentence[] = ROWS.map(([ar, en, level, topic, alsoAccept], i) => ({
   id: `s-${String(i + 1).padStart(3, "0")}`,
   ar,
   en: [...en],
+  ...(alsoAccept ? { alsoAccept: [...alsoAccept] } : {}),
   level,
   topic,
 }));
+
+/** Every answer the grader accepts (shown answers first). */
+export const acceptedAnswers = (s: Sentence): string[] => [...s.en, ...(s.alsoAccept ?? [])];
 
 export const sentenceById: ReadonlyMap<string, Sentence> = new Map(sentences.map((s) => [s.id, s]));

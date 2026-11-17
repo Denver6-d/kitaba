@@ -112,7 +112,8 @@ describe("sentence bank", () => {
   });
   it("every accepted answer is graded as correct", () => {
     for (const s of sentences) {
-      for (const answer of s.en) expect(gradeSentence(answer, s.en).correct, `${s.id}: ${answer}`).toBe(true);
+      const all = [...s.en, ...(s.alsoAccept ?? [])];
+      for (const answer of all) expect(gradeSentence(answer, all).correct, `${s.id}: ${answer}`).toBe(true);
     }
   });
   it("most sentences offer more than one accepted answer", () => {

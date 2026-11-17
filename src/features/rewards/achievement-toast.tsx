@@ -13,7 +13,7 @@ export function AchievementToast() {
   const [ids, setIds] = useState<string[]>([]);
 
   useEffect(() => {
-    const on = (e: Event) => setIds((e as CustomEvent<string[]>).detail);
+    const on = (e: Event) => setIds((prev) => [...new Set([...prev, ...(e as CustomEvent<string[]>).detail])]);
     window.addEventListener(ACHIEVEMENT_EVENT, on);
     return () => window.removeEventListener(ACHIEVEMENT_EVENT, on);
   }, []);

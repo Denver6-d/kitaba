@@ -73,6 +73,8 @@ export const sentenceSchema = z.object({
   ar: arabic,
   /** Accepted English answers. The first one is the model answer shown to the learner. */
   en: z.array(english).min(1),
+  /** Also accepted (e.g. British forms) but never shown, since the app teaches American English. */
+  alsoAccept: z.array(english).optional(),
   level: levelSchema,
   topic: z.string().min(1),
 });

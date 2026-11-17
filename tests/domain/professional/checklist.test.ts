@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkMessage, wordCount, type CheckId } from "@/domain/professional/checklist";
+import { checkMessage, wordCount, type CheckId, type ScenarioRules } from "@/domain/professional/checklist";
 
 const scenario = {
   minWords: 30,
@@ -19,7 +19,7 @@ Please let me know if this is possible. Thank you for your understanding.
 Best regards,
 Omar`;
 
-const failed = (text: string, s = scenario): CheckId[] =>
+const failed = (text: string, s: ScenarioRules = scenario): CheckId[] =>
   checkMessage(text, s)
     .filter((c) => !c.passed)
     .map((c) => c.id);
@@ -105,5 +105,42 @@ describe("checkMessage", () => {
 
   it("fails everything sensible for empty text", () => {
     expect(failed("")).toEqual(expect.arrayContaining(["greeting", "closing", "polite", "length"]));
+  });
+});
+
+describe("checkMessage: review regressions", () => {
+  const timeRule = { minWords: 1, maxWords: 500, mustMention: [{ anyOf: ["@time"] }, { anyOf: ["@day", "@date"] }] };
+  const mentionFails = (text: string) => failed(text, timeRule).filter((id) => id.startsWith("mention"));
+
+  it("matches times written with a.m./p.m. and 24-hour times", () => {
+    expect(mentionFails("Can we meet at 10 a.m. on Sunday?")).toEqual([]);
+    expect(mentionFails("Can we meet at 3pm on 14 March?")).toEqual([]);
+    expect(mentionFails("Can we meet at 14:30 tomorrow?")).toEqual([]);
+  });
+  it("includes Saturday and Sunday and month dates", () => {
+    expect(mentionFails("See you at noon on Saturday.")).toEqual([]);
+    expect(mentionFails("See you at 9 a.m. on 3 June.")).toEqual([]);
+  });
+  it("does not flag i.e. or sentences that start with a number", () => {
+    const text = good.replace("I have finished the weekly report", "3 days ago I finished the weekly report, i.e. the sales summary");
+    expect(failed(text)).not.toContain("capitalization");
+  });
+  it("does not treat R&D or U.S. as text-speak", () => {
+    expect(failed(good.replace("the weekly report", "the R&D report for the U.S. office"))).not.toContain("noTextSpeak");
+  });
+  it("accepts 'To whom it may concern' and a one-line closing with a name", () => {
+    expect(failed(good.replace("Dear Mr. Khalid,", "To whom it may concern,"))).not.toContain("greeting");
+    const oneLine = good.replace("Best regards,\nOmar", "Best regards, Omar");
+    expect(failed(oneLine)).not.toContain("closing");
+    expect(failed(oneLine)).not.toContain("punctuation");
+  });
+  it("matches keywords as whole words with simple inflections only", () => {
+    const rule = { minWords: 1, maxWords: 500, mustMention: [{ anyOf: ["hear"] }, { anyOf: ["apply"] }] };
+    expect(failed("I love my heart. Please. Thanks.", rule)).toContain("mention-0");
+    expect(failed("I am applying now.", rule)).not.toContain("mention-1");
+  });
+  it("normalises curly apostrophes", () => {
+    const rule = { minWords: 1, maxWords: 500, mustMention: [{ anyOf: ["can't"] }] };
+    expect(failed("I can’t come.", rule)).not.toContain("mention-0");
   });
 });
