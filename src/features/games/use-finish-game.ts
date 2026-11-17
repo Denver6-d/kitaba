@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { starsFor, summarize, xpForGame, type GameState, type GameSummary } from "@/domain/games/engine";
+import { starsFor, starsForTimed, summarize, xpForGame, type GameState, type GameSummary } from "@/domain/games/engine";
 import { levelInfo } from "@/domain/progress/levels";
 import type { StageRecord } from "@/domain/model";
 import { useRepos } from "@/repositories/provider";
@@ -33,7 +33,12 @@ export function useFinishGame(): (session: BuiltSession, state: GameState) => Pr
   return useCallback(
     async (session, state) => {
       const summary = summarize(state);
-      const stars = session.stageId === null ? null : starsFor(summary.accuracy, summary.answered, session.boss);
+      const stars =
+        session.stageId === null
+          ? null
+          : session.config.durationMs !== null
+            ? starsForTimed(summary.accuracy, summary.correct)
+            : starsFor(summary.accuracy, summary.answered, session.boss);
       const xp = xpForGame(summary, stars ?? 0);
       const xpBefore = (await repos.activity.list()).reduce((n, a) => n + a.xp, 0);
       const { previous, best } = await repos.games.saveSession(

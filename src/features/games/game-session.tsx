@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useId, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useReducer, useRef, useState, type MouseEvent } from "react";
+import { flushSync } from "react-dom";
 import { Eye, Turtle, Volume2 } from "lucide-react";
 import type { SpellingWord } from "@/data/schema";
 import { CATEGORY_INFO } from "@/data/rules";
@@ -36,6 +37,15 @@ interface Props {
 }
 
 const TICK_MS = 250;
+
+/**
+ * Buttons around the answer field must not take focus from it: a click (or a
+ * tap, which would also close the phone keyboard) would otherwise leave focus
+ * on a button that then unmounts, and the next word's first letter would be lost.
+ */
+const keepInputFocus = (e: MouseEvent) => e.preventDefault();
+
+const takesTyping = (item: GameItem | undefined) => item !== undefined && (item.kind === "typed" || item.kind === "sentence");
 
 /**
  * Plays one session. The engine (domain/games/engine.ts) keeps score; this
@@ -113,11 +123,14 @@ export function GameSession({ items, config, words, onFinish, title }: Props) {
     const following = game.items[game.index + 1];
     dispatch({ type: "next", t });
     // Same event: the input's value is cleared in the same update that changes the item.
-    if (following) input.nextItem(following.key);
+    // Letters typed during feedback carry over only into an item that takes typing.
+    if (following) input.dispatch(takesTyping(following) ? { type: "item", itemKey: following.key, t } : { type: "item", itemKey: following.key, carry: "", t });
     setVerdict(null);
     setFixPick(null);
     setRevealed(false);
     setRevealing(false);
+    // Still inside the user's gesture, so phones keep (or open) the keyboard.
+    if (takesTyping(following)) inputRef.current?.focus({ preventScroll: true });
   }, [item, answered, game.items, game.index, input]);
 
   // Typing while a verdict is showing moves on and keeps the typed letters: the
@@ -235,7 +248,8 @@ export function GameSession({ items, config, words, onFinish, title }: Props) {
             size="lg"
             className="h-12 px-8 text-base"
             onClick={() => {
-              dispatch({ type: "start", t: performance.now() });
+              // Render the input now, then focus it inside the same tap (iOS opens the keyboard only then).
+              flushSync(() => dispatch({ type: "start", t: performance.now() }));
               inputRef.current?.focus();
             }}
           >
@@ -261,16 +275,16 @@ export function GameSession({ items, config, words, onFinish, title }: Props) {
             <div className="flex flex-wrap items-center gap-2">
               {canSpeak ? (
                 <>
-                  <Button size="lg" variant="secondary" onClick={() => item.speak && speak(item.speak)} className="h-11 gap-2 px-5">
+                  <Button size="lg" variant="secondary" onMouseDown={keepInputFocus} onClick={() => item.speak && speak(item.speak)} className="h-11 gap-2 px-5">
                     <Volume2 className="size-5" aria-hidden="true" />
                     {t.game.listen}
                   </Button>
-                  <Button variant="outline" size="lg" onClick={() => speak(item.kind === "sentence" ? item.answer : item.answer, 0.6)} className="h-11 gap-2">
+                  <Button variant="outline" size="lg" onMouseDown={keepInputFocus} onClick={() => speak(item.answer, 0.6)} className="h-11 gap-2">
                     <Turtle className="size-4" aria-hidden="true" />
                     {t.game.slow}
                   </Button>
                   {item.kind !== "sentence" && (
-                    <Button variant="ghost" size="lg" onClick={() => speak(word.example)} className="h-11">
+                    <Button variant="ghost" size="lg" onMouseDown={keepInputFocus} onClick={() => speak(word.example)} className="h-11">
                       {t.game.example}
                     </Button>
                   )}
@@ -332,7 +346,7 @@ export function GameSession({ items, config, words, onFinish, title }: Props) {
 
           <div className="flex flex-wrap items-center gap-3 max-sm:sticky max-sm:bottom-0 max-sm:-mx-5 max-sm:border-t max-sm:border-rule max-sm:bg-sheet max-sm:px-5 max-sm:py-3">
             {answered ? (
-              <Button ref={nextRef} size="lg" onClick={goNext} className="h-12 flex-1 px-8 text-base sm:flex-none">
+              <Button ref={nextRef} size="lg" onMouseDown={showInput ? keepInputFocus : undefined} onClick={goNext} className="h-12 flex-1 px-8 text-base sm:flex-none">
                 {game.index + 1 >= game.items.length ? t.game.finish : t.game.next}
               </Button>
             ) : (
@@ -340,13 +354,14 @@ export function GameSession({ items, config, words, onFinish, title }: Props) {
                 <>
                   <Button
                     size="lg"
+                    onMouseDown={keepInputFocus}
                     onClick={onEnter}
                     disabled={input.state.value.trim() === ""}
                     className="h-12 flex-1 px-8 text-base sm:flex-none"
                   >
                     {t.game.check}
                   </Button>
-                  <Button variant="ghost" size="lg" onClick={() => submit("", { forcedWrong: true })} className="h-12">
+                  <Button variant="ghost" size="lg" onMouseDown={keepInputFocus} onClick={() => submit("", { forcedWrong: true })} className="h-12">
                     {t.game.dontKnow}
                   </Button>
                 </>

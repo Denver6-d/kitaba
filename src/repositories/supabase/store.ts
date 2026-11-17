@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { TABLE_NAMES, type SyncRecord, type TableMap, type TableName } from "@/domain/model";
 import { recordSchemas } from "../export";
 import type { RecordStore } from "../store";
+import { migrateV1Row } from "@/domain/sync/migrate-v1";
 
 /**
  * Supabase backend for the RecordStore contract. Every record is one row of
@@ -37,7 +38,11 @@ const isTable = (t: string): t is TableName => (TABLE_NAMES as readonly string[]
 function parseRow(row: Row): PulledRecord | null {
   if (!isTable(row.table_name)) return null;
   const parsed = recordSchemas[row.table_name].safeParse(row.data);
-  return parsed.success ? { table: row.table_name, record: parsed.data as SyncRecord } : null;
+  if (parsed.success) return { table: row.table_name, record: parsed.data as SyncRecord };
+  // A row written by a V1 client (e.g. kind "typing", a profile with a plan) is migrated, not dropped.
+  const migrated = row.data && typeof row.data === "object" ? migrateV1Row(row.table_name, row.data as Record<string, unknown>) : null;
+  const again = migrated ? recordSchemas[row.table_name].safeParse(migrated) : null;
+  return again?.success ? { table: row.table_name, record: again.data as SyncRecord } : null;
 }
 
 const toRow = (table: TableName, r: SyncRecord) => ({

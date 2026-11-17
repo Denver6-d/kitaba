@@ -28,7 +28,8 @@ export function GameView() {
   else title = t.modes[request.mode]?.name ?? t.play.freePlay;
 
   let body: React.ReactNode;
-  if (request.kind === "stage" && stages.status !== "ready") body = <LoadingBlock label={t.common.loading} />;
+  // Only the first load can block: a later re-query (sync, sign-in) must never unmount a running game.
+  if (request.kind === "stage" && stages.status === "loading") body = <LoadingBlock label={t.common.loading} />;
   else if (request.kind === "stage" && stages.status === "ready" && !isStageUnlocked(request.id, stages.data)) {
     body = (
       <EmptyBlock

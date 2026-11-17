@@ -49,9 +49,12 @@ describe("answer input keeps the first character", () => {
   });
 
   it("keeps a character typed while the previous verdict is showing", () => {
-    let s = run([{ type: "change", value: "receive", t: 1 }, { type: "verdict" }, { type: "change", value: "receiveb", t: 20 }]);
+    // The field is emptied at the verdict, so the browser now reports just "b".
+    let s = run([{ type: "change", value: "receive", t: 1 }, { type: "verdict" }]);
+    expect(displayValue(s)).toBe("");
+    s = reduceAnswerInput(s, { type: "change", value: "b", t: 20 });
     expect(s.advanceRequested).toBe(true);
-    s = reduceAnswerInput(s, { type: "item", itemKey: "w2", carry: s.value, t: 20 });
+    s = reduceAnswerInput(s, { type: "item", itemKey: "w2", t: 21 });
     expect(s.value).toBe("b");
     expect(s.phase).toBe("answering");
     expect(s.startedAt).toBe(20);
@@ -59,12 +62,27 @@ describe("answer input keeps the first character", () => {
 
   it("keeps every character typed quickly during feedback, before the next item appears", () => {
     let s = run([{ type: "change", value: "cat", t: 1 }, { type: "verdict" }]);
-    expect(displayValue(s)).toBe("cat");
-    s = run([{ type: "change", value: "catd", t: 2 }, { type: "change", value: "catdo", t: 3 }], s);
+    expect(displayValue(s)).toBe("");
+    s = run([{ type: "change", value: "d", t: 2 }, { type: "change", value: "do", t: 3 }], s);
     expect(s.value).toBe("do");
     s = reduceAnswerInput(s, { type: "item", itemKey: "w2" });
     expect(s.value).toBe("do");
     expect(s.startedAt).toBe(2);
+  });
+
+  it("waits for an IME composition typed during feedback to end before moving on", () => {
+    let s = run([{ type: "change", value: "cat", t: 1 }, { type: "verdict" }, { type: "compositionstart" }, { type: "change", value: "d", t: 2 }]);
+    expect(s.advanceRequested).toBe(false);
+    s = reduceAnswerInput(s, { type: "compositionend", value: "do", t: 3 });
+    expect(s.advanceRequested).toBe(true);
+    s = reduceAnswerInput(s, { type: "item", itemKey: "w2" });
+    expect(s.value).toBe("do");
+  });
+
+  it("does not carry letters into an item that takes no typing", () => {
+    const s = run([{ type: "change", value: "cat", t: 1 }, { type: "verdict" }, { type: "change", value: "d", t: 2 }, { type: "item", itemKey: "c1", carry: "", t: 3 }]);
+    expect(s.value).toBe("");
+    expect(s.startedAt).toBeNull();
   });
 
   it("handles a keyboard that replaces the whole field while showing the verdict", () => {

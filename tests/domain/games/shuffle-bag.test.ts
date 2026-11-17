@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { drawFromBag, recentGuard, type BagState } from "@/domain/games/shuffle-bag";
+import { drawFromBag, recentGuard, returnToBag, type BagState } from "@/domain/games/shuffle-bag";
 import { seededRng } from "@/domain/shared/random";
 
 const pool = (n: number) => Array.from({ length: n }, (_, i) => `w${i}`);
@@ -48,5 +48,19 @@ describe("shuffle-bag selection", () => {
     const restored = JSON.parse(JSON.stringify(r1.state)) as BagState;
     const r2 = drawFromBag(pool(20), restored, 13, seededRng(10));
     expect(new Set([...r1.ids, ...r2.ids]).size).toBe(20);
+  });
+
+  it("returns unused spare ids to the front, so playing 10 of 16 drawn never repeats before the pool is used", () => {
+    const ids = pool(25);
+    const rng = seededRng(11);
+    let state: BagState | null = null;
+    const played: string[] = [];
+    for (let round = 0; round < 2; round += 1) {
+      const r = drawFromBag(ids, state, 16, rng);
+      const used = r.ids.slice(0, 10);
+      played.push(...used);
+      state = returnToBag(r.state, r.ids.slice(10));
+    }
+    expect(new Set(played).size).toBe(20);
   });
 });

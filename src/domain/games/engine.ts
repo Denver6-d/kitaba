@@ -180,6 +180,16 @@ export function starsFor(accuracy: number, answered: number, boss = false): numb
   return 0;
 }
 
+/**
+ * Stars for a timed round (Spelling Bee): accuracy alone would let one correct
+ * word and a run-out clock earn three stars, so it also needs enough correct
+ * words: 10 for one star, 15 for two, 20 for three.
+ */
+export function starsForTimed(accuracy: number, correct: number): number {
+  const byCount = correct >= 20 ? 3 : correct >= 15 ? 2 : correct >= 10 ? 1 : 0;
+  return Math.min(starsFor(accuracy, correct), byCount);
+}
+
 /** XP for a finished game: 3 per correct word, 1 per attempt that missed, 5 per star. */
 export function xpForGame(summary: GameSummary, stars: number): number {
   return summary.correct * 3 + (summary.answered - summary.correct) + stars * 5;

@@ -10,20 +10,23 @@
  * 3. Moving to the next item clears the value in the same update that changes
  *    the item. A repeated `item` event for the current item is a no-op, so a
  *    re-render or a re-run effect can never wipe what was typed.
- * 4. Typing while the previous verdict is showing advances to the next item
- *    and keeps the character as the start of the new answer.
+ * 4. The field is emptied at the verdict (the feedback panel shows the answer).
+ *    Typing while the verdict is showing advances to the next item and keeps
+ *    the characters as the start of the new answer. Inside an IME composition
+ *    (mobile keyboards) it waits for the composition to end, so the keyboard's
+ *    composing text is never rewritten mid-word.
  */
 
 export type AnswerPhase = "answering" | "feedback";
 
 export interface AnswerInputState {
   readonly itemKey: string;
-  /** The answer being typed (in the feedback phase: what was typed after the checked answer). */
+  /** The answer being typed (in the feedback phase: what was typed for the next item). */
   readonly value: string;
   /** The answer that was checked (feedback phase only). */
   readonly checked: string;
   readonly phase: AnswerPhase;
-  /** When the first character of this item was typed (ms), or null. */
+  /** When the first character of this item was typed (ms), or null. Not a game timer. */
   readonly startedAt: number | null;
   readonly composing: boolean;
   /** Set when typing in the feedback phase asked to move on; the caller then advances. */
@@ -61,16 +64,16 @@ export function reduceAnswerInput(state: AnswerInputState, event: AnswerInputEve
     case "change":
       return applyValue(state, event.value, event.t);
     case "verdict":
-      return state.phase === "feedback" ? state : { ...state, phase: "feedback", checked: state.value, value: "", advanceRequested: false };
+      return state.phase === "feedback" ? state : { ...state, phase: "feedback", checked: state.value, value: "", startedAt: null, advanceRequested: false };
     case "item": {
       if (event.itemKey === state.itemKey) return state;
-      const carry = sanitizeAnswer(event.carry ?? (state.advanceRequested ? state.value : ""));
+      const carry = sanitizeAnswer(event.carry ?? (state.phase === "feedback" ? state.value : ""));
       return {
         itemKey: event.itemKey,
         value: carry,
         checked: "",
         phase: "answering",
-        startedAt: carry.length > 0 ? (state.advanceRequested && state.startedAt !== null ? state.startedAt : (event.t ?? null)) : null,
+        startedAt: carry.length > 0 ? (state.startedAt ?? event.t ?? null) : null,
         composing: false,
         advanceRequested: false,
       };
@@ -78,19 +81,18 @@ export function reduceAnswerInput(state: AnswerInputState, event: AnswerInputEve
   }
 }
 
-/** What the input element shows: in the feedback phase, the checked answer plus anything typed after it. */
+/** What the input element shows. */
 export function displayValue(state: AnswerInputState): string {
-  return state.phase === "feedback" ? state.checked + state.value : state.value;
+  return state.value;
 }
 
 function applyValue(state: AnswerInputState, raw: string, t: number): AnswerInputState {
   const value = sanitizeAnswer(raw);
   if (state.phase === "feedback") {
-    // The input still shows the checked answer; anything typed after it starts the next item.
-    const typed = value.startsWith(state.checked) ? value.slice(state.checked.length) : value;
-    if (typed === state.value) return state;
-    const startedAt = typed.length === 0 ? null : state.advanceRequested && state.startedAt !== null ? state.startedAt : t;
-    return { ...state, value: typed, startedAt, advanceRequested: typed.length > 0 };
+    // The field was emptied at the verdict: whatever is typed now starts the next item.
+    if (value === state.value && state.advanceRequested === (value.length > 0 && !state.composing)) return state;
+    const startedAt = value.length === 0 ? null : (state.startedAt ?? t);
+    return { ...state, value, startedAt, advanceRequested: value.length > 0 && !state.composing };
   }
   if (value === state.value) return state;
   return { ...state, value, startedAt: state.startedAt ?? (value.length > 0 ? t : null) };

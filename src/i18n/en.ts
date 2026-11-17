@@ -152,6 +152,7 @@ export const en: Dictionary = {
     cleared: "Stage cleared",
     notCleared: "Not cleared yet",
     needStars: (pct: number) => `You need at least ${pct}% for one star.`,
+    needWords: (n: number) => `You need at least ${n} correct words for one star.`,
     accuracy: "Accuracy",
     bestCombo: "Best streak",
     newBest: "Your best result on this stage",

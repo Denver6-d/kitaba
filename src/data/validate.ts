@@ -1,6 +1,6 @@
 import { LEVELS } from "@/domain/model";
 import { SPELLING_CATEGORIES } from "@/domain/spelling/categories";
-import { findWordToken } from "@/domain/games/items";
+import { DICTATION_MAX_WORDS, findWordToken } from "@/domain/games/items";
 import { CATEGORY_INFO } from "./rules";
 import { spellingWordSchema, type SpellingWord } from "./schema";
 
@@ -8,9 +8,6 @@ import { spellingWordSchema, type SpellingWord } from "./schema";
  * Content validation (run by `npm run validate:content` and the test suite).
  * Returns every problem found, so one run shows them all.
  */
-
-/** Dictation sentences: short enough to type from one hearing. */
-export const DICTATION_MAX_WORDS = 12;
 
 export interface ContentReport {
   readonly issues: readonly string[];

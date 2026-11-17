@@ -66,3 +66,18 @@ export function drawFromBag(pool: readonly string[], state: BagState | null, n: 
   }
   return { ids, state: { queue, recent, sig } };
 }
+
+/**
+ * Puts drawn ids that were not used (spare words a mode could not turn into an
+ * item, or more than a session needed) back at the front of the queue, so they
+ * count as unseen and the next session draws them first.
+ */
+export function returnToBag(state: BagState, unused: readonly string[]): BagState {
+  if (unused.length === 0) return state;
+  const back = new Set(unused);
+  return {
+    queue: [...unused.filter((id, i) => unused.indexOf(id) === i), ...state.queue.filter((id) => !back.has(id))],
+    recent: state.recent.filter((id) => !back.has(id)),
+    sig: state.sig,
+  };
+}

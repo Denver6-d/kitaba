@@ -90,6 +90,7 @@ export function GameRunner({ request, title, emptyText, emptyAction }: { request
       outcome={phase.outcome}
       saveFailed={phase.saveFailed}
       boss={phase.session.boss}
+      timed={phase.session.config.durationMs !== null}
       isStage={stageId !== null && parseStageId(stageId) !== null}
       nextHref={next ? `/play/game?stage=${next}` : null}
       onAgain={() => {

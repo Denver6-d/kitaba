@@ -4,7 +4,7 @@ import { spellingWordById, spellingWords } from "@/data/words";
 import type { SpellingWord } from "@/data/schema";
 import { DAILY_MODES, dailyId, seedFrom, stageDef } from "@/domain/games/campaign";
 import type { GameConfig, GameItem, ItemMode } from "@/domain/games/engine";
-import { drawFromBag, type BagState } from "@/domain/games/shuffle-bag";
+import { drawFromBag, returnToBag, type BagState } from "@/domain/games/shuffle-bag";
 import { buildItems } from "@/domain/games/session";
 import type { CefrLevel, GameMode } from "@/domain/model";
 import { LEVELS } from "@/domain/model";
@@ -43,8 +43,19 @@ const bankSpellings: ReadonlySet<string> = new Set(spellingWords.flatMap((w) => 
 
 const BAG_PREFIX = "bag:";
 
-/** Draws from a persisted shuffle-bag (local only, never synced), so words do not repeat until the pool is used up. */
-async function drawPersisted(meta: OutboxStore, key: string, pool: readonly SpellingWord[], n: number, rng: Rng): Promise<SpellingWord[]> {
+/**
+ * Draws from a persisted shuffle-bag (local only, never synced), builds the
+ * items, and returns the words that were not used to the bag, so words do not
+ * repeat until the pool is used up.
+ */
+async function drawAndBuild(
+  meta: OutboxStore,
+  key: string,
+  pool: readonly SpellingWord[],
+  n: number,
+  rng: Rng,
+  build: (words: SpellingWord[]) => GameItem[],
+): Promise<GameItem[]> {
   const state = (await meta.getMeta<BagState>(BAG_PREFIX + key).catch(() => undefined)) ?? null;
   const { ids, state: next } = drawFromBag(
     pool.map((w) => w.id),
@@ -52,8 +63,10 @@ async function drawPersisted(meta: OutboxStore, key: string, pool: readonly Spel
     n,
     rng,
   );
-  await meta.setMeta(BAG_PREFIX + key, next).catch(() => undefined);
-  return ids.flatMap((id) => spellingWordById.get(id) ?? []);
+  const items = build(ids.flatMap((id) => spellingWordById.get(id) ?? []));
+  const used = new Set(items.map((i) => i.wordId));
+  await meta.setMeta(BAG_PREFIX + key, returnToBag(next, ids.filter((id) => !used.has(id)))).catch(() => undefined);
+  return items;
 }
 
 export const levelsUpTo = (level: CefrLevel | null): readonly CefrLevel[] =>
@@ -70,10 +83,7 @@ export async function buildSession(
       if (!def) return { items: [], config: UNTIMED, stageId: req.id, mode: "listen", boss: false };
       const pool = spellingWords.filter((w) => def.world.categories.includes(w.category) && def.levels.includes(w.level));
       const count = def.timed ? BEE_WORDS : def.items;
-      const words = await drawPersisted(deps.meta, `stage:${def.id}`, pool, count + SPARE, deps.rng);
-      // Sentence items need short examples (dictation stays under ~12 words).
-      const ordered = Array.isArray(def.modes) ? words.sort((a, b) => a.example.length - b.example.length) : words;
-      const items = buildItems(def.modes, Array.isArray(def.modes) ? shuffle(ordered, deps.rng) : ordered, ctx, count);
+      const items = await drawAndBuild(deps.meta, `stage:${def.id}`, pool, count + SPARE, deps.rng, (words) => buildItems(def.modes, words, ctx, count));
       const mode: GameMode = Array.isArray(def.modes) ? "mixed" : (def.modes as GameMode);
       return { items, config: def.timed ? BEE : UNTIMED, stageId: def.id, mode, boss: def.boss };
     }
@@ -91,8 +101,9 @@ export async function buildSession(
       const pool = spellingWords.filter((w) => (req.level === null || w.level === req.level) && (req.category === null || w.category === req.category));
       const timed = req.mode === "bee";
       const count = timed ? BEE_WORDS : FREE_ITEMS;
-      const words = await drawPersisted(deps.meta, `free:${req.level ?? "all"}:${req.category ?? "all"}`, pool, count + SPARE, deps.rng);
-      return { items: buildItems(req.mode as ItemMode, words, ctx, count), config: timed ? BEE : UNTIMED, stageId: null, mode: req.mode, boss: false };
+      const key = `free:${req.level ?? "all"}:${req.category ?? "all"}`;
+      const items = await drawAndBuild(deps.meta, key, pool, count + SPARE, deps.rng, (words) => buildItems(req.mode as ItemMode, words, ctx, count));
+      return { items, config: timed ? BEE : UNTIMED, stageId: null, mode: req.mode, boss: false };
     }
     case "review": {
       const due = await deps.repos.words.dueCards(deps.now);

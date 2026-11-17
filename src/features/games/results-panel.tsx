@@ -45,13 +45,14 @@ interface Props {
   readonly outcome: FinishOutcome | null;
   readonly saveFailed: boolean;
   readonly boss: boolean;
+  readonly timed: boolean;
   readonly onAgain: () => void;
   /** Next campaign stage, when there is one and this stage was cleared. */
   readonly nextHref: string | null;
   readonly isStage: boolean;
 }
 
-export function ResultsPanel({ outcome, saveFailed, boss, onAgain, nextHref, isStage }: Props) {
+export function ResultsPanel({ outcome, saveFailed, boss, timed, onAgain, nextHref, isStage }: Props) {
   const { t, num, pct } = useI18n();
   const [settings] = useSettings();
   const [board, setBoard] = useState<SubmitStatus | null>(null);
@@ -94,7 +95,7 @@ export function ResultsPanel({ outcome, saveFailed, boss, onAgain, nextHref, isS
             ))}
           </div>
         )}
-        {!cleared && <p className="text-ink-soft">{t.game.needStars(boss ? 70 : 60)}</p>}
+        {!cleared && <p className="text-ink-soft">{timed ? t.game.needWords(10) : t.game.needStars(boss ? 70 : 60)}</p>}
         {improved && <p className="font-medium text-brass">{t.game.newBest}</p>}
       </div>
 

@@ -102,7 +102,6 @@ export const SpellingInput = forwardRef<HTMLInputElement, Props>(function Spelli
 /** Reducer-backed state for a SpellingInput, plus stable helpers. */
 export function useAnswerInput(firstItemKey: string) {
   const [state, dispatch] = useReducer(reduceAnswerInput, firstItemKey, initialAnswerInput);
-  const nextItem = useCallback((itemKey: string) => dispatch({ type: "item", itemKey, t: performance.now() }), []);
   const markChecked = useCallback(() => dispatch({ type: "verdict" }), []);
-  return { state, dispatch, nextItem, markChecked };
+  return { state, dispatch, markChecked };
 }

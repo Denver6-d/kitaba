@@ -150,6 +150,7 @@ export const ar = {
     cleared: "اجتزت المرحلة",
     notCleared: "لم تجتز المرحلة بعد",
     needStars: (pct: number) => `تحتاج ${pct}٪ على الأقل لنجمة واحدة.`,
+    needWords: (n: number) => `تحتاج ${n} كلمات صحيحة على الأقل لنجمة واحدة.`,
     accuracy: "الدقة",
     bestCombo: "أفضل سلسلة",
     newBest: "أفضل نتيجة لك في هذه المرحلة",

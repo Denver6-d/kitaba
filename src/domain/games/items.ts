@@ -21,6 +21,9 @@ export interface BuildContext {
   readonly bankSpellings: ReadonlySet<string>;
 }
 
+/** Dictation sentences: short enough to type from one hearing. */
+export const DICTATION_MAX_WORDS = 12;
+
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** Index of the example token that holds the word (case-insensitive, ignoring punctuation), or -1. */
@@ -88,6 +91,8 @@ export function buildItem(mode: ItemMode, w: ItemWord, ctx: BuildContext, key: s
       return { ...base, kind: "fix", tokens: shown, wrongIndex: index, speak: w.example };
     }
     case "sentence":
+      // Too long to type from one hearing: the caller falls back to a word item.
+      if (w.example.split(/s+/).length > DICTATION_MAX_WORDS) return null;
       return { ...base, kind: "sentence", answer: w.example, speak: w.example };
   }
 }
