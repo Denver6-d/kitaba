@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "validate:content": "vitest run tests/data --reporter=verbose"
+    "validate:content": "vitest run tests/data --reporter=verbose",
+    "content:build": "node scripts/content/run.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

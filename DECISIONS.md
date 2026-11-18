@@ -408,3 +408,36 @@ Choices made while building Kitaba where the brief left room for interpretation.
   - the import file input on `/settings` had no label.
 
   Layout shift was also measured (not a requested category). The loading block now reserves the height of the content it is replaced by, so CLS dropped from 0.29 to 0.02 on `/play` (mobile), from 0.29 to 0.01 on `/progress`, and from 0.17 to under 0.01 on `/write/free`. The highest value left is 0.10 on `/review` (mobile). Lighthouse Performance itself was not measured, as in F1.
+
+## Open data: a much larger library (2026-11-18)
+
+The owner asked for a full dictionary, a large graded word set and tens of thousands of sentences, from sources whose licences allow this use. Every licence below was read in the source itself (not taken from a summary) before anything was downloaded for use.
+
+- **OD1. Sources used.** `scripts/content/sources.json` is the machine-readable list. `tests/data/sources.test.ts` (part of `validate:content`) fails when a source lacks a licence, a link, its obligations or a pinned hash.
+
+  | Source | Version | Licence (read in) | What we use | Obligations |
+  |---|---|---|---|---|
+  | SCOWL | 2020.12.07 (same as dictionary-en) | SCOWL notice, permissive, MIT-like (`Copyright` in the release and in ESDB v2), plus public-domain parts, the Ispell BSD licence and the WordNet 1.6 notice | size levels 10–60 as a commonness tier; the proper-name, abbreviation and taboo lists as filters | keep the notices in supporting documentation (credits page); sizes ≤ 60 only (UKACD terms start above 80); no Australian "D" spellings |
+  | VarCon | 2020.12.07 | Kevin Atkinson and Benjamin Titze notices (permissive) plus the Ispell BSD-style licence (README, "Copyright") | American/British pairs (tags A and B only) | keep both notices and the Ispell licence in the documentation; mark the derived data as modified (Ispell clause 3) |
+  | dictionary-en | 4.0.0 | MIT AND BSD (SCOWL), already approved in F1 | the full spell-check dictionary (layer 1, reused as is); validity filter; NOSUGGEST taboo flags | licence file kept with the copied dictionary |
+  | Tatoeba | weekly export of 2026-11-14 (hashes in `sources.lock.json`) | CC BY 2.0 FR, part also CC0 (terms of use and downloads page) | English sentences, Arabic translations through eng↔ara links, English token counts for ranking, reviews and self-declared levels as quality signals | name each sentence's author and link to it, name and link the licence, say the sentences were filtered and normalised |
+  | CMU Pronouncing Dictionary | commit 7479086 (2025-10-24) | BSD-2-Clause-style (CMU `LICENSE`) | homophones (same pronunciation, different spelling); silent-letter evidence. Pronunciations are not shipped | reproduce the CMU notice, conditions and disclaimer in the documentation (credits page) |
+
+- **OD2. Sources rejected.**
+  - **wordfreq:** its data is CC BY-SA 4.0 and mixes several sources with their own terms (SUBTLEX credit, Twitter's developer agreement). Its author says exporting the data to a plain list is not acceptable.
+  - **Wiktionary translations and Arabic WordNet (AWN v2, CC BY-SA 3.0):** share-alike would apply to the hint data. The owner chose our own hints only (OD4).
+  - **Oxford 3000/5000, Cambridge, Merriam-Webster, Collins:** copyrighted.
+  - **SUBTLEX-US, Google Web 1T and Norvig's counts:** terms unclear or LDC-licensed.
+  - **ESDB (SCOWL v2, 2026):** its licence is fine (read and recorded), but building it needs Python and SQLite, which this machine does not have. SCOWL v1 2020.12.07 is the exact version dictionary-en was built from, so the spell checker and the word filters agree.
+  - **Google Books Ngram (CC BY 3.0):** allowed, but multi-gigabyte and skewed toward old printed text. Tatoeba's own token counts are conversational and enough to rank the top 20,000 words.
+
+- **OD3. The pipeline** (`scripts/content/`, dev-only, no new npm dependency).
+  - `npm run content:build` runs the steps in order. `--from=<step>` and `--only=<step>` select steps, `--force` ignores checkpoints, and `--update` accepts a new upstream snapshot.
+  - Downloads go to `content-raw/downloads/<source>/` and extracted files to `content-raw/extracted/<source>/`. Both are git-ignored.
+  - Archives are opened with the system's `tar` and `bzip2`. Arguments are passed as an array, with no shell. Archives are data only: the Perl and Python files inside SCOWL and VarCon are never run.
+  - **Repeatable:** `sources.lock.json` (committed) pins the SHA-256 and size of every file. A different file is refused unless `--update` is passed. Tatoeba keeps no old exports, so accepting a new weekly snapshot is a deliberate, recorded step.
+  - **Resumable:** downloads are written to `.part` files and renamed when complete. Every step stores a checkpoint keyed by the hash of its script, options and inputs, and is skipped while that key and its outputs are unchanged.
+  - Only the cleaned, compact output in `public/content/v1/` and the reviewed source files under `scripts/content/` are committed.
+- **OD4. Owner decisions (2026-11-18).**
+  - **Arabic hints:** our own hints only. These are the 1,591 existing hints plus new hints for the most frequent words, written and reviewed in batches. Other words have no hint, and every game works without one.
+  - **Tatoeba credit:** each Tatoeba sentence shows a small "Tatoeba #id · author" line linked to the sentence. An "Open data credits" page carries the licences, the notices and a downloadable list of every sentence and its author.

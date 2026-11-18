@@ -50,6 +50,7 @@ Next.js 16 (App Router), React 19 and strict TypeScript, Tailwind CSS 4, shadcn/
 ```
 npm run dev | build | start | lint | typecheck | test
 npm run validate:content     # content validation script (also covered by the test suite)
+npm run content:build        # open-data pipeline (dev-only, resumable; see DECISIONS "Open data")
 ```
 
 ## 5. Routes

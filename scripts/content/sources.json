@@ -1,0 +1,146 @@
+{
+  "$comment": "Open-data sources for the content pipeline (scripts/content). Every licence here was read from the source itself before use; see DECISIONS.md, section 'Open data'. Raw files are downloaded to content-raw/ (git-ignored). Hashes of the exact files used are pinned in sources.lock.json.",
+  "sources": [
+    {
+      "id": "scowl",
+      "name": "SCOWL (Spell Checker Oriented Word Lists)",
+      "author": "Kevin Atkinson and contributors",
+      "homepage": "http://wordlist.aspell.net/",
+      "version": "2020.12.07",
+      "license": "SCOWL licence (permissive, MIT-like) with public-domain and BSD/WordNet components",
+      "licenseUrl": "https://github.com/en-wl/wordlist/blob/v2/Copyright",
+      "obligations": [
+        "Keep the SCOWL copyright and permission notice in all copies and in supporting documentation.",
+        "Keep the Ispell (BSD) and WordNet 1.6 notices that SCOWL includes.",
+        "Use sizes up to 60 only; the UK Advanced Cryptics Dictionary terms apply above size 80, and the Australian 'D' spellings carry an extra notice."
+      ],
+      "use": "Commonness tiers (size levels), American/British variants, inflection families, proper names and abbreviations to exclude. The spell checker itself reuses dictionary-en, which is SCOWL size 60 en-US.",
+      "files": [
+        {
+          "name": "scowl.tar.gz",
+          "url": "https://downloads.sourceforge.net/wordlist/scowl-2020.12.07.tar.gz",
+          "extract": "tar"
+        }
+      ]
+    },
+    {
+      "id": "varcon",
+      "name": "VarCon (Variant Conversion Info)",
+      "author": "Kevin Atkinson and Benjamin Titze; word lists from Ispell (Geoff Kuenning)",
+      "homepage": "http://wordlist.aspell.net/varcon/",
+      "version": "2020.12.07",
+      "license": "VarCon licence (permissive, MIT-like) plus Ispell BSD-style licence",
+      "licenseUrl": "http://wordlist.aspell.net/varcon-readme/",
+      "obligations": [
+        "Keep the Kevin Atkinson and Benjamin Titze copyright and permission notices in supporting documentation.",
+        "Reproduce the Ispell copyright, conditions and disclaimer in the documentation.",
+        "Mark the derived data as modified (Ispell clause 3): only American/British pairs are extracted."
+      ],
+      "use": "American and British spelling pairs (color/colour, center/centre). Only the A and B tags are used; Australian and Canadian data is ignored.",
+      "files": [
+        {
+          "name": "varcon.tar.gz",
+          "url": "https://downloads.sourceforge.net/project/wordlist/VarCon/2020.12.07/varcon-2020.12.07.tar.gz",
+          "extract": "tar",
+          "exclude": [
+            "*/variant-wroot.tab",
+            "*/variant-infl.tab"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dictionary-en",
+      "name": "dictionary-en (Hunspell en-US from SCOWL)",
+      "author": "Titus Wormer (packaging); Kevin Atkinson (SCOWL)",
+      "homepage": "https://github.com/wooorm/dictionaries",
+      "version": "4.0.0 (SCOWL 2020.12.07)",
+      "license": "MIT AND BSD (SCOWL licence)",
+      "licenseUrl": "https://github.com/wooorm/dictionaries/blob/main/dictionaries/en/license",
+      "obligations": [
+        "Keep the licence file with the copied dictionary (public/dict/LICENSE-dictionary-en.txt)."
+      ],
+      "use": "The full spell-check dictionary in the browser (already a dependency since phase F), the validity filter for game words, and the NOSUGGEST taboo flags.",
+      "files": []
+    },
+    {
+      "id": "tatoeba",
+      "name": "Tatoeba sentences",
+      "author": "The Tatoeba community (each sentence's author is credited)",
+      "homepage": "https://tatoeba.org/",
+      "version": "weekly export (date pinned in sources.lock.json)",
+      "license": "CC BY 2.0 FR (part of the corpus is also CC0 1.0)",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0/fr/",
+      "obligations": [
+        "Name the author of every sentence used and link to the sentence.",
+        "Name the licence with a link.",
+        "Say that the sentences were changed (filtered and normalised)."
+      ],
+      "use": "English sentences for dictation and examples, Arabic translations as optional hints, English token frequencies for word ranking, quality signals (reviews, native speakers).",
+      "files": [
+        {
+          "name": "eng_sentences_detailed.tsv.bz2",
+          "url": "https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences_detailed.tsv.bz2",
+          "extract": "bz2"
+        },
+        {
+          "name": "ara_sentences_detailed.tsv.bz2",
+          "url": "https://downloads.tatoeba.org/exports/per_language/ara/ara_sentences_detailed.tsv.bz2",
+          "extract": "bz2"
+        },
+        {
+          "name": "eng-ara_links.tsv.bz2",
+          "url": "https://downloads.tatoeba.org/exports/per_language/eng/eng-ara_links.tsv.bz2",
+          "extract": "bz2"
+        },
+        {
+          "name": "users_sentences.csv",
+          "url": "https://downloads.tatoeba.org/exports/users_sentences.csv",
+          "extract": null
+        },
+        {
+          "name": "user_languages.tar.bz2",
+          "url": "https://downloads.tatoeba.org/exports/user_languages.tar.bz2",
+          "extract": "tar"
+        }
+      ]
+    },
+    {
+      "id": "cmudict",
+      "name": "CMU Pronouncing Dictionary",
+      "author": "Carnegie Mellon University",
+      "homepage": "https://github.com/cmusphinx/cmudict",
+      "version": "commit 74790861f652b15e4ac49015a90074ad62a27690 (2025-10-24)",
+      "license": "BSD-2-Clause-style (Carnegie Mellon University)",
+      "licenseUrl": "https://github.com/cmusphinx/cmudict/blob/master/LICENSE",
+      "obligations": [
+        "Reproduce the CMU copyright notice, conditions and disclaimer in the documentation (the credits page)."
+      ],
+      "use": "Homophone detection (same pronunciation, different spelling) and silent-letter hints. Pronunciations are not shipped.",
+      "files": [
+        {
+          "name": "cmudict.dict",
+          "url": "https://raw.githubusercontent.com/cmusphinx/cmudict/74790861f652b15e4ac49015a90074ad62a27690/cmudict.dict",
+          "extract": null
+        },
+        {
+          "name": "LICENSE",
+          "url": "https://raw.githubusercontent.com/cmusphinx/cmudict/74790861f652b15e4ac49015a90074ad62a27690/LICENSE",
+          "extract": null
+        }
+      ]
+    },
+    {
+      "id": "kitaba",
+      "name": "Original content written for this project",
+      "author": "Kitaba",
+      "homepage": "",
+      "version": "in repository",
+      "license": "Project content",
+      "licenseUrl": "",
+      "obligations": [],
+      "use": "The hand-written word bank (ids, levels, Arabic hints, examples), the reviewed Arabic hints, original sentences, scenarios and messages, blocklists.",
+      "files": []
+    }
+  ]
+}

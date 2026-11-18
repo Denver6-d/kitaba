@@ -45,3 +45,20 @@
 - [x] 360/390/768/1280 px × light/dark × RTL/LTR sweep: no horizontal scroll (G2)
 - [x] Lighthouse: Accessibility, Best Practices and SEO 100 on nine pages, mobile and desktop (G3)
 - [x] Arabic manual checklist: level choice, placement, changing levels, free writing, message dictation, mistakes to review
+
+## Open data, phase A: sources and pipeline
+- [x] Licences read in the sources: SCOWL, VarCon, dictionary-en, Tatoeba, CMUdict; rejected sources recorded (DECISIONS OD1–OD4)
+- [x] `scripts/content/sources.json` + `sources.lock.json` (pinned hashes), `content-raw/` git-ignored
+- [x] `npm run content:build`: fetch + extract, resumable and checkpointed; licence metadata validated in `validate:content`
+
+## Open data, phase B: words and levels
+- [ ] Lexicon, frequency, levels, categories, filters; ≥ 8,000 checked words; every existing id kept
+
+## Open data, phase C: sentences
+- [ ] Filtered Tatoeba sentences + original ones, linked to words, Arabic hints where linked, attribution
+
+## Open data, phase D: Arabic hints
+- [ ] Top 3,000 words, reviewed batches, hint validator
+
+## Open data, phase E: loading, offline, credits
+- [ ] Lazy chunks, IndexedDB, SW runtime cache, download-all setting, credits page, no counts, Lighthouse, reviews

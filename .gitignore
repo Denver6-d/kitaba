@@ -56,3 +56,6 @@ ehthumbs.db
 
 # spell-check dictionary, copied from node_modules by scripts/copy-dictionary.mjs
 /public/dict/
+
+# open-data pipeline: raw downloads, extracted archives and checkpoints (scripts/content)
+/content-raw/
