@@ -52,7 +52,7 @@
 - [x] `npm run content:build`: fetch + extract, resumable and checkpointed; licence metadata validated in `validate:content`
 
 ## Open data, phase B: words and levels
-- [ ] Lexicon, frequency, levels, categories, filters; ≥ 8,000 checked words; every existing id kept
+- [x] Lexicon (SCOWL ≤ 60, dictionary-en, taboo and sensitive filters), Tatoeba frequency, levels by rank bands, rule-based categories (VarCon, CMUdict); 18,466 new words; bank ids unchanged (OD5–OD8)
 
 ## Open data, phase C: sentences
 - [ ] Filtered Tatoeba sentences + original ones, linked to words, Arabic hints where linked, attribution

@@ -57,6 +57,17 @@ describe("item builders", () => {
   });
 });
 
+describe("sentence dictation items", () => {
+  // Regression: the length check split on the letter "s" (/s+/) instead of whitespace,
+  // so long sentences without many s's were dictated and short ones full of s's were not.
+  it("count words, not runs of the letter s", () => {
+    const long = { ...receive, example: "Did you receive the email that I wrote to you on the morning of the third day?" };
+    expect(buildItem("sentence", long, ctx(), "k")).toBeNull();
+    const shortWithS = { ...receive, example: "Yes, she says this is his receive slot." };
+    expect(buildItem("sentence", shortWithS, ctx(), "k")?.kind).toBe("sentence");
+  });
+});
+
 describe("sentence helpers", () => {
   it("find a word token ignoring case and punctuation", () => {
     expect(findWordToken(["Their", "house"], "their")).toBe(0);

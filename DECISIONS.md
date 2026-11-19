@@ -441,3 +441,53 @@ The owner asked for a full dictionary, a large graded word set and tens of thous
 - **OD4. Owner decisions (2026-11-18).**
   - **Arabic hints:** our own hints only. These are the 1,591 existing hints plus new hints for the most frequent words, written and reviewed in batches. Other words have no hint, and every game works without one.
   - **Tatoeba credit:** each Tatoeba sentence shows a small "Tatoeba #id · author" line linked to the sentence. An "Open data credits" page carries the licences, the notices and a downloadable list of every sentence and its author.
+
+### Open data, phase B: words and levels (2026-11-20)
+
+- **OD5. The word library.** These are pipeline steps 02–04 and 09 (`npm run content:build`):
+  - **Lexicon (step 02).** The candidates are SCOWL `english-words` and `american-words` at sizes 10–60, each tagged with its smallest size. A candidate is kept when it:
+    - is lower-case letters with optional inner hyphens, at least two letters long;
+    - is accepted by dictionary-en through nspell (the same dictionary as the browser);
+    - is not a SCOWL abbreviation;
+    - is not taboo: SCOWL `misc/offensive.*` and `misc/profane.*`, plus dictionary-en's NOSUGGEST words;
+    - is not on our reviewed `scripts/content/blocklist.json` (see below).
+
+    Of 101,368 candidates, 76,558 are kept. Every rejection is counted by reason in `content-raw/work/lexicon.json`. Possessives make up 24,108 of the rejections; sensitive, taboo and abbreviation rejections total 444.
+  - **Frequency (step 03).** Token counts come from the 2,041,097 sentences of the pinned Tatoeba English export. Only counts are derived; no text is kept. A capitalised token at the start of a sentence counts for the lower-case word only when that word is mostly lower case mid-sentence, so "Tom" does not count for "tom". 32,863 lexicon words occur at least three times.
+  - **Selection and levels (step 04).** The 20,000 most frequent words are taken, counting the hand-written bank, so the rank is a true rank. Words under three letters are dropped. Levels come from rank bands (A1 ≤ 600, A2 ≤ 2,000, B1 ≤ 4,500, B2 ≤ 8,000, C1 above), and a word SCOWL only lists at size 50 or more is never easier than B2. Against the bank's hand-set levels, 1,374 of 1,531 ranked bank words fall within one level, and 675 match exactly. The levels describe frequency, not a certified level (V5).
+  - **The bank stays as is.** The 1,591 hand-written words keep their ids, levels, categories, hints and examples, and stay bundled. The library holds only words that are not in the bank (18,466 words), so no id can change or clash (tested).
+  - **Categories (`lib/classify.mjs`, pure, tested).** The first matching rule wins:
+    1. British form (VarCon);
+    2. homophone (CMUdict);
+    3. plural with a spelling change;
+    4. verb ending with a spelling change;
+    5. -ly adverb;
+    6. prefix;
+    7. ie/ei (not when i and e are separate syllables, and not -ies/-ied);
+    8. silent letter, confirmed by CMUdict where it has the word;
+    9. plain -ed/-ing;
+    10. double consonant;
+    11. suffix;
+    12. dropped short vowel (speech drops a written vowel, or three or more single-letter vowel sounds);
+    13. consonant cluster (in `common`, like the bank's street/spring);
+    14. p, then v;
+    15. weak vowel;
+    16. `common`.
+
+    The classifier agrees with the bank's hand-set category for 979 of 1,591 words (62%). The categories overlap by nature ("unnecessary" is both a prefix word and a double-letter word), so agreement is reported, not forced.
+  - **British forms.** VarCon A/B pairs are used only when all of these hold:
+    - the British form is a small edit of the American one;
+    - the word is not meaning-dependent (the G1 list, including inflections such as practicing);
+    - the British form is not an American word in its own right;
+    - the pair is not a -t past tense (learnt, spilt), which British English does not require (G-7).
+  - **Homophones.** Only primary CMUdict pronunciations are used, and both words must be in the top 10,000 or in the bank, so "the" is not paired with "thee". A homophone is spoken with its example sentence, so until it has one (phase C) it is published under its next category.
+- **OD6. Sensitive-content blocklist (`scripts/content/blocklist.json`, written and reviewed for this project).**
+  - **Two tiers.** The `words` tier removes words from the library and from sentences: sexual terms, drugs, alcohol, pork, gambling, slurs and insults, self-harm. The `sentences` tier only removes sentences: violence and death, religion, politics, romance and the body, smoking.
+  - **Moved to the sentence tier.** Everyday words that are only sometimes sensitive (sake, dealer, weed, affair, breast, jerk) stay playable as words.
+  - **Inflections.** Each entry also blocks its simple inflections.
+- **OD7. Published format (step 09).**
+  - **Files.** `public/content/v1/words-<LEVEL>.<hash>.json` holds rows `[word, rank, extra?]` grouped by category; `extra` holds `uk`, homophone confusables `c`, and (later phases) `ar` and `ex`. Each file is named by its SHA-256 prefix, so a URL never changes content and can be cached forever. `manifest.json` (stable name) lists each file's hash and size, and stale files are deleted.
+  - **Sizes.** Raw: A1 6 KB, A2 15 KB, B1 35 KB, B2 56 KB, C1 220 KB. Gzipped, the five total 130 KB.
+  - **Validation.** `src/data/library-schema.ts` (zod) validates every chunk in `validate:content` and, from phase E, at runtime. The tests check the hashes, that no word or id is a bank word, that there are at least 8,000 words over every level and category, and that every campaign stage fills at its world's levels.
+  - **Counts.** These are recorded here and in the git-ignored reports only. The site never shows them.
+- **OD8. Fixed on the way.** The sentence-dictation length check split on the letter "s" (`/s+/`) instead of whitespace. Long sentences with few s's were dictated in boss stages, and short ones full of s's were not. It now splits on whitespace, with a regression test.

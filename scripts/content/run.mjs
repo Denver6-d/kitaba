@@ -10,7 +10,13 @@
  * resume across sessions. Only the compact output in public/content/v1 and the
  * reviewed source files under scripts/content are committed.
  */
-const STEPS = [{ name: "fetch", load: () => import("./01-fetch.mjs") }];
+const STEPS = [
+  { name: "fetch", load: () => import("./01-fetch.mjs") },
+  { name: "lexicon", load: () => import("./02-lexicon.mjs") },
+  { name: "frequency", load: () => import("./03-frequency.mjs") },
+  { name: "words", load: () => import("./04-words.mjs") },
+  { name: "publish", load: () => import("./09-publish.mjs") },
+];
 
 function parseArgs(argv) {
   const args = { from: null, only: null, force: false, update: false };

@@ -92,7 +92,7 @@ export function buildItem(mode: ItemMode, w: ItemWord, ctx: BuildContext, key: s
     }
     case "sentence":
       // Too long to type from one hearing: the caller falls back to a word item.
-      if (w.example.split(/s+/).length > DICTATION_MAX_WORDS) return null;
+      if (w.example.trim().split(/\s+/).length > DICTATION_MAX_WORDS) return null;
       return { ...base, kind: "sentence", answer: w.example, speak: w.example };
   }
 }

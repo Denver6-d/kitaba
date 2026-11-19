@@ -31,7 +31,7 @@ The app answers one question for Arabic speakers: **"can I spell English words c
 |---|---|
 | `platform` | Next.js shell, i18n (ar/en, RTL), themes, fonts, hamburger menu, PWA, design tokens, brand constant |
 | `persistence` | Repository interfaces, Dexie (local, schema v3 with migrations), export/import (v1 and v2 files are migrated on import) |
-| `content` | Validated spelling data (1,591 words, see DECISIONS C1): ≥ 1,500 words (A1–C1, 15 categories), each with an Arabic hint and an example sentence; ≥ 800 dictation sentences; rule explanations |
+| `content` | Validated spelling data: the bundled hand-written bank (1,591 words, see DECISIONS C1; each with an Arabic hint and an example sentence; ≥ 800 dictation sentences; rule explanations) plus the open-data library in `public/content/v1` (≥ 8,000 more graded and categorised words, DECISIONS OD5–OD7), loaded on demand. Counts are never shown on the site |
 | `spelling` | Answer checking (US/UK variants), letter diff, misspelling generator, rule explanations, SM-2 SRS |
 | `games` | Game engine (items, scoring, combo, timer), 7 modes, shuffle-bag selection without repeats |
 | `campaign` | 8 worlds × 10 stages, stars, unlocks, bosses, daily challenge |
