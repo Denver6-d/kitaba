@@ -55,7 +55,7 @@
 - [x] Lexicon (SCOWL ≤ 60, dictionary-en, taboo and sensitive filters), Tatoeba frequency, levels by rank bands, rule-based categories (VarCon, CMUdict); 18,466 new words; bank ids unchanged (OD5–OD8)
 
 ## Open data, phase C: sentences
-- [ ] Filtered Tatoeba sentences + original ones, linked to words, Arabic hints where linked, attribution
+- [x] Filtered Tatoeba sentences (form, quality, names allowlist, blocklist, graded vocabulary, the app's checker, near duplicates), examples for 17,441 words, 20 original fill-ins, Arabic translations where linked, credits file (OD9–OD10)
 
 ## Open data, phase D: Arabic hints
 - [ ] Top 3,000 words, reviewed batches, hint validator

@@ -1,0 +1,25 @@
+{
+  "$comment": "Original example sentences written for this project (DECISIONS OD9) for frequent library words whose Tatoeba sentences were all removed by the sentence blocklist. Only calm, everyday senses are used; words that only occur in sensitive contexts (war, crime, religion, romance) keep no example and are played in the modes that do not need one. Each sentence must contain its word and pass the app's spell checker (05-sentences.mjs fails otherwise).",
+  "examples": {
+    "died": "The flowers died because nobody watered them.",
+    "dead": "My phone battery is dead again.",
+    "die": "Most plants die without water and light.",
+    "kill": "We played cards to kill time at the airport.",
+    "fat": "This kind of milk has very little fat.",
+    "crazy": "It sounds like a crazy idea, but it might work.",
+    "blood": "The nurse took a small blood sample from my arm.",
+    "smoking": "Smoking is not allowed anywhere in this building.",
+    "smoke": "Smoke was coming out of the kitchen window.",
+    "stolen": "My bike was stolen from outside the library.",
+    "fool": "Don't let the low price fool you.",
+    "ugly": "The old car looked ugly, but it ran well.",
+    "foolish": "It was foolish of me to leave my umbrella at home.",
+    "weed": "She pulled every weed out of the garden.",
+    "poison": "Some house plants are poison to cats.",
+    "stupid": "I made a stupid mistake in the last question.",
+    "crime": "Crime is very low in our small town.",
+    "election": "Our class held an election to choose a new leader.",
+    "dumb": "Sorry, that was a dumb question.",
+    "cigarette": "There was a cigarette smell in the hotel room."
+  }
+}

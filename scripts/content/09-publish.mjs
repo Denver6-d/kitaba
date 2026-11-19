@@ -2,12 +2,16 @@
  * Step 09: write the compact, committed library to public/content/v1.
  *
  * Every data file is named with the first 10 hex digits of its SHA-256
- * (words-B1.<hash>.json), so it never changes under a URL: the browser and the
- * service worker can cache it for good. manifest.json is the only file with a
- * stable name; it lists the current files with their hash and size. Files that
- * are no longer listed are deleted.
+ * (words-B1-1.<hash>.json), so it never changes under a URL: the browser and
+ * the service worker can cache it for good. manifest.json is the only file with
+ * a stable name; it lists the current files with their hash and size. Files
+ * that are no longer listed are deleted.
  *
- * Rows are [word, rank, extra?] grouped by category, one chunk per level.
+ * Word chunks: { level, authors, examples, words: { category: [[word, rank, extra?]] } },
+ * at most CHUNK_BYTES each, so a level may have several parts. A word's example
+ * travels in the same chunk (examples[id] = [text, author index or -1 for our
+ * own sentences]), so a game never needs a second request to build an item.
+ * Sentence chunks and the Tatoeba credit list come from step 05.
  */
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
@@ -16,13 +20,12 @@ import { fileURLToPath } from "node:url";
 import { readJson, runStep, writeAtomic } from "./lib/checkpoint.mjs";
 import { OUT, WORK } from "./lib/paths.mjs";
 import { WORDS } from "./04-words.mjs";
+import { SENTENCES_OUT } from "./05-sentences.mjs";
 
 const SCRIPT = fileURLToPath(import.meta.url);
 export const MANIFEST = join(OUT, "manifest.json");
 export const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
-
-/** Optional inputs written by later steps (sentences, hints); absent files are simply skipped. */
-export const SENTENCES = join(WORK, "sentences.json");
+export const CHUNK_BYTES = 240_000;
 export const HINTS = join(WORK, "hints.json");
 
 function sha(data) {
@@ -30,47 +33,68 @@ function sha(data) {
 }
 
 /** Writes one content file under its hashed name and returns its manifest entry. */
-function emit(base, ext, value) {
-  const data = `${JSON.stringify(value)}\n`;
+function emit(base, ext, data) {
   const hash = sha(data);
   const path = `${base}.${hash.slice(0, 10)}.${ext}`;
   writeAtomic(join(OUT, path), data);
   return { path, sha256: hash, bytes: Buffer.byteLength(data) };
 }
+const json = (value) => `${JSON.stringify(value)}\n`;
 
-export function wordRows(words, { examples = new Map(), hints = new Map() } = {}) {
-  const byLevel = Object.fromEntries(LEVELS.map((l) => [l, {}]));
-  for (const w of [...words].sort((a, b) => a.rank - b.rank)) {
-    const ex = examples.get(w.word);
-    const ar = hints.get(w.word);
-    const homophone = w.category === "homophones" && ex !== undefined;
+/**
+ * Packs one level's words into chunks of at most `budget` bytes.
+ * A homophone without an example is published under its fallback category.
+ */
+export function wordChunks(words, level, { examples = {}, exampleText = {}, hints = {}, budget = CHUNK_BYTES } = {}) {
+  const chunks = [];
+  let cur = null;
+  const fresh = () => ({ level, authors: [], examples: {}, words: {}, _authors: new Map(), _bytes: 0 });
+  cur = fresh();
+  for (const w of words.filter((x) => x.level === level).sort((a, b) => a.rank - b.rank)) {
+    const exId = examples[w.word];
+    const ar = hints[w.word];
+    const homophone = w.category === "homophones" && exId !== undefined;
     const category = w.category === "homophones" && !homophone ? w.fallback : w.category;
-    const extra = { ...(w.uk ? { uk: w.uk } : {}), ...(homophone ? { c: w.confusables } : {}), ...(ar ? { ar } : {}), ...(ex ? { ex } : {}) };
+    const extra = { ...(w.uk ? { uk: w.uk } : {}), ...(homophone ? { c: w.confusables } : {}), ...(ar ? { ar } : {}), ...(exId ? { ex: exId } : {}) };
     const row = Object.keys(extra).length ? [w.word, w.rank, extra] : [w.word, w.rank];
-    (byLevel[w.level][category] ??= []).push(row);
+    const ex = exId ? exampleText[exId] : undefined;
+    const size = JSON.stringify(row).length + (ex ? JSON.stringify(ex).length + exId.length + 8 : 0);
+    if (cur._bytes + size > budget && cur._bytes > 0) {
+      chunks.push(cur);
+      cur = fresh();
+    }
+    if (ex) {
+      const [text, author] = ex;
+      let a = -1;
+      if (author) {
+        if (!cur._authors.has(author)) cur._authors.set(author, cur.authors.push(author) - 1);
+        a = cur._authors.get(author);
+      }
+      cur.examples[exId] = [text, a];
+    }
+    (cur.words[category] ??= []).push(row);
+    cur._bytes += size;
   }
-  return byLevel;
+  if (cur._bytes > 0) chunks.push(cur);
+  return chunks.map((c) => ({ level: c.level, authors: c.authors, examples: c.examples, words: c.words }));
 }
 
 export async function run({ force = false } = {}) {
-  const inputs = [WORDS, SENTENCES, HINTS];
-  const { result } = await runStep(WORK, "publish", { script: SCRIPT, inputs, outputs: [MANIFEST], force }, async () => {
+  const inputs = [WORDS, SENTENCES_OUT, HINTS];
+  const { result } = await runStep(WORK, "publish", { script: SCRIPT, inputs, outputs: [MANIFEST], options: { CHUNK_BYTES }, force }, async () => {
     mkdirSync(OUT, { recursive: true });
     const { words } = readJson(WORDS);
-    const hints = existsSync(HINTS) ? new Map(Object.entries(readJson(HINTS).hints)) : new Map();
-    const sentences = existsSync(SENTENCES) ? readJson(SENTENCES) : null;
-    const examples = sentences ? new Map(Object.entries(sentences.examples)) : new Map();
+    const hints = existsSync(HINTS) ? readJson(HINTS).hints : {};
+    const sentences = existsSync(SENTENCES_OUT) ? readJson(SENTENCES_OUT) : null;
 
     const files = {};
-    const byLevel = wordRows(words, { examples, hints });
-    for (const level of LEVELS) files[`words-${level}`] = emit(`words-${level}`, "json", { level, words: byLevel[level] });
-    if (sentences) for (const [key, chunk] of Object.entries(sentences.chunks)) files[key] = emit(key, "json", chunk);
-    if (sentences?.credits) {
-      const data = sentences.credits;
-      const hash = sha(data);
-      const path = `tatoeba-credits.${hash.slice(0, 10)}.tsv`;
-      writeAtomic(join(OUT, path), data);
-      files["tatoeba-credits"] = { path, sha256: hash, bytes: Buffer.byteLength(data) };
+    for (const level of LEVELS) {
+      const parts = wordChunks(words, level, { examples: sentences?.examples, exampleText: sentences?.exampleText, hints });
+      parts.forEach((chunk, i) => (files[`words-${level}-${i + 1}`] = emit(`words-${level}-${i + 1}`, "json", json(chunk))));
+    }
+    if (sentences) {
+      for (const [key, chunk] of Object.entries(sentences.chunks)) files[key] = emit(key, "json", json(chunk));
+      files["tatoeba-credits"] = emit("tatoeba-credits", "tsv", sentences.credits);
     }
 
     const manifest = {
@@ -81,7 +105,9 @@ export async function run({ force = false } = {}) {
     writeAtomic(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
     const keep = new Set(["manifest.json", ...Object.values(files).map((f) => f.path)]);
     for (const f of readdirSync(OUT)) if (!keep.has(f)) rmSync(join(OUT, f));
-    return Object.fromEntries(Object.entries(files).map(([k, v]) => [k, `${(v.bytes / 1024).toFixed(0)} KB`]));
+    const kb = (keys) => `${(keys.reduce((s, k) => s + files[k].bytes, 0) / 1024).toFixed(0)} KB in ${keys.length} files`;
+    const keys = Object.keys(files);
+    return { words: kb(keys.filter((k) => k.startsWith("words-"))), sentences: kb(keys.filter((k) => k.startsWith("sentences-"))), credits: kb(["tatoeba-credits"].filter((k) => files[k])) };
   });
   return result;
 }

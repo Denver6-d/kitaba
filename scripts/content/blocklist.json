@@ -250,7 +250,20 @@
       "burglar",
       "revenge",
       "drown",
-      "drowned"
+      "drowned",
+      "armed",
+      "gore",
+      "quartered",
+      "bowels",
+      "corpses",
+      "grenade",
+      "sword",
+      "knife",
+      "dagger",
+      "lynch",
+      "bleed",
+      "bleeding",
+      "wounds"
     ],
     "religion": [
       "god",
@@ -300,7 +313,15 @@
       "witch",
       "witchcraft",
       "zodiac",
-      "horoscope"
+      "horoscope",
+      "deity",
+      "deities",
+      "idol",
+      "idols",
+      "pagan",
+      "prophet",
+      "temple",
+      "sacrifice"
     ],
     "politics": [
       "president",

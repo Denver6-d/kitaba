@@ -38,13 +38,46 @@ export type LibraryExtra = z.infer<typeof libraryExtraSchema>;
 export const libraryRowSchema = z.union([z.tuple([lowerWord, z.number().int().positive()]), z.tuple([lowerWord, z.number().int().positive(), libraryExtraSchema])]);
 export type LibraryRow = z.infer<typeof libraryRowSchema>;
 
+/** A sentence as the app shows and dictates it: printable ASCII, a capital start, one final . ? or !. */
+const sentenceText = z
+  .string()
+  .min(1)
+  .max(160)
+  .refine((s) => /^[\x20-\x7E]+$/.test(s), "printable ASCII English")
+  .refine((s) => /^[A-Z].*[.?!]$/.test(s), "capital start, final . ? or !");
+
+/** Tatoeba usernames, credited next to each sentence (CC BY 2.0 FR). */
+const authors = z.array(z.string().min(1).max(64));
+
 export const wordChunkSchema = z
   .object({
     level: z.enum(LEVELS),
+    authors,
+    /** Example sentences of this chunk's words: id → [text, author index, or -1 for our own sentences]. */
+    examples: z.record(z.string().regex(/^(t|o)\d+$/), z.tuple([sentenceText, z.number().int().min(-1)])),
     words: z.partialRecord(z.enum(SPELLING_CATEGORIES), z.array(libraryRowSchema)),
   })
   .strict();
 export type WordChunk = z.infer<typeof wordChunkSchema>;
+
+/** [Tatoeba id, Arabic text, author index]: a translation linked on Tatoeba. */
+const arabicTranslation = z.tuple([z.number().int().positive(), z.string().min(1).max(200).refine((s) => /[؀-ۿ]/.test(s) && !/[A-Za-z]/.test(s), "Arabic"), z.number().int().min(0)]);
+
+/** [Tatoeba id, text, author index, Arabic translation?] */
+export const sentenceRowSchema = z.union([
+  z.tuple([z.number().int().positive(), sentenceText, z.number().int().min(0)]),
+  z.tuple([z.number().int().positive(), sentenceText, z.number().int().min(0), arabicTranslation]),
+]);
+export type SentenceRow = z.infer<typeof sentenceRowSchema>;
+
+export const sentenceChunkSchema = z
+  .object({
+    level: z.enum(LEVELS),
+    authors,
+    rows: z.array(sentenceRowSchema),
+  })
+  .strict();
+export type SentenceChunk = z.infer<typeof sentenceChunkSchema>;
 
 const fileEntry = z
   .object({
@@ -59,7 +92,7 @@ export const manifestSchema = z
   .object({
     $comment: z.string().optional(),
     version: z.literal(1),
-    /** Words by level: "words-A1" … "words-C1". Sentences arrive in phase C. */
+    /** "words-<level>-<n>", "sentences-<level>-<n>" and "tatoeba-credits". */
     files: z.record(z.string().regex(/^[A-Za-z0-9-]+$/), fileEntry),
   })
   .strict();

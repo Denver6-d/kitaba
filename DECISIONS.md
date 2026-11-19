@@ -491,3 +491,30 @@ The owner asked for a full dictionary, a large graded word set and tens of thous
   - **Validation.** `src/data/library-schema.ts` (zod) validates every chunk in `validate:content` and, from phase E, at runtime. The tests check the hashes, that no word or id is a bank word, that there are at least 8,000 words over every level and category, and that every campaign stage fills at its world's levels.
   - **Counts.** These are recorded here and in the git-ignored reports only. The site never shows them.
 - **OD8. Fixed on the way.** The sentence-dictation length check split on the letter "s" (`/s+/`) instead of whitespace. Long sentences with few s's were dictated in boss stages, and short ones full of s's were not. It now splits on whitespace, with a regression test.
+
+### Open data, phase C: sentences (2026-11-20)
+
+- **OD9. Sentences from Tatoeba (step 05).** These come from the 2,041,097 English sentences of the pinned export. The filters run in this order, and every rejection is counted in `content-raw/work/report-sentences.json`:
+  1. **Form.** Printable ASCII after straightening typographic apostrophes and spaces, a capital start, one final `.`, `?` or `!`, and only letters, spaces, commas, apostrophes and inner hyphens. There are no digits (prices, times, phone numbers), no quotes, brackets, e-mails or URLs, and no "Mr./Dr." abbreviations. Each sentence has 3–16 words. Rejected: 92,342 for form, 6,345 for characters, 47,761 for length.
+  2. **Quality.** No −1 review, a known author (39,815 orphans dropped), and either a native English author (`user_languages` level 5) or a +1 review (390,627 dropped).
+  3. **Names and personal data.** A capitalised word must be on the reviewed allowlist `scripts/content/names.json`:
+     - Tatoeba's stock names, days, months, languages, and non-contentious countries and cities;
+     - a possessive name counts too.
+
+     Real people, brands and news places therefore drop out (46,386). Tatoeba's recurring story names (Sami, Layla, Fadil and others) are left out on purpose, because their series are mostly about crime and abuse.
+  4. **Sensitive content.** Both tiers of the blocklist apply (78,736 in total). The sentence tier gained a few stems after a sample review: armed, gore, deity, idol, prophet, temple and others.
+  5. **Graded vocabulary.** Every word must be in the bank or the library, a short function word, or a contraction, so the sentence can be given a level (228,554 dropped).
+  6. **The app's own checker** (`src/domain/writing/check.ts` with the real dictionary) must flag nothing. The pipeline imports it through Node's type stripping and a small resolve hook (`lib/ts-hooks.mjs`, dev only). This removed 259 sentences, for example "approve of your going", where the sound-alike rule would fire. A learner is never "corrected" on a library sentence.
+  7. **Duplicates.** Exact duplicates (case and punctuation ignored) and near duplicates (the same words in any order, story names collapsed) are removed: 2,659 and 31,261.
+
+  **Result:** 1,073,965 clean sentences. A sentence's level is its hardest word's level, raised by length (A1 ≤ 6 words, A2 ≤ 8, B1 ≤ 10, B2 ≤ 12, C1 ≤ 16).
+- **OD10. What is published.**
+  - **Dictation pools.** Up to 8,000 sentences per level. Every example sentence is included first; the rest are chosen by a +1 review, then by having an Arabic translation, then by a stable shuffle of the id, so that no single contributor dominates. In total there are 42,924 sentences (C1 has 10,924, because all of its examples are kept). 11,783 of them carry an Arabic translation through `eng-ara_links` (only translations with no −1 review and no Latin letters), credited to their own author.
+  - **Examples.** 17,441 of the 18,466 library words have an example: the shortest good sentence of 4–12 words with the word, preferring the word's own level and a +1 review, and never shared between two words. Homophones keep their category only with an example; the rest play under their next category.
+  - **Original fill-ins.** Of the 3,000 most frequent library words, 73 had no example: their Tatoeba sentences were all removed by the sentence blocklist (died, smoke, crime…). We wrote 20 original, neutral examples (`scripts/content/original/examples.json`), which must contain the word and pass the app's checker. The remaining 53 occur only in sensitive senses (war, kiss, church, prison…). They keep no example and play in the modes that need none.
+  - **Files.**
+    - `sentences-<LEVEL>-<n>.<hash>.json` (`{ level, authors, rows: [id, text, author#, [araId, arabic, author#]?] }`): 14 files, 2.7 MB raw, 1.06 MB gzipped.
+    - Word chunks now carry their examples (`examples[id] = [text, author# or −1]`), so building an item needs no second request. They are split at 240 KB into 10 files, 1.6 MB raw, 0.64 MB gzipped.
+    - `tatoeba-credits.<hash>.tsv` (id, language, author, with the licence, the change note and the URL pattern in its header): 0.9 MB raw, 0.26 MB gzipped.
+  - **Attribution (CC BY 2.0 FR).** Every Tatoeba sentence and translation is in the credits file with its author, and every chunk row carries its author for the small credit line (phase E). The test suite checks both. A few sentences are also CC0; crediting those too is harmless.
+  - **Known limit.** Tatoeba sentences are checked for spelling, not grammar. A native author's slip ("How would you feel is someone did that…") can pass. This is rare, and the report and the app never claim more than spelling.
