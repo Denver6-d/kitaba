@@ -58,7 +58,7 @@
 - [x] Filtered Tatoeba sentences (form, quality, names allowlist, blocklist, graded vocabulary, the app's checker, near duplicates), examples for 17,441 words, 20 original fill-ins, Arabic translations where linked, credits file (OD9–OD10)
 
 ## Open data, phase D: Arabic hints
-- [ ] Top 3,000 words, reviewed batches, hint validator
+- [x] Top 3,000 words: 2,192 new hints in ten reviewed batches (808 are bank words with their own hint), hint validator, completeness test (OD11–OD12)
 
 ## Open data, phase E: loading, offline, credits
 - [ ] Lazy chunks, IndexedDB, SW runtime cache, download-all setting, credits page, no counts, Lighthouse, reviews

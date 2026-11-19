@@ -518,3 +518,27 @@ The owner asked for a full dictionary, a large graded word set and tens of thous
     - `tatoeba-credits.<hash>.tsv` (id, language, author, with the licence, the change note and the URL pattern in its header): 0.9 MB raw, 0.26 MB gzipped.
   - **Attribution (CC BY 2.0 FR).** Every Tatoeba sentence and translation is in the credits file with its author, and every chunk row carries its author for the small credit line (phase E). The test suite checks both. A few sentences are also CC0; crediting those too is harmless.
   - **Known limit.** Tatoeba sentences are checked for spelling, not grammar. A native author's slip ("How would you feel is someone did that…") can pass. This is rare, and the report and the app never claim more than spelling.
+
+### Open data, phase D: Arabic hints (2026-11-20)
+
+- **OD11. Hints for the 3,000 most frequent words.**
+  - **Coverage.** The frequency rank counts the bank, so 808 of the top 3,000 are bank words that already have their hand-written hint. The other 2,192 got new hints, written for this project in ten rank-ordered batches (`scripts/content/hints/batch-01.json` … `batch-10.json`).
+  - **Review.** Each batch was validated by step 06 and reviewed before the next was written.
+  - **How they are written.**
+    - Hints follow the bank's style: a short meaning, with `/` between senses ("يحصل على / يصبح").
+    - Inflected forms get the meaning of the form ("wanted" → "أراد / مطلوب", "gone" → "ذهب / رحل (التصريف الثالث)").
+    - Function words get a plain gloss ("the" → "أداة التعريف (الـ)").
+    - Hints follow the word's everyday sense; where a word also has a sensitive sense, the hint gives both plainly ("drugs" → "أدوية / مخدّرات").
+  - **Validator (`06-hints.mjs`, and the content tests).** Each hint must:
+    - contain Arabic letters and no Latin letters;
+    - be at most 60 characters;
+    - have no stray spaces and no empty alternative;
+    - belong to a library word, and appear in one batch only.
+
+    The step fails on any problem, and the test requires a hint for every top-3,000 library word.
+  - **Elsewhere.** Words below the top 3,000 have no hint (OD4). Every game already works without one: the hint line simply does not show.
+  - **Licence.** The hints are our own (no Wiktionary or AWN, OD2), so no share-alike applies.
+- **OD12. More words removed from the library before writing hints.**
+  - `ass` (vulgar), informal spellings that are not standard written English (gonna, wanna, gotta, yeah…), and archaic forms (thou, thee, thy, ye, whilst).
+  - They are a new `informal_and_archaic` group in the blocklist's `words` tier, which also removes sentences that use them.
+  - The library stays at 18,466 words, because the next-ranked words take their place.

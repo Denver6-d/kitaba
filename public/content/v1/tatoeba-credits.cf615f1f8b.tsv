@@ -11722,7 +11722,6 @@ sentence_id	language	author
 383029	ara	saeb
 1615	eng	CK
 3631641	ara	Safa_Alfulaij
-1645	eng	CM
 1653	eng	brauliobezerra
 432227	ara	LOBD
 1654	eng	CK
@@ -11764,7 +11763,6 @@ sentence_id	language	author
 404440	ara	saeb
 1888	eng	Swift
 405936	ara	saeb
-1919	eng	Swift
 2024	eng	CK
 376360	ara	saeb
 2044	eng	CK
@@ -12595,8 +12593,6 @@ sentence_id	language	author
 595338	ara	saeb
 30513	eng	CK
 1572095	ara	Amastan
-30530	eng	Zifre
-422670	ara	saeb
 30756	eng	CK
 523504	ara	saeb
 30868	eng	CK
@@ -12617,6 +12613,7 @@ sentence_id	language	author
 31342	eng	CK
 1593911	ara	Amastan
 31357	eng	CK
+31419	eng	CK
 31430	eng	CK
 372802	ara	saeb
 31451	eng	CK
@@ -12761,8 +12758,6 @@ sentence_id	language	author
 371363	ara	saeb
 35468	eng	CK
 395514	ara	saeb
-35504	eng	Scott
-6679479	ara	marhabaan
 35560	eng	spockofvulcan
 371523	ara	saeb
 35644	eng	CS
@@ -12797,6 +12792,7 @@ sentence_id	language	author
 36642	eng	CK
 36649	eng	CK
 36668	eng	CK
+36785	eng	CM
 36834	eng	CK
 36854	eng	CK
 36893	eng	CM
@@ -15073,7 +15069,6 @@ sentence_id	language	author
 288819	eng	CK
 375738	ara	saeb
 289006	eng	CK
-289019	eng	CK
 289104	eng	ChickenKiev
 289215	eng	mamat
 515066	ara	saeb
@@ -16114,7 +16109,6 @@ sentence_id	language	author
 402339	eng	CK
 616417	ara	saeb
 402363	eng	CK
-402418	eng	CK
 402491	eng	CK
 458515	ara	saeb
 402973	eng	CK
@@ -16228,8 +16222,6 @@ sentence_id	language	author
 433393	eng	kazuya00
 5115659	ara	damascene
 433515	eng	CK
-433589	eng	CK
-6679559	ara	marhabaan
 433616	eng	CK
 616594	ara	saeb
 433617	eng	CK
@@ -16537,6 +16529,7 @@ sentence_id	language	author
 489206	ara	saeb
 486453	eng	CK
 489204	ara	saeb
+486464	eng	CK
 487163	eng	CK
 489197	ara	saeb
 487172	eng	adjusting
@@ -16728,8 +16721,6 @@ sentence_id	language	author
 4149710	ara	eeyinn
 611131	eng	kebukebu
 10059883	ara	asmaf
-612969	eng	CK
-1409358	ara	alanood
 613111	eng	CK
 13252180	ara	atitarev
 614434	eng	CK
@@ -16930,7 +16921,6 @@ sentence_id	language	author
 838894	eng	Scott
 1598511	ara	Amastan
 843050	eng	J_S
-843585	eng	ddnktr
 848771	eng	CK
 8677541	ara	Ahmed_Waleed
 853178	eng	piksea
@@ -17061,6 +17051,7 @@ sentence_id	language	author
 1938240	ara	Asma
 1024685	eng	CK
 1938249	ara	Asma
+1024688	eng	CK
 1024689	eng	CK
 1938258	ara	Asma
 1024704	eng	CK
@@ -17451,6 +17442,8 @@ sentence_id	language	author
 1891208	ara	Asma
 1403196	eng	Eldad
 1891207	ara	Asma
+1405384	eng	alanood
+1405383	ara	alanood
 1409147	eng	CK
 1409154	ara	alanood
 1417682	eng	Eldad
@@ -17471,6 +17464,7 @@ sentence_id	language	author
 1883969	ara	Asma
 1432795	eng	CK
 1439471	eng	CK
+1440026	eng	CK
 1442055	eng	CK
 1445310	eng	CK
 9036314	ara	KeEichi
@@ -18467,6 +18461,7 @@ sentence_id	language	author
 2055264	eng	Dejo
 2057819	eng	CK
 11896258	ara	Safa_Alfulaij
+2060306	eng	CK
 2060521	eng	CK
 2062882	eng	CK
 2062913	ara	Asma
@@ -18763,8 +18758,6 @@ sentence_id	language	author
 2280323	eng	CK
 4533150	ara	Amastan
 2280428	eng	CK
-2281851	eng	CK
-7972723	ara	OsoHombre
 2282025	eng	CK
 2282102	eng	Hybrid
 5118694	ara	damascene
@@ -18806,6 +18799,7 @@ sentence_id	language	author
 2318373	eng	CK
 4926449	ara	damascene
 2318643	eng	Gulo_Luscus
+2321251	eng	Hybrid
 2321360	eng	MethodGT
 4887546	ara	Amastan
 2322713	eng	CK
@@ -18881,6 +18875,7 @@ sentence_id	language	author
 2361872	eng	CK
 4808741	ara	khaledp16
 2361985	eng	CK
+2371800	eng	CS
 2372842	eng	CK
 2374062	eng	CK
 2374091	eng	CK
@@ -18974,8 +18969,6 @@ sentence_id	language	author
 2439069	ara	User105223
 2440964	eng	MarlonX19
 375759	ara	saeb
-2441016	eng	MarlonX19
-2442131	ara	Amastan
 2446825	eng	Hybrid
 2451178	eng	CK
 10952429	ara	User105223
@@ -19502,6 +19495,7 @@ sentence_id	language	author
 2883966	eng	CK
 2886755	eng	CM
 3840443	ara	odexed
+2888236	eng	CK
 2890274	eng	sharptoothed
 2890354	eng	sharptoothed
 2891197	eng	CK
@@ -19872,8 +19866,6 @@ sentence_id	language	author
 4926279	ara	damascene
 3413236	eng	CK
 6200099	ara	aym
-3413247	eng	CK
-6679712	ara	marhabaan
 3413284	eng	CK
 13195168	ara	atitarev
 3415261	eng	CK
@@ -20124,6 +20116,7 @@ sentence_id	language	author
 3727795	eng	CM
 3727939	eng	CM
 3728028	eng	CM
+3728405	eng	CM
 3728440	eng	CM
 7981641	ara	OsoHombre
 3728693	eng	CM
@@ -20131,6 +20124,7 @@ sentence_id	language	author
 3729248	eng	CM
 3729646	eng	CM
 4221334	ara	Alaakhalid
+3729858	eng	CM
 3729913	eng	CM
 3730159	eng	CM
 7423029	ara	Amastan
@@ -20212,6 +20206,7 @@ sentence_id	language	author
 3777836	ara	Safa_Alfulaij
 3779399	eng	popball
 4942302	ara	damascene
+3780407	eng	Hybrid
 3783117	eng	CK
 4942302	ara	damascene
 3791497	eng	Hybrid
@@ -20731,7 +20726,6 @@ sentence_id	language	author
 4828727	eng	salpfish
 7751098	ara	User105223
 4829393	eng	Hybrid
-4846286	eng	Hybrid
 4867611	eng	Amastan
 11849332	ara	Amastan
 4890422	eng	CK
@@ -20956,6 +20950,7 @@ sentence_id	language	author
 5186108	eng	CK
 5187472	eng	CK
 5189302	eng	CK
+5190899	eng	CK
 5193716	eng	maaster
 5194621	eng	CK
 13321655	ara	Igider15
@@ -21072,7 +21067,6 @@ sentence_id	language	author
 5495261	ara	ahmedsho
 5500581	eng	CK
 5509930	eng	CK
-5512137	eng	CK
 5515503	eng	CK
 5516174	eng	CK
 5516318	eng	CK
@@ -21089,8 +21083,6 @@ sentence_id	language	author
 5536147	eng	CK
 5536607	eng	CK
 5604915	ara	Safa_Alfulaij
-5536717	eng	Hybrid
-11896403	ara	Safa_Alfulaij
 5538587	eng	mailohilohi
 5546293	eng	CK
 10856569	ara	User105223
@@ -21237,6 +21229,7 @@ sentence_id	language	author
 7972750	ara	OsoHombre
 5748014	eng	CM
 5748158	eng	CM
+5748302	eng	CM
 5751962	eng	CM
 5752059	eng	CM
 7981613	ara	OsoHombre
@@ -21661,6 +21654,7 @@ sentence_id	language	author
 6248103	eng	CK
 6248247	eng	CK
 6248391	eng	CK
+6248624	eng	CK
 6248713	eng	CK
 6248946	eng	CK
 6249001	eng	CK
@@ -21690,7 +21684,6 @@ sentence_id	language	author
 6254258	eng	CK
 6254402	eng	CK
 6254868	eng	CK
-6255012	eng	CK
 6255156	eng	CK
 6255245	eng	CK
 6255478	eng	CK
@@ -22383,7 +22376,6 @@ sentence_id	language	author
 7143135	eng	CK
 7143468	eng	CK
 7143701	eng	CK
-7143845	eng	CK
 7144078	eng	CK
 7144133	eng	CK
 7150233	eng	CK
@@ -22595,7 +22587,6 @@ sentence_id	language	author
 7531623	ara	Rose_qudairi
 7530626	eng	CK
 7531614	ara	Rose_qudairi
-7537291	eng	CK
 7537901	eng	CK
 7538045	eng	CK
 7538422	eng	CK
@@ -22828,7 +22819,6 @@ sentence_id	language	author
 8069608	eng	CK
 8069770	eng	CK
 13185167	ara	atitarev
-8071438	eng	CK
 8078614	eng	Hybrid
 11896866	ara	Safa_Alfulaij
 8078957	eng	CK
@@ -23161,6 +23151,7 @@ sentence_id	language	author
 9025337	eng	Nylez
 9028531	eng	CK
 9033843	eng	CK
+9034919	eng	CK
 9034991	eng	CK
 11525972	ara	alhamdi
 9043658	eng	CK
@@ -23233,6 +23224,7 @@ sentence_id	language	author
 9331470	eng	Amastan
 11627003	ara	dididodo
 9337658	eng	DJ_Saidez
+9345266	eng	CK
 9349536	eng	CK
 9350201	eng	CK
 9366260	eng	CK
@@ -23663,7 +23655,6 @@ sentence_id	language	author
 11897558	ara	Safa_Alfulaij
 11008344	eng	CK
 13202209	ara	atitarev
-11009579	eng	CK
 11014459	eng	CK
 11017564	eng	CK
 11017653	eng	CK
@@ -23891,6 +23882,7 @@ sentence_id	language	author
 12165064	eng	CK
 12166661	eng	glossboss
 12168957	eng	CK
+12170554	eng	megamanenm
 12173138	eng	CK
 12176010	eng	CK
 12177374	eng	CK
@@ -24034,6 +24026,7 @@ sentence_id	language	author
 13554452	eng	CK
 13622335	eng	CK
 13718553	eng	terrywallwork
+13719862	eng	carlosalberto
 13722590	eng	CK
 13737541	eng	rul
 13838318	ara	rul
@@ -25756,6 +25749,7 @@ sentence_id	language	author
 2602674	ara	Samer
 238228	eng	CK
 238288	eng	CM
+238345	eng	mamat
 238349	eng	CK
 238355	eng	CK
 238381	eng	CK
@@ -26245,7 +26239,6 @@ sentence_id	language	author
 260884	eng	CK
 260898	eng	CK
 371619	ara	saeb
-260975	eng	buster_blu
 261107	eng	CK
 261196	eng	CK
 261197	eng	CK
@@ -26364,6 +26357,7 @@ sentence_id	language	author
 372558	ara	saeb
 266741	eng	CK
 266864	eng	CM
+266906	eng	Dejo
 266946	eng	CM
 266974	eng	CK
 267296	eng	CM
@@ -27450,7 +27444,6 @@ sentence_id	language	author
 1406683	ara	alanood
 323020	eng	CK
 670922	ara	Samer
-323222	eng	CM
 323279	eng	CK
 617181	ara	saeb
 323439	eng	CK
@@ -27874,7 +27867,6 @@ sentence_id	language	author
 489223	ara	saeb
 485496	eng	CK
 489075	ara	saeb
-486464	eng	CK
 487626	eng	minshirui
 487773	ara	saeb
 488820	eng	saeb
@@ -28030,6 +28022,7 @@ sentence_id	language	author
 677144	eng	CM
 680131	eng	Source_VOA
 680194	eng	Source_VOA
+680207	eng	Source_VOA
 680279	eng	Source_VOA
 680318	eng	Source_VOA
 680326	eng	Source_VOA
@@ -28727,8 +28720,6 @@ sentence_id	language	author
 1891205	ara	Asma
 1403181	eng	Eldad
 1891202	ara	Asma
-1405384	eng	alanood
-1405383	ara	alanood
 1409018	eng	CK
 1409539	eng	CM
 1410150	eng	Eldad
@@ -28810,6 +28801,7 @@ sentence_id	language	author
 10713507	ara	Yacinegutta
 1546292	eng	Spamster
 1549681	eng	Spamster
+1550912	eng	miflhanc
 1552989	eng	CK
 1553133	eng	CK
 2079896	ara	saeb
@@ -29052,8 +29044,6 @@ sentence_id	language	author
 1795949	eng	ifethereal
 11788762	ara	Walled2023
 1797673	eng	Spamster
-1803412	eng	Amastan
-11676842	ara	dididodo
 1805480	eng	CM
 1807342	eng	Eldad
 1883108	ara	Asma
@@ -29174,6 +29164,7 @@ sentence_id	language	author
 1890761	ara	Asma
 1890746	eng	Spamster
 1890760	ara	Asma
+1890930	eng	CK
 1891099	eng	CK
 1891304	ara	Asma
 1891134	eng	CK
@@ -29464,7 +29455,6 @@ sentence_id	language	author
 2047690	eng	CK
 2047745	eng	CK
 2059125	eng	darinmex
-2060306	eng	CK
 2062760	eng	CK
 7981574	ara	OsoHombre
 2062961	eng	CK
@@ -30249,6 +30239,7 @@ sentence_id	language	author
 3091275	eng	CK
 3093715	eng	CK
 3094521	eng	CK
+3096053	eng	CK
 3096121	eng	CK
 3096138	eng	CK
 3098938	eng	CK
@@ -30596,6 +30587,7 @@ sentence_id	language	author
 3605326	eng	karloelkebekio
 3616313	eng	Hybrid
 4227546	ara	Alaakhalid
+3618513	eng	CK
 3618568	eng	CK
 3618655	eng	CK
 5173956	ara	damascene
@@ -30656,6 +30648,7 @@ sentence_id	language	author
 3688569	eng	CK
 3689857	eng	Hybrid
 11896381	ara	Safa_Alfulaij
+3689953	eng	karloelkebekio
 3695279	eng	AlanF_US
 3698066	eng	katshi94
 3698131	ara	Safa_Alfulaij
@@ -30713,7 +30706,6 @@ sentence_id	language	author
 3727622	eng	CM
 3727884	eng	CM
 3728117	eng	CM
-3728405	eng	CM
 3728494	eng	CM
 3728549	eng	CM
 3728782	eng	CM
@@ -30888,6 +30880,7 @@ sentence_id	language	author
 4016472	eng	CK
 4221634	ara	Alaakhalid
 4016716	eng	CK
+4016726	eng	CK
 4016949	eng	CK
 4017011	eng	CK
 4017093	eng	CK
@@ -31222,6 +31215,8 @@ sentence_id	language	author
 5173926	ara	damascene
 4919777	eng	AlanF_US
 4923369	ara	Safa_Alfulaij
+4919876	eng	CK
+4923368	ara	Safa_Alfulaij
 4921440	eng	CK
 4923365	ara	Safa_Alfulaij
 4921458	eng	CK
@@ -31308,7 +31303,6 @@ sentence_id	language	author
 5181173	eng	CK
 5189247	eng	CK
 5189341	eng	CK
-5190899	eng	CK
 5193413	eng	CK
 9307600	ara	Mohammed_Iraq
 5193428	eng	CK
@@ -31442,7 +31436,6 @@ sentence_id	language	author
 5659231	eng	CK
 5660901	ara	Safa_Alfulaij
 5659514	eng	CK
-5663159	eng	Hybrid
 5665628	eng	CK
 5666368	eng	CK
 5667965	eng	Hybrid
@@ -31501,7 +31494,6 @@ sentence_id	language	author
 5747027	eng	CM
 5747171	eng	CM
 5747870	eng	CM
-5748302	eng	CM
 5748391	eng	CM
 5752284	eng	CM
 5753271	eng	CM
@@ -31882,7 +31874,6 @@ sentence_id	language	author
 6234429	eng	CK
 6234573	eng	CK
 6234662	eng	CK
-6234741	eng	CK
 6234806	eng	CK
 6234861	eng	CK
 6234950	eng	CK
@@ -32006,7 +31997,7 @@ sentence_id	language	author
 6248336	eng	CK
 6248425	eng	CK
 6248480	eng	CK
-6248624	eng	CK
+6249185	eng	CK
 6249194	eng	CK
 6249378	eng	CK
 6249415	eng	CK
@@ -32060,7 +32051,6 @@ sentence_id	language	author
 6259659	eng	CK
 6259803	eng	CK
 6259892	eng	CK
-6260735	eng	CK
 6260790	eng	CK
 6260934	eng	CK
 6261167	eng	CK
@@ -32391,6 +32381,7 @@ sentence_id	language	author
 6533340	eng	Hybrid
 6537503	eng	Hybrid
 11896355	ara	Safa_Alfulaij
+6541006	eng	Hybrid
 6541036	eng	Hybrid
 6562040	eng	Selena777
 6570578	ara	OsoHombre
@@ -33764,7 +33755,6 @@ sentence_id	language	author
 9015755	eng	CK
 9020491	eng	CK
 9031492	eng	CK
-9034919	eng	CK
 9036018	eng	carlosalberto
 9036261	ara	KeEichi
 9036352	eng	deniko
@@ -33842,7 +33832,6 @@ sentence_id	language	author
 9344046	eng	CK
 9344080	eng	CK
 9344224	eng	CK
-9345266	eng	CK
 9345588	eng	CK
 9354183	eng	CK
 9356767	eng	MarijnKp
@@ -34063,7 +34052,6 @@ sentence_id	language	author
 9970327	eng	shekitten
 9975371	eng	Amastan
 9982053	eng	CK
-9982701	eng	tsp_2
 9987276	eng	CK
 9999209	eng	CK
 10001906	eng	shekitten
@@ -34253,6 +34241,7 @@ sentence_id	language	author
 10751234	eng	CK
 10751378	eng	CK
 10751433	eng	CK
+10755881	eng	ddnktr
 10776519	eng	CK
 10778205	eng	CK
 10780035	eng	CK
@@ -34482,6 +34471,7 @@ sentence_id	language	author
 12112486	eng	CK
 12112918	eng	CK
 12113384	eng	sundown
+12113939	eng	CK
 12114304	eng	Nuel
 12114316	eng	Nuel
 12126859	eng	CK
@@ -34515,12 +34505,14 @@ sentence_id	language	author
 12208098	eng	AlanF_US
 12208531	eng	Miktsoanit
 1567427	ara	Amastan
+12215037	eng	CK
 12217299	eng	CK
 12217354	eng	Miktsoanit
 11791904	ara	dididodo
 12217655	eng	sundown
 12221192	eng	Miktsoanit
 12229321	eng	CK
+12232282	eng	CK
 12239890	eng	CK
 12246799	eng	CK
 12265319	eng	Ergulis
@@ -35679,7 +35671,6 @@ sentence_id	language	author
 238084	eng	CK
 238119	eng	CK
 238296	eng	CK
-238345	eng	mamat
 238347	eng	CK
 238351	eng	CK
 238364	eng	CK
@@ -35954,6 +35945,7 @@ sentence_id	language	author
 1409142	ara	alanood
 260615	eng	CK
 260640	eng	CK
+260750	eng	CM
 260794	eng	minshirui
 260952	eng	CK
 261249	eng	CK
@@ -36036,7 +36028,6 @@ sentence_id	language	author
 266415	eng	CM
 266518	eng	CM
 266775	eng	CM
-266906	eng	Dejo
 266919	eng	CM
 266977	eng	CS
 11838419	ara	Walled2023
@@ -36377,6 +36368,7 @@ sentence_id	language	author
 291687	eng	CK
 1597757	ara	Amastan
 291721	eng	CK
+291746	eng	CK
 291818	eng	CK
 291834	eng	CM
 1397806	ara	alanood
@@ -37047,6 +37039,8 @@ sentence_id	language	author
 475792	ara	saeb
 476189	eng	CK
 616401	ara	saeb
+476492	eng	CK
+478210	eng	CM
 478211	eng	CM
 4113274	ara	fadi
 479218	eng	kblakes
@@ -37098,6 +37092,7 @@ sentence_id	language	author
 562347	eng	darinmex
 565333	eng	CM
 566121	eng	darinmex
+576243	eng	CM
 580213	eng	Dejo
 581203	eng	darinmex
 665276	ara	Samer
@@ -37145,7 +37140,6 @@ sentence_id	language	author
 680084	eng	Source_VOA
 680119	eng	Source_VOA
 680155	eng	Source_VOA
-680207	eng	Source_VOA
 680228	eng	Source_VOA
 680260	eng	Source_VOA
 680264	eng	Source_VOA
@@ -37207,6 +37201,7 @@ sentence_id	language	author
 681648	eng	Source_VOA
 681661	eng	Source_VOA
 681664	eng	Source_VOA
+681700	eng	Source_VOA
 681713	eng	Source_VOA
 681719	eng	Source_VOA
 963441	ara	Adou_Fr
@@ -37401,6 +37396,7 @@ sentence_id	language	author
 8539929	ara	TheBahi
 954059	eng	CK
 954077	eng	CK
+954097	eng	CK
 954221	eng	CK
 954228	eng	CK
 954255	eng	CK
@@ -37570,7 +37566,6 @@ sentence_id	language	author
 1093394	eng	CK
 1093541	eng	CK
 1093569	eng	CK
-1093825	eng	CK
 1093899	eng	CK
 1093904	eng	CK
 1093964	eng	CK
@@ -37852,14 +37847,12 @@ sentence_id	language	author
 1550026	eng	miflhanc
 1017345	ara	alkhaldy
 1550037	eng	Spamster
-1550912	eng	miflhanc
 1550939	eng	CM
 1555363	eng	CK
 1556797	eng	kerbear407
 1556855	eng	brymck
 1556984	eng	brymck
 1557002	eng	brymck
-1561474	eng	kolin2009
 1563135	eng	sam_m
 1563136	eng	sam_m
 1572963	eng	fanty
@@ -38036,7 +38029,6 @@ sentence_id	language	author
 13026217	ara	Naityahia
 1887718	eng	CK
 1887914	eng	CK
-1890930	eng	CK
 1891433	eng	CK
 1891666	eng	CK
 1892559	ara	Asma
@@ -38138,7 +38130,6 @@ sentence_id	language	author
 1986893	eng	CM
 1987223	eng	Scott
 1987970	eng	Spamster
-1989211	eng	FlamingTofu
 1989772	eng	CK
 5157655	ara	damascene
 1990342	eng	CK
@@ -38728,7 +38719,7 @@ sentence_id	language	author
 2751035	eng	sharptoothed
 5118764	ara	damascene
 2753381	eng	Hybrid
-2761313	eng	Hybrid
+2758102	eng	shekitten
 2761476	eng	sharptoothed
 2761588	eng	sharptoothed
 2761610	eng	sharptoothed
@@ -38784,7 +38775,6 @@ sentence_id	language	author
 2869325	eng	CK
 13167527	ara	atitarev
 2870182	eng	CK
-2870436	eng	CK
 2870627	eng	Amastan
 11988669	ara	dididodo
 2870630	eng	Amastan
@@ -38826,6 +38816,7 @@ sentence_id	language	author
 2951921	eng	CK
 2952030	eng	CK
 2952082	eng	CK
+2952239	eng	CK
 2952315	eng	CK
 2952383	eng	CK
 2952527	eng	CK
@@ -38893,6 +38884,7 @@ sentence_id	language	author
 2971708	eng	CK
 2976311	eng	CK
 2977490	eng	CM
+2977956	eng	Hybrid
 2980362	eng	Hybrid
 2985297	eng	sharptoothed
 2985475	eng	sharptoothed
@@ -38908,7 +38900,6 @@ sentence_id	language	author
 3001458	eng	CK
 3001479	eng	CK
 3001589	eng	CK
-3001856	eng	CK
 3002987	eng	CK
 3008854	eng	CK
 3009197	eng	CK
@@ -38949,7 +38940,6 @@ sentence_id	language	author
 3087418	eng	Hybrid
 3094592	eng	CK
 3094594	eng	CK
-3096053	eng	CK
 3096204	eng	CK
 3096231	eng	CK
 3096992	eng	CK
@@ -39066,7 +39056,6 @@ sentence_id	language	author
 3314986	eng	CK
 3315053	eng	CK
 3315054	eng	CK
-3315219	eng	CK
 3315253	eng	CK
 3315274	eng	CK
 3316605	eng	CK
@@ -39152,6 +39141,7 @@ sentence_id	language	author
 3428390	eng	CK
 3428517	eng	CK
 3428682	eng	CK
+3431138	eng	CK
 3431151	eng	CK
 3434261	eng	CK
 3436662	eng	CK
@@ -39207,7 +39197,6 @@ sentence_id	language	author
 3612824	eng	_undertoad
 3616326	eng	Hybrid
 3616343	eng	karloelkebekio
-3618513	eng	CK
 3618602	eng	CK
 3618924	eng	CK
 3618945	eng	CK
@@ -39228,11 +39217,13 @@ sentence_id	language	author
 3631576	ara	Safa_Alfulaij
 3636368	eng	CK
 3640638	eng	MTC
+3643500	eng	patgfisher
 3651494	eng	Hybrid
 6670022	ara	marhabaan
 3651495	eng	Hybrid
 3651884	eng	patgfisher
 3651940	eng	patgfisher
+3657546	eng	nava
 3658269	eng	Hybrid
 3659577	ara	Safa_Alfulaij
 3663661	eng	patgfisher
@@ -39243,7 +39234,6 @@ sentence_id	language	author
 3680961	eng	Hybrid
 3688487	eng	Hybrid
 3689668	ara	Safa_Alfulaij
-3689953	eng	karloelkebekio
 3691073	eng	deyta
 3064654	ara	altusi
 3692021	eng	patgfisher
@@ -39354,6 +39344,7 @@ sentence_id	language	author
 3735391	eng	CK
 7960524	ara	Garnetskull
 3735582	eng	CK
+3735704	eng	CK
 3735848	eng	CK
 3735992	eng	CK
 3736013	eng	CK
@@ -39399,7 +39390,6 @@ sentence_id	language	author
 3825390	eng	CK
 3826288	eng	CK
 3826432	eng	CK
-3826843	eng	CK
 3868368	eng	patgfisher
 3871258	eng	CK
 3880340	eng	CK
@@ -39673,7 +39663,6 @@ sentence_id	language	author
 4806318	eng	Hybrid
 4823867	eng	orcrist
 4828351	eng	Hybrid
-4846313	eng	Hybrid
 4846727	eng	CK
 4846763	eng	CK
 4853348	eng	CK
@@ -39689,8 +39678,6 @@ sentence_id	language	author
 4944711	ara	Safa_Alfulaij
 4918702	eng	AlanF_US
 4919024	eng	CK
-4919876	eng	CK
-4923368	ara	Safa_Alfulaij
 4921914	eng	CK
 4923360	ara	Safa_Alfulaij
 4923347	eng	CK
@@ -39757,7 +39744,6 @@ sentence_id	language	author
 5251928	eng	Hybrid
 5252462	eng	Hybrid
 5276195	eng	tabular
-5280614	eng	CK
 5282216	eng	CK
 5282483	eng	CK
 5287096	eng	Hybrid
@@ -39894,8 +39880,10 @@ sentence_id	language	author
 5729583	eng	CM
 5729617	eng	CM
 5729636	eng	CM
+5729693	eng	CM
 5729727	eng	CM
 5729782	eng	CM
+5729850	eng	CM
 5729905	eng	CM
 5730824	eng	CM
 5730886	eng	CM
@@ -40205,6 +40193,7 @@ sentence_id	language	author
 6082850	eng	CK
 6082926	eng	CK
 6083659	eng	CK
+6083693	eng	CK
 6083837	eng	CK
 6084002	eng	CK
 6084036	eng	CK
@@ -40433,6 +40422,7 @@ sentence_id	language	author
 6242172	eng	CK
 6242880	eng	CK
 6243028	eng	CK
+6243825	eng	CK
 6244278	eng	CK
 6244827	eng	CK
 6245217	eng	CK
@@ -40446,7 +40436,6 @@ sentence_id	language	author
 6248490	eng	CK
 6248692	eng	CK
 6248802	eng	CK
-6249185	eng	CK
 6249188	eng	CK
 6249215	eng	CK
 6249246	eng	CK
@@ -40457,7 +40446,6 @@ sentence_id	language	author
 6250056	eng	CK
 6250344	eng	CK
 6250687	eng	CK
-6251043	eng	CK
 6251064	eng	CK
 6251242	eng	CK
 6251485	eng	CK
@@ -40818,6 +40806,7 @@ sentence_id	language	author
 6537507	eng	Hybrid
 6537529	eng	CK
 6542654	eng	Hybrid
+6542815	eng	CK
 6546935	eng	dzoja
 13852099	ara	Adelpa
 6547106	eng	CK
@@ -42251,6 +42240,7 @@ sentence_id	language	author
 8510731	eng	CK
 8512910	eng	CK
 8525138	eng	CK
+8525172	eng	CK
 8532691	eng	CK
 8533377	eng	shekitten
 8533454	eng	Adelpa
@@ -42423,10 +42413,10 @@ sentence_id	language	author
 8996134	eng	mccarras
 8997934	eng	CK
 9001649	eng	Ergulis
+9002005	eng	Ergulis
 9002259	eng	Bitirim
 9006498	eng	carlosalberto
 9006995	eng	CK
-9009367	eng	CK
 9012241	eng	CK
 11636777	ara	elmassoudi
 9015702	eng	jaydenms
@@ -42833,7 +42823,6 @@ sentence_id	language	author
 10073762	eng	CK
 10075522	eng	CK
 10077496	eng	DJ_Saidez
-10079491	eng	espamatics
 10083453	eng	DJ_Saidez
 10091869	eng	CK
 10091924	eng	CK
@@ -43180,8 +43169,9 @@ sentence_id	language	author
 11150636	eng	mutskt
 11151712	eng	ddnktr
 11157257	eng	CK
+11159718	eng	CK
 11160315	eng	CK
-11160940	eng	CK
+11160938	eng	CK
 11163501	eng	sundown
 11175976	eng	CK
 11176426	eng	CK
@@ -43244,6 +43234,7 @@ sentence_id	language	author
 11553198	eng	CK
 11554706	eng	CK
 11573234	eng	CK
+11588366	eng	CK
 11589152	eng	CK
 11589806	eng	CK
 11591704	eng	CK
@@ -43389,6 +43380,7 @@ sentence_id	language	author
 11930491	eng	CK
 11930760	ara	shoma79
 11930653	eng	CK
+11931263	eng	CK
 11931407	eng	Ergulis
 11932827	eng	DJ_Saidez
 11935554	eng	CK
@@ -43517,7 +43509,6 @@ sentence_id	language	author
 12219167	eng	Miktsoanit
 12221315	eng	CK
 12223577	eng	CK
-12232282	eng	CK
 12233180	eng	CK
 12239715	eng	LdjuherTaqvaylit
 12243840	eng	Miktsoanit
@@ -43585,7 +43576,6 @@ sentence_id	language	author
 12558434	eng	ddnktr
 12558616	eng	CK
 12559099	eng	CK
-12577046	eng	CK
 12579127	eng	CK
 12602328	eng	CK
 12606647	eng	rul
@@ -43606,6 +43596,7 @@ sentence_id	language	author
 12789690	eng	CK
 12796395	eng	CK
 12849583	eng	CK
+12869158	eng	Ergulis
 12869912	eng	CM
 12873428	eng	rul
 12874586	eng	rul
@@ -43643,7 +43634,6 @@ sentence_id	language	author
 13270889	eng	CK
 13349583	eng	rul
 13385759	eng	frpzzd
-13391158	eng	menaud
 13437185	eng	frpzzd
 13472497	eng	CK
 13490496	eng	CK
@@ -43659,6 +43649,7 @@ sentence_id	language	author
 13750015	eng	rul
 13802776	eng	rul
 13884174	eng	araneo
+13895286	eng	frpzzd
 13940132	eng	rul
 13957297	eng	Ioan_Cristian
 13966909	eng	rul
@@ -43901,6 +43892,7 @@ sentence_id	language	author
 27049	eng	CM
 27086	eng	CK
 27135	eng	CK
+27148	eng	CM
 27153	eng	CK
 27182	eng	jakov
 27359	eng	CK
@@ -44521,6 +44513,7 @@ sentence_id	language	author
 245517	eng	CK
 245518	eng	CM
 245687	eng	CK
+245862	eng	CK
 245940	eng	CK
 245946	eng	CK
 246006	eng	CM
@@ -44650,7 +44643,6 @@ sentence_id	language	author
 260581	eng	CK
 260651	eng	CK
 260729	eng	CM
-260750	eng	CM
 260761	eng	CK
 260869	eng	CK
 260961	eng	CK
@@ -45071,7 +45063,6 @@ sentence_id	language	author
 291360	eng	CM
 291386	eng	CK
 291614	eng	CK
-291746	eng	CK
 291787	eng	CK
 291807	eng	CK
 292394	eng	CK
@@ -45130,7 +45121,6 @@ sentence_id	language	author
 296083	eng	CS
 296130	eng	CM
 296172	eng	CK
-296258	eng	CM
 296259	eng	CM
 296286	eng	CM
 296653	eng	CM
@@ -45630,7 +45620,6 @@ sentence_id	language	author
 470044	eng	CM
 471384	eng	CM
 475757	eng	darinmex
-476492	eng	CK
 477091	eng	FeuDRenais
 478383	eng	CK
 480312	eng	minshirui
@@ -45832,7 +45821,6 @@ sentence_id	language	author
 681665	eng	Source_VOA
 681666	eng	Source_VOA
 681683	eng	Source_VOA
-681700	eng	Source_VOA
 681704	eng	Source_VOA
 681731	eng	Source_VOA
 681748	eng	Source_VOA
@@ -45857,6 +45845,7 @@ sentence_id	language	author
 682232	eng	Source_VOA
 682240	eng	Source_VOA
 682257	eng	Source_VOA
+682307	eng	Source_VOA
 682318	eng	Source_VOA
 682367	eng	Source_VOA
 682380	eng	Source_VOA
@@ -46095,7 +46084,6 @@ sentence_id	language	author
 954008	eng	CK
 954013	eng	CK
 954069	eng	CK
-954097	eng	CK
 954165	eng	CK
 954320	eng	CK
 954322	eng	CK
@@ -46501,6 +46489,7 @@ sentence_id	language	author
 1497644	eng	Spamster
 1497685	eng	Spamster
 1498791	eng	Spamster
+1498792	eng	Spamster
 1498794	eng	Spamster
 1499498	eng	CK
 1502131	eng	darinmex
@@ -46544,11 +46533,13 @@ sentence_id	language	author
 1536844	eng	Spamster
 1538693	eng	erikspen
 1538694	eng	erikspen
+1538917	eng	darinmex
 1539640	eng	madhatter5
 1540705	eng	erikspen
 1542291	eng	Spamster
 1542294	eng	Spamster
 1542318	eng	Spamster
+1542325	eng	Spamster
 1542581	eng	Spamster
 1543282	eng	Bah_Dure
 1544429	eng	Bah_Dure
@@ -46642,6 +46633,7 @@ sentence_id	language	author
 1693399	eng	CM
 1694011	eng	CK
 1698482	eng	mookeee
+1698737	eng	darinmex
 1699799	eng	al_ex_an_der
 1702321	eng	Spamster
 1702456	eng	Spamster
@@ -47124,7 +47116,6 @@ sentence_id	language	author
 2417097	eng	al_ex_an_der
 2417859	eng	AlanF_US
 2418623	eng	orcrist
-2432842	eng	AlanF_US
 2434598	eng	DJ_Saidez
 2447448	eng	MethodGT
 2450019	eng	sharptoothed
@@ -47680,7 +47671,6 @@ sentence_id	language	author
 3121473	eng	CK
 3122137	eng	CK
 3122317	eng	CK
-3122461	eng	sundown
 3123194	eng	CK
 3123600	eng	Theocracy
 3123888	eng	Hybrid
@@ -47882,7 +47872,6 @@ sentence_id	language	author
 3424271	eng	CK
 3426230	eng	CK
 3426347	eng	CK
-3431138	eng	CK
 3431252	eng	CK
 3431297	eng	CK
 3431343	eng	CK
@@ -47987,13 +47976,11 @@ sentence_id	language	author
 3635884	eng	CK
 3639100	eng	andrewgtreantos
 3643399	eng	Hybrid
-3643500	eng	patgfisher
 3647824	eng	Sarita
 3650584	eng	MTC
 3651192	eng	karloelkebekio
 3654152	eng	AlanF_US
 3655646	eng	patgfisher
-3657546	eng	nava
 3659640	eng	Vanilla
 3659891	eng	_undertoad
 3660652	eng	Vanilla
@@ -48134,6 +48121,7 @@ sentence_id	language	author
 3728218	eng	CM
 3728472	eng	CM
 3728505	eng	CM
+3728512	eng	CM
 3728638	eng	CM
 3728643	eng	CM
 3728668	eng	CM
@@ -48211,7 +48199,6 @@ sentence_id	language	author
 3738933	eng	CK
 3753100	eng	Hybrid
 3759355	eng	Hybrid
-3759380	eng	Hybrid
 3761480	eng	patgfisher
 3763397	eng	cromwellt
 3773146	eng	amrbekhit
@@ -48368,7 +48355,6 @@ sentence_id	language	author
 4218124	eng	Dani6187
 4221146	eng	megamanenm
 4237035	eng	mtcmcg
-4245860	eng	Tigrin
 4255961	eng	orcrist
 4255963	eng	orcrist
 4255980	eng	orcrist
@@ -48725,6 +48711,7 @@ sentence_id	language	author
 5181088	eng	CK
 5181145	eng	CK
 5182608	eng	CK
+5185787	eng	ulymarrero
 5185817	eng	AlanF_US
 5189239	eng	CK
 5193589	eng	CK
@@ -49432,7 +49419,6 @@ sentence_id	language	author
 6150372	eng	CarpeLanam
 6166044	eng	DuosDragonPolyglot
 6167800	eng	sabretou
-6168081	eng	sabretou
 6168083	eng	sabretou
 6172488	eng	sundown
 6174895	eng	sundown
@@ -49442,6 +49428,7 @@ sentence_id	language	author
 6197130	eng	sifhg
 6197780	eng	sundown
 6203072	eng	Hybrid
+6203129	eng	Hybrid
 6211268	eng	Hybrid
 6211818	eng	Hybrid
 6212495	eng	Hybrid
@@ -49478,7 +49465,6 @@ sentence_id	language	author
 6242498	eng	CK
 6242908	eng	CK
 6243581	eng	CK
-6243825	eng	CK
 6244276	eng	CK
 6244566	eng	CK
 6244574	eng	CK
@@ -50707,6 +50693,7 @@ sentence_id	language	author
 8274106	eng	CK
 8274108	eng	CK
 8274669	eng	Amastan
+8277624	eng	CK
 8281554	eng	sundown
 8293724	eng	sundown
 8293758	eng	sundown
@@ -50718,6 +50705,7 @@ sentence_id	language	author
 8303333	eng	Amastan
 8303383	eng	Amastan
 8303631	eng	Amastan
+8303686	eng	Amastan
 8311579	eng	CK
 8311607	eng	CK
 8312255	eng	Hybrid
@@ -50817,7 +50805,6 @@ sentence_id	language	author
 8417043	eng	Amastan
 8417127	eng	Amastan
 8417182	eng	Amastan
-8417529	eng	Amastan
 8418856	eng	CK
 8419948	eng	AlanF_US
 8419961	eng	AlanF_US
@@ -50905,7 +50892,6 @@ sentence_id	language	author
 8549932	eng	Amastan
 8549959	eng	CK
 8552471	eng	Amastan
-8556228	eng	Rawrren
 8556448	eng	Ergulis
 8556959	eng	Amastan
 8556987	eng	Amastan
@@ -52737,7 +52723,6 @@ sentence_id	language	author
 10782303	eng	sundown
 10782845	eng	CK
 10784914	eng	megamanenm
-10787321	eng	megamanenm
 10791576	eng	LW
 10791610	eng	sundown
 10793070	eng	megamanenm
@@ -53034,6 +53019,7 @@ sentence_id	language	author
 11069935	eng	Luornu
 11069936	eng	Luornu
 11070364	eng	CM
+11070770	eng	shekitten
 11070910	eng	shekitten
 11070967	eng	sundown
 11071434	eng	CM
@@ -53099,7 +53085,6 @@ sentence_id	language	author
 11127385	eng	CK
 11129303	eng	CK
 11129458	eng	CM
-11132268	eng	sundown
 11132281	eng	sundown
 11133497	eng	CK
 11137906	eng	sundown
@@ -53154,6 +53139,7 @@ sentence_id	language	author
 11209228	eng	sundown
 11209591	eng	Amastan
 11211352	eng	shekitten
+11212527	eng	Amastan
 11212878	eng	Amastan
 11213403	eng	mutskt
 11214006	eng	CK
@@ -53517,6 +53503,7 @@ sentence_id	language	author
 11741070	eng	Ergulis
 11741822	eng	Nuel
 11742552	eng	Nuel
+11742822	eng	sundown
 11743700	eng	Amastan
 11743765	eng	Amastan
 11743914	eng	Amastan
@@ -53766,6 +53753,7 @@ sentence_id	language	author
 11961155	eng	CK
 11962369	eng	CK
 11962468	eng	CK
+11963156	eng	zogwarg
 11966172	eng	sundown
 11966224	eng	CK
 11968490	eng	Amastan
@@ -54162,7 +54150,6 @@ sentence_id	language	author
 12348041	eng	CK
 12354520	eng	sundown
 12354726	eng	ddnktr
-12366115	eng	menaud
 12366947	eng	Miktsoanit
 12369962	eng	Ergulis
 12372506	eng	sundown
@@ -54188,6 +54175,7 @@ sentence_id	language	author
 12382302	eng	CK
 12382836	eng	ddnktr
 12382837	eng	ddnktr
+12382842	eng	ddnktr
 12382856	eng	ddnktr
 12382869	eng	ddnktr
 12383063	eng	ddnktr
@@ -54555,6 +54543,7 @@ sentence_id	language	author
 13270779	eng	CK
 13270841	eng	CK
 13270846	eng	CK
+13279642	eng	rul
 13283245	eng	AlanF_US
 13283828	eng	menaud
 13283893	eng	rul
@@ -54594,7 +54583,6 @@ sentence_id	language	author
 13467242	eng	frpzzd
 13469902	eng	frpzzd
 13471333	eng	rul
-13475172	eng	rul
 13483444	eng	CK
 13489521	eng	rul
 13489522	eng	rul
@@ -54636,7 +54624,6 @@ sentence_id	language	author
 13690703	eng	terrywallwork
 13692170	eng	Ergulis
 13700043	eng	Babelball
-13703854	eng	menaud
 13704055	eng	terrywallwork
 13705823	eng	rul
 13706237	eng	bakaveka9

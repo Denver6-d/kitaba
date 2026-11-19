@@ -165,11 +165,37 @@
       "dyke",
       "queer",
       "tranny",
-      "infidel"
+      "infidel",
+      "ass",
+      "arse",
+      "asshole"
     ],
     "self_harm": [
       "suicide",
       "suicidal"
+    ],
+    "informal_and_archaic": [
+      "gonna",
+      "wanna",
+      "gotta",
+      "kinda",
+      "sorta",
+      "dunno",
+      "gimme",
+      "lemme",
+      "ain",
+      "yeah",
+      "yep",
+      "nope",
+      "thou",
+      "thee",
+      "thy",
+      "thine",
+      "hath",
+      "doth",
+      "shalt",
+      "ye",
+      "whilst"
     ]
   },
   "sentences": {

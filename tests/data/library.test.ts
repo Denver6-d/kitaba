@@ -100,6 +100,12 @@ describe("open-data library: words", () => {
     expect(withExample / library.length).toBeGreaterThan(0.9);
   });
 
+  it("gives every one of the 3,000 most frequent words a reviewed Arabic hint (phase D)", () => {
+    const missing = library.filter((w) => w.rank <= 3000 && !w.extra?.ar).map((w) => w.word);
+    expect(missing).toEqual([]);
+    expect(library.filter((w) => w.extra?.ar).length).toBeGreaterThan(2000);
+  });
+
   it("keeps every campaign stage fillable at each of its world's levels, bank plus library", () => {
     for (const id of ALL_STAGE_IDS) {
       const d = stageDef(id);
