@@ -20,4 +20,5 @@ export const MENU_NAV: readonly NavItem[] = [
   { href: "/account", label: (t) => t.nav.account },
   { href: "/settings", label: (t) => t.nav.settings },
   { href: "/privacy", label: (t) => t.nav.privacy },
+  { href: "/credits", label: (t) => t.nav.credits },
 ];

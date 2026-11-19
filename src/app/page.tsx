@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { spellingWords } from "@/data/words";
 import { letterDiff } from "@/domain/spelling/diff";
 import { useI18n } from "@/i18n";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ const MODE_MINIS: ReadonlyArray<{ mode: string; href: string; mini: React.ReactN
 ];
 
 export default function HomePage() {
-  const { t, lang, num } = useI18n();
+  const { t, lang } = useI18n();
   const display = lang === "en" ? "font-latin-display font-medium" : "font-bold";
   return (
     <>
@@ -38,9 +37,6 @@ export default function HomePage() {
           </div>
           <p className="text-sm text-ink-soft">{t.home.noAccount}</p>
           <ul className="flex flex-wrap gap-x-6 gap-y-2 border-t border-rule pt-5 text-ink-soft">
-            <li>
-              <strong className="text-ink tabular">{t.home.factWords(num(spellingWords.length))}</strong>
-            </li>
             <li>{t.home.factModes}</li>
             <li>{t.home.factWorlds}</li>
           </ul>

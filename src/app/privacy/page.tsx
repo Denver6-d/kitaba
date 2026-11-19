@@ -132,6 +132,11 @@ export default function PrivacyPage() {
           </section>
         ))}
         <p className="text-sm text-ink-soft">{c.updated}</p>
+        <p className="text-sm">
+          <Link href="/credits" className="underline underline-offset-4">
+            {t.nav.credits}
+          </Link>
+        </p>
         <details className="rounded-xl border border-rule p-4" lang={other} dir={other === "ar" ? "rtl" : "ltr"}>
           <summary className="cursor-pointer font-medium">{other === "ar" ? "النسخة العربية" : "English version"}</summary>
           <div className="mt-4 space-y-6">

@@ -61,4 +61,4 @@
 - [x] Top 3,000 words: 2,192 new hints in ten reviewed batches (808 are bank words with their own hint), hint validator, completeness test (OD11–OD12)
 
 ## Open data, phase E: loading, offline, credits
-- [ ] Lazy chunks, IndexedDB, SW runtime cache, download-all setting, credits page, no counts, Lighthouse, reviews
+- [x] On-demand loader with a shared content cache (OD13), library words in every game mode and in review, library sentences in dictation with credits and Arabic translations, SW content cache, download-all setting, /credits with notices, no counts, lazy Supabase and a bundle budget (OD14), Lighthouse, reviews

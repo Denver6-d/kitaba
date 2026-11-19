@@ -11,7 +11,8 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 import { Eye, Turtle, Volume2 } from "lucide-react";
-import type { SpellingWord } from "@/data/schema";
+import type { PlayWord } from "@/data/play-word";
+import { TatoebaCreditLine } from "@/features/library/credit-line";
 import { CATEGORY_INFO } from "@/data/rules";
 import {
   createGame,
@@ -50,7 +51,7 @@ interface Verdict {
 interface Props {
   readonly items: readonly GameItem[];
   readonly config: GameConfig;
-  readonly words: ReadonlyMap<string, SpellingWord>;
+  readonly words: ReadonlyMap<string, PlayWord>;
   readonly onFinish: (state: GameState) => void;
   /** Label shown above the play area (mode or stage name). */
   readonly title: string;
@@ -465,12 +466,12 @@ export function GameSession({
                       <Turtle className="size-4" aria-hidden="true" />
                       {t.game.slow}
                     </Button>
-                    {item.kind !== "sentence" && (
+                    {item.kind !== "sentence" && word.example && (
                       <Button
                         variant="ghost"
                         size="lg"
                         onMouseDown={keepInputFocus}
-                        onClick={() => speak(word.example)}
+                        onClick={() => speak(word.example ?? "")}
                         className="h-11"
                       >
                         {t.game.example}
@@ -625,7 +626,7 @@ function Prompt({
   meaningShown,
 }: {
   item: GameItem;
-  word: SpellingWord;
+  word: PlayWord;
   fixPick: number | null;
   answered: boolean;
   onPickToken: (i: number) => void;
@@ -643,11 +644,12 @@ function Prompt({
   revealing: boolean;
   meaningShown: boolean;
 }) {
-  const meaning = (
+  // Library words below the most frequent 3,000 have no Arabic hint (DECISIONS OD4): the line is simply left out.
+  const meaning = word.ar ? (
     <p className="text-hint">
       {labels.meaning}: <span lang="ar">{word.ar}</span>
     </p>
-  );
+  ) : null;
   if (revealing) {
     return (
       <p
@@ -753,7 +755,7 @@ function Prompt({
           </div>
         );
       }
-      return meaningShown ? <div lang={lang}>{meaning}</div> : null;
+      return meaningShown && meaning ? <div lang={lang}>{meaning}</div> : null;
   }
 }
 
@@ -823,7 +825,7 @@ function Feedback({
 }: {
   verdict: Verdict;
   item: GameItem;
-  word: SpellingWord;
+  word: PlayWord;
   rule: string;
   category: string;
 }) {
@@ -871,14 +873,21 @@ function Feedback({
             </span>{" "}
             {rule}
           </p>
-          <p className="text-sm text-ink-soft">
-            <span lang="ar">{word.ar}</span> ·{" "}
-            <span dir="ltr" lang="en">
-              {word.example}
-            </span>
-          </p>
+          {(word.ar || word.example) && (
+            <p className="text-sm text-ink-soft">
+              {word.ar && <span lang="ar">{word.ar}</span>}
+              {word.ar && word.example && " · "}
+              {word.example && (
+                <span dir="ltr" lang="en">
+                  {word.example}
+                </span>
+              )}
+            </p>
+          )}
+          {word.example && word.exampleCredit && <TatoebaCreditLine credit={word.exampleCredit} />}
         </>
       )}
+      {item.kind === "sentence" && word.exampleCredit && <TatoebaCreditLine credit={word.exampleCredit} />}
       {verdict.nextReviewDays !== null && (
         <p className="text-sm text-hint">
           {t.review.nextReview(verdict.nextReviewDays)}

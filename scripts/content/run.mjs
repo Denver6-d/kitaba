@@ -17,6 +17,7 @@ const STEPS = [
   { name: "words", load: () => import("./04-words.mjs") },
   { name: "sentences", load: () => import("./05-sentences.mjs") },
   { name: "hints", load: () => import("./06-hints.mjs") },
+  { name: "notices", load: () => import("./07-notices.mjs") },
   { name: "publish", load: () => import("./09-publish.mjs") },
 ];
 

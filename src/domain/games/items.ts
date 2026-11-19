@@ -10,7 +10,8 @@ export interface ItemWord {
   readonly word: string;
   readonly uk?: string | undefined;
   readonly category: string;
-  readonly example: string;
+  /** Library words may have no example (DECISIONS OD10): modes that need one skip the word. */
+  readonly example?: string | undefined;
   readonly confusables?: readonly string[] | undefined;
 }
 
@@ -64,6 +65,7 @@ export function buildItem(mode: ItemMode, w: ItemWord, ctx: BuildContext, key: s
     case "bee":
     case "review":
       // Sound-alike words are spoken with their example, or they would be a guess.
+      if (isHomophone && !w.example) return null;
       return { ...base, kind: "typed", speak: isHomophone ? `${answer}. ${w.example}` : answer };
     case "missing": {
       const positions = trickyPositions({ word: answer, category: w.category });
@@ -79,10 +81,11 @@ export function buildItem(mode: ItemMode, w: ItemWord, ctx: BuildContext, key: s
         ...base,
         kind: "choice",
         options: shuffle([answer, ...wrong], ctx.rng),
-        ...(isHomophone ? { context: blankedContext(w.example, w.word) } : {}),
+        ...(isHomophone && w.example ? { context: blankedContext(w.example, w.word) } : {}),
       };
     }
     case "fix": {
+      if (!w.example) return null;
       const tokens = w.example.split(" ");
       const index = findWordToken(tokens, w.word);
       const [wrong] = misspellingOf(1);
@@ -92,7 +95,7 @@ export function buildItem(mode: ItemMode, w: ItemWord, ctx: BuildContext, key: s
     }
     case "sentence":
       // Too long to type from one hearing: the caller falls back to a word item.
-      if (w.example.trim().split(/\s+/).length > DICTATION_MAX_WORDS) return null;
+      if (!w.example || w.example.trim().split(/\s+/).length > DICTATION_MAX_WORDS) return null;
       return { ...base, kind: "sentence", answer: w.example, speak: w.example };
   }
 }

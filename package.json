@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:content": "vitest run tests/data --reporter=verbose",
-    "content:build": "node scripts/content/run.mjs"
+    "content:build": "node scripts/content/run.mjs",
+    "check:bundle": "node scripts/bundle-report.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

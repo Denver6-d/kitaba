@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { spellingWordById } from "@/data/words";
 import { nextStageAfter, parseStageId } from "@/domain/games/campaign";
 import type { GameState } from "@/domain/games/engine";
 import { seededRng } from "@/domain/shared/random";
@@ -83,9 +82,9 @@ export function GameRunner({ request, title, emptyText, emptyAction }: { request
     }
     const mastery = phase.session.mastery;
     const extra = phase.session.extraWords;
-    const words = extra && extra.size > 0 ? new Map([...spellingWordById, ...extra]) : spellingWordById;
+    const words = phase.session.words;
     // Arabic hints fade as a word is mastered; sound-alikes keep theirs (the meaning tells them apart).
-    const showMeaning = (wordId: string) => !extra?.has(wordId) && (spellingWordById.get(wordId)?.category === "homophones" || hintLevel(mastery[wordId] ?? 0) !== "none");
+    const showMeaning = (wordId: string) => !extra?.has(wordId) && (words.get(wordId)?.category === "homophones" || hintLevel(mastery[wordId] ?? 0) !== "none");
     return (
       <GameSession key={phase.round} items={phase.session.items} config={phase.session.config} words={words} onFinish={onFinish} title={title} showMeaning={showMeaning} level={phase.session.level} />
     );
@@ -96,6 +95,7 @@ export function GameRunner({ request, title, emptyText, emptyAction }: { request
   return (
     <ResultsPanel
       outcome={phase.outcome}
+      words={phase.session.words}
       saveFailed={phase.saveFailed}
       boss={phase.session.boss}
       timed={phase.session.config.durationMs !== null}

@@ -17,6 +17,7 @@ import { LineChart } from "@/components/line-chart";
 import { Button } from "@/components/ui/button";
 import { ACHIEVEMENT_TEXT } from "@/features/rewards/achievement-text";
 import { freePlayHref } from "@/features/games/parse-request";
+import { getLibrary, LIBRARY_WAIT_MS, withTimeout } from "@/features/library/library";
 
 const GOAL_OPTIONS = [5, 10, 15, 20, 30];
 const RECENT_SESSIONS = 30;
@@ -36,7 +37,11 @@ export default function ProgressPage() {
       r.achievements.list(),
       r.writing.list(),
     ]);
-    return { activity, profile, sessions, stages, due: due.length, achievements, writings };
+    // Missed open-data library words are looked up on demand (nothing when the library is unavailable).
+    const missedIds = [...new Set(sessions.slice(-RECENT_SESSIONS).flatMap((s) => s.missed))].filter((id) => !spellingWordById.has(id) && !id.startsWith("x-"));
+    const library = await withTimeout(getLibrary().findWords(missedIds, profile.levels.words), LIBRARY_WAIT_MS, new Map<string, { category: SpellingCategory }>());
+    const categoryOf = (id: string): SpellingCategory | undefined => spellingWordById.get(id)?.category ?? library.get(id)?.category;
+    return { activity, profile, sessions, stages, due: due.length, achievements, writings, categoryOf };
   });
 
   if (data.status === "loading")
@@ -52,7 +57,7 @@ export default function ProgressPage() {
       </Page>
     );
 
-  const { activity, profile, sessions, stages, due, achievements, writings } = data.data;
+  const { activity, profile, sessions, stages, due, achievements, writings, categoryOf } = data.data;
   const today = dayKey(new Date());
   const days = activity.map((a) => a.day);
   const secondsToday = activity.filter((a) => a.day === today).reduce((s, a) => s + a.seconds, 0);
@@ -70,8 +75,8 @@ export default function ProgressPage() {
   const misses = new Map<SpellingCategory, number>();
   for (const s of recent) {
     for (const id of s.missed) {
-      const w = spellingWordById.get(id);
-      if (w) misses.set(w.category, (misses.get(w.category) ?? 0) + 1);
+      const category = categoryOf(id);
+      if (category) misses.set(category, (misses.get(category) ?? 0) + 1);
     }
   }
   const weakest = [...misses.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);

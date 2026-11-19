@@ -51,6 +51,7 @@ Next.js 16 (App Router), React 19 and strict TypeScript, Tailwind CSS 4, shadcn/
 npm run dev | build | start | lint | typecheck | test
 npm run validate:content     # content validation script (also covered by the test suite)
 npm run content:build        # open-data pipeline (dev-only, resumable; see DECISIONS "Open data")
+npm run check:bundle         # after build: first-load JS per page, budget and placement checks (OD14)
 ```
 
 ## 5. Routes
@@ -70,9 +71,10 @@ npm run content:build        # open-data pipeline (dev-only, resumable; see DECI
 | `/progress` | Stats, streak, XP and level, achievements, weakest categories |
 | `/leaderboard` | Weekly spelling score (opt-in) |
 | `/account`, `/account/reset`, `/auth/callback` | Optional accounts |
-| `/settings`, `/privacy`, `/offline` | Settings, privacy, offline fallback |
+| `/settings`, `/privacy`, `/offline` | Settings (including "the full library offline"), privacy, offline fallback |
+| `/credits` | Open-data sources, licences, reproduced notices, Tatoeba author list |
 
-Main navigation: Home, Play, Sentences, Review, My progress. Everything else (Leaderboard, Account, Settings, Privacy, language and theme) sits in a hamburger menu on every screen size. The footer shows only the name and one short line.
+Main navigation: Home, Play, Sentences, Review, My progress. Everything else (Leaderboard, Account, Settings, Privacy, Open data credits, language and theme) sits in a hamburger menu on every screen size. The footer shows only the name and one short line.
 
 ## 6. Architecture
 

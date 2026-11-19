@@ -5,7 +5,6 @@ import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarCheck, Crown, Flame, Lock, Play } from "lucide-react";
 import { CATEGORY_INFO } from "@/data/rules";
-import { spellingWords } from "@/data/words";
 import { BOSS_STAGE, dailyId, isStageUnlocked, isWorldUnlocked, nextStageToPlay, parseStageId, stageDef, stageId, STAGES_PER_WORLD, WORLDS } from "@/domain/games/campaign";
 import { LEVELS, type CefrLevel, type ProfileRecord, type StageRecord } from "@/domain/model";
 import { currentStreak, dayKey } from "@/domain/progress/streak";
@@ -193,7 +192,6 @@ function FreePlay({ level, onLevel }: { level: CefrLevel; onLevel: (l: CefrLevel
   const [category, setCategory] = useState<string>("all");
   const lvl = level;
   const cat = category === "all" ? null : category;
-  const count = spellingWords.filter((w) => w.level === lvl && (cat === null || w.category === cat)).length;
   return (
     <section aria-labelledby="free-h" className="space-y-6">
       <div className="space-y-2">
@@ -227,25 +225,15 @@ function FreePlay({ level, onLevel }: { level: CefrLevel; onLevel: (l: CefrLevel
             ))}
           </select>
         </div>
-        <p className="text-sm text-ink-soft" aria-live="polite">
-          {t.common.wordsN(count)}
-        </p>
       </div>
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FREE_MODES.map((m: FreeMode) => (
           <li key={m}>
-            {count === 0 ? (
-              <div aria-disabled="true" className="sheet flex h-full flex-col gap-2 p-5 opacity-60">
-                <span className="text-lg font-semibold">{t.modes[m]?.name}</span>
-                <span className="text-ink-soft">{t.game.empty}</span>
-              </div>
-            ) : (
-              <Link href={freePlayHref(m, lvl, cat)} className="sheet flex h-full flex-col gap-2 p-5 transition-colors hover:bg-brass-wash">
-                <span className="text-lg font-semibold">{t.modes[m]?.name}</span>
-                <span className="text-ink-soft">{t.modes[m]?.desc}</span>
-                {m === "bee" && <span className="mt-auto text-sm text-brass">{num(60)} {t.common.seconds}</span>}
-              </Link>
-            )}
+            <Link href={freePlayHref(m, lvl, cat)} className="sheet flex h-full flex-col gap-2 p-5 transition-colors hover:bg-brass-wash">
+              <span className="text-lg font-semibold">{t.modes[m]?.name}</span>
+              <span className="text-ink-soft">{t.modes[m]?.desc}</span>
+              {m === "bee" && <span className="mt-auto text-sm text-brass">{num(60)} {t.common.seconds}</span>}
+            </Link>
           </li>
         ))}
       </ul>

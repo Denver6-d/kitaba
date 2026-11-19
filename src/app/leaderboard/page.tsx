@@ -15,7 +15,7 @@ type Load<T> = { status: "loading" } | { status: "error" } | { status: "ready"; 
 
 export default function LeaderboardPage() {
   const { t } = useI18n();
-  const { configured, user } = useAccount();
+  const { configured, user, ready, unavailable, retryLoad } = useAccount();
   const board = useLeaderboard();
   const [rows, setRows] = useState<Load<PublicScore[]>>({ status: "loading" });
   const [nonce, setNonce] = useState(0);
@@ -40,7 +40,11 @@ export default function LeaderboardPage() {
 
   return (
     <Page title={t.leaderboard.title} intro={t.leaderboard.intro}>
-      {!configured || !board ? (
+      {configured && !ready ? (
+        <LoadingBlock label={t.common.loading} />
+      ) : configured && unavailable ? (
+        <ErrorBlock title={t.common.errorTitle} body={t.account.errors.generic} onRetry={retryLoad} retryLabel={t.common.retry} />
+      ) : !configured || !board ? (
         <div className="sheet flex flex-col items-start gap-4 p-6 sm:p-8">
           <Trophy className="size-8 text-brass" aria-hidden="true" />
           <h2 className="text-xl font-semibold">{t.leaderboard.notConfiguredTitle}</h2>

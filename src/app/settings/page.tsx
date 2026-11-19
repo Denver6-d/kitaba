@@ -12,6 +12,7 @@ import { useRepos } from "@/repositories/provider";
 import { Page } from "@/components/page";
 import { Segmented } from "@/components/segmented";
 import { Switch } from "@/components/ui/switch";
+import { OfflineLibrary } from "@/features/library/offline-library";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -100,6 +101,8 @@ export default function SettingsPage() {
             </Button>
           </div>
         </section>
+
+        <OfflineLibrary />
 
         <section aria-labelledby="data-h" className="space-y-4">
           <h2 id="data-h" className="text-xl font-semibold">

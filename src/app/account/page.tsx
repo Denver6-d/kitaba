@@ -6,7 +6,7 @@ import { Download, LogOut, RefreshCw, Trash2 } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { useRepos } from "@/repositories/provider";
 import { downloadJson, exportFilename } from "@/lib/download";
-import { Page, LoadingBlock } from "@/components/page";
+import { Page, ErrorBlock, LoadingBlock } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/features/account/account-provider";
 import { AuthForms } from "@/features/account/auth-forms";
@@ -33,6 +33,8 @@ export default function AccountPage() {
         </div>
       ) : !account.ready ? (
         <LoadingBlock label={t.common.loading} />
+      ) : account.unavailable ? (
+        <ErrorBlock title={t.common.errorTitle} body={t.account.errors.generic} onRetry={account.retryLoad} retryLabel={t.common.retry} />
       ) : account.user ? (
         <SignedIn />
       ) : (

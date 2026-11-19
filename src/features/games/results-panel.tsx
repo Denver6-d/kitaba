@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { spellingWordById } from "@/data/words";
+import type { PlayWord } from "@/data/play-word";
 import { expectedSpelling } from "@/domain/spelling/check";
 import { useI18n } from "@/i18n";
 import { useReducedMotion } from "@/lib/use-hydrated";
@@ -50,9 +50,11 @@ interface Props {
   /** Next campaign stage, when there is one and this stage was cleared. */
   readonly nextHref: string | null;
   readonly isStage: boolean;
+  /** The words the session played (bank and library), for the missed-words list. */
+  readonly words: ReadonlyMap<string, PlayWord>;
 }
 
-export function ResultsPanel({ outcome, saveFailed, boss, timed, onAgain, nextHref, isStage }: Props) {
+export function ResultsPanel({ outcome, saveFailed, boss, timed, onAgain, nextHref, isStage, words }: Props) {
   const { t, num, pct } = useI18n();
   const [settings] = useSettings();
   const [board, setBoard] = useState<SubmitStatus | null>(null);
@@ -82,7 +84,7 @@ export function ResultsPanel({ outcome, saveFailed, boss, timed, onAgain, nextHr
   const { summary, stars } = outcome;
   const cleared = stars === null || stars > 0;
   const improved = stars !== null && outcome.previous !== null && outcome.best !== null && outcome.best.updatedAt !== outcome.previous.updatedAt;
-  const missed = summary.missed.flatMap((id) => spellingWordById.get(id) ?? []);
+  const missed = summary.missed.flatMap((id) => words.get(id) ?? []);
 
   return (
     <div className="sheet space-y-8 p-6 sm:p-10" role="status" aria-live="polite">
@@ -123,7 +125,13 @@ export function ResultsPanel({ outcome, saveFailed, boss, timed, onAgain, nextHr
           <ul className="flex flex-wrap gap-2" dir="ltr" lang="en">
             {missed.map((w) => (
               <li key={w.id} className="rounded-full border border-rule px-3 py-1.5 font-mono">
-                {expectedSpelling(w, settings.accent)} <span className="font-sans text-sm text-hint" lang="ar" dir="rtl">· {w.ar}</span>
+                {expectedSpelling(w, settings.accent)}
+                {w.ar && (
+                  <span className="font-sans text-sm text-hint" lang="ar" dir="rtl">
+                    {" "}
+                    · {w.ar}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

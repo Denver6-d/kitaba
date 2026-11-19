@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Play, RotateCcw, Volume2 } from "lucide-react";
-import { dictationById, dictationMessages, dictationSentences, type DictationText } from "@/data/writing";
+import { dictationMessages, dictationSentences } from "@/data/writing";
+import { TatoebaCreditLine } from "@/features/library/credit-line";
+import { getLibrary, LIBRARY_WAIT_MS, withTimeout } from "@/features/library/library";
 import type { CefrLevel } from "@/domain/model";
 import { compareDictation, type DictationResult, type DictationSegment } from "@/domain/writing/dictation";
 import { summarizeWriting, type WritingSummary } from "@/domain/writing/summary";
@@ -14,6 +16,7 @@ import { useRepoContext } from "@/repositories/provider";
 import { ErrorBlock, LoadingBlock } from "@/components/page";
 import { Segmented } from "@/components/segmented";
 import { Button } from "@/components/ui/button";
+import { dictationPool, type DictItem } from "./dictation-pool";
 import { drawNext } from "./draw";
 import { MistakeDetail } from "./mistake-detail";
 import { useSaveWriting, type SavedWriting } from "./use-save-writing";
@@ -46,7 +49,10 @@ export function Dictation({ level }: { level: CefrLevel }) {
   const areaId = useId();
   const [kind, setKind] = useState<Kind>("sentence");
   const [round, setRound] = useState(0);
-  const [item, setItem] = useState<DictationText | null | undefined>(undefined);
+  /** The drawn text, tagged with what it was drawn for: a stale one (kind, level or round changed) shows as loading. */
+  const [drawn, setDrawn] = useState<{ readonly key: string; readonly item: DictItem | null } | null>(null);
+  const drawKey = `${kind}:${level}:${round}`;
+  const item = drawn && drawn.key === drawKey ? drawn.item : undefined;
   const [index, setIndex] = useState(0);
   const [speed, setSpeed] = useState<Speed>("normal");
   const [typed, setTyped] = useState("");
@@ -59,17 +65,23 @@ export function Dictation({ level }: { level: CefrLevel }) {
 
   useEffect(() => {
     let alive = true;
-    const pool = (kind === "sentence" ? dictationSentences : dictationMessages).filter((d) => d.level === level).map((d) => d.id);
-    void drawNext(outbox, `write:dict:${kind}:${level}`, pool).then((id) => {
-      if (!alive) return;
-      setItem(id ? (dictationById.get(id) ?? null) : null);
-      setIndex(0);
-      setTyped("");
-      setResult(null);
-      setSelected(null);
-      setPeek(false);
-      startedAt.current = Date.now();
-    });
+    // Sentences also come from the open-data library at this level (loaded on demand; none when offline and not stored).
+    const library = kind === "sentence" ? withTimeout(getLibrary().sentencesAt(level), LIBRARY_WAIT_MS, []) : Promise.resolve([]);
+    void library
+      .then((lib) => {
+        const pool = dictationPool(kind === "sentence" ? dictationSentences : dictationMessages, lib, level, kind);
+        return drawNext(outbox, `write:dict:${kind}:${level}`, [...pool.keys()]).then((id) => (id ? (pool.get(id) ?? null) : null));
+      })
+      .then((next) => {
+        if (!alive) return;
+        setDrawn({ key: `${kind}:${level}:${round}`, item: next });
+        setIndex(0);
+        setTyped("");
+        setResult(null);
+        setSelected(null);
+        setPeek(false);
+        startedAt.current = Date.now();
+      });
     return () => {
       alive = false;
     };
@@ -137,7 +149,16 @@ export function Dictation({ level }: { level: CefrLevel }) {
             <p dir="ltr" lang="en" className="font-mono">
               {full}
             </p>
+            {item.credit && <TatoebaCreditLine credit={item.credit} className="mt-1" />}
           </details>
+          {item.ar && (
+            <div className="space-y-1">
+              <p className="text-hint">
+                <span className="font-semibold">{t.writing.translation}:</span> <span lang="ar" dir="rtl">{item.ar.text}</span>
+              </p>
+              <TatoebaCreditLine credit={item.ar.credit} />
+            </div>
+          )}
         </section>
         <WritingSummaryPanel summary={result.summary} saved={result.saved} saveFailed={result.saveFailed} />
         <div className="flex flex-wrap gap-3">
@@ -185,9 +206,12 @@ export function Dictation({ level }: { level: CefrLevel }) {
               )}
             </div>
             {peek && (
-              <p dir="ltr" lang="en" className="font-mono text-lg">
-                {sentences[index]}
-              </p>
+              <>
+                <p dir="ltr" lang="en" className="font-mono text-lg">
+                  {sentences[index]}
+                </p>
+                {item.credit && <TatoebaCreditLine credit={item.credit} />}
+              </>
             )}
           </div>
         ) : (

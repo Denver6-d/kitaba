@@ -40,7 +40,9 @@ npm run dev               # http://localhost:3000
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` (strict) |
 | `npm test` | Vitest: domain, repositories and the Dexie migration, sync, content, auth redirects |
-| `npm run validate:content` | Content validator: schema, duplicates, examples, volumes, stage pools |
+| `npm run validate:content` | Content validator: schema, duplicates, examples, volumes, stage pools, the open-data library (hashes, credits, blocklist, a clean spell check of every sentence) |
+| `npm run check:bundle` | After a build: first-load JS per page, the size budget, and that the spell checker, library data and licence notices stay off the pages that do not need them |
+| `npm run content:build` | Dev-only open-data pipeline (downloads to the git-ignored `content-raw/`, writes `public/content/v1`); see DECISIONS, "Open data" |
 
 The service worker is registered in production builds only.
 

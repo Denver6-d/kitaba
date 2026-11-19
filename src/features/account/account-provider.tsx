@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { TABLE_NAMES } from "@/domain/model";
 import { decideFirstSync } from "@/domain/sync/session";
-import { getSupabase, isSupabaseConfigured } from "@/lib/supabase/client";
+import { isSupabaseConfigured, loadSupabase } from "@/lib/supabase/client";
 import { downloadJson, exportFilename } from "@/lib/download";
 import { createRepositories } from "@/repositories/create";
 import { createSupabaseStore } from "@/repositories/supabase/store";
@@ -30,6 +30,10 @@ interface AccountValue {
   readonly exportCloud: () => Promise<void>;
   /** Deletes the account, its cloud data and its data on this device. */
   readonly deleteAccount: () => Promise<void>;
+  /** Accounts are configured, but the account library could not be loaded (for example offline). */
+  readonly unavailable: boolean;
+  /** Tries to load the account library again. */
+  readonly retryLoad: () => void;
 }
 
 const AccountContext = createContext<AccountValue | null>(null);
@@ -38,7 +42,7 @@ const withTimeout = (p: Promise<void>, ms: number) => Promise.race([p, new Promi
 
 export function AccountProvider({ children }: { children: ReactNode }) {
   const configured = isSupabaseConfigured();
-  const [client] = useState<SupabaseClient | null>(() => getSupabase());
+  const [client, setClient] = useState<SupabaseClient | null>(null);
   const { baseStore, outbox, onWrite, invalidate, repos } = useRepoContext();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -47,6 +51,31 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const [askMerge, setAskMerge] = useState(false);
   const engineRef = useRef<SyncEngine | null>(null);
   const userId = user?.id ?? null;
+
+  // The Supabase library loads on demand; until then (and if it cannot load) the learner is a guest.
+  const [loadTry, setLoadTry] = useState(0);
+  const retryLoad = useCallback(() => setLoadTry((n) => n + 1), []);
+  useEffect(() => {
+    if (!configured) return;
+    let alive = true;
+    loadSupabase()
+      .then((c) => {
+        if (!alive) return;
+        setClient(c);
+        if (!c) setReady(true);
+      })
+      .catch(() => alive && setReady(true));
+    return () => {
+      alive = false;
+    };
+  }, [configured, loadTry]);
+
+  // A failed load is retried when the connection comes back.
+  useEffect(() => {
+    if (!configured || client) return;
+    window.addEventListener("online", retryLoad);
+    return () => window.removeEventListener("online", retryLoad);
+  }, [configured, client, retryLoad]);
 
   // Session: initial check + changes (sign-in, sign-out, password recovery).
   useEffect(() => {
@@ -169,6 +198,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     () => ({
       configured,
       client,
+      unavailable: configured && ready && !client,
+      retryLoad,
       user,
       ready,
       sync,
@@ -206,7 +237,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         await client.auth.signOut();
       },
     }),
-    [configured, client, user, ready, sync, outbox, baseStore, invalidate, stopEngine],
+    [configured, client, user, ready, sync, outbox, baseStore, invalidate, stopEngine, retryLoad],
   );
 
   return (

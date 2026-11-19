@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildSession, type GameRequest } from "@/features/games/build-session";
+import { getLibrary } from "@/features/library/library";
 import { spellingWordById, spellingWords } from "@/data/words";
 import { ALL_STAGE_IDS, DAILY_MODES, stageDef } from "@/domain/games/campaign";
 import { LEVELS, sameLevels, type CefrLevel } from "@/domain/model";
@@ -157,7 +158,9 @@ describe("buildSession: review", () => {
     const d = deps();
     expect((await buildSession({ kind: "review" }, d)).items).toEqual([]);
     await d.repos.words.saveCard({ ...newCard("w-no-such-word", NOW), due: NOW - 1 });
-    expect((await buildSession({ kind: "review" }, d)).items).toEqual([]);
+    // The library is reachable and does not have the word: it was removed, so its card is skipped.
+    const reachable = { ...getLibrary(), manifest: async () => ({ version: 1 as const, files: {} }), findWords: async () => new Map() };
+    expect((await buildSession({ kind: "review" }, { ...d, library: reachable })).items).toEqual([]);
   });
 });
 

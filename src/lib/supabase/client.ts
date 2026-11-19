@@ -1,6 +1,5 @@
 "use client";
 
-import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -22,11 +21,18 @@ function validUrl(u: string): boolean {
 
 export const isSupabaseConfigured = (): boolean => validUrl(URL_VALUE) && ANON_KEY.length > 20;
 
-let client: SupabaseClient | null = null;
+let client: Promise<SupabaseClient> | null = null;
 
-/** Browser client (PKCE flow, session in cookies). null when accounts are not configured. */
-export function getSupabase(): SupabaseClient | null {
-  if (!isSupabaseConfigured() || typeof window === "undefined") return null;
-  client ??= createBrowserClient(URL_VALUE, ANON_KEY);
+/**
+ * Browser client (PKCE flow, session in cookies), or null when accounts are not configured.
+ * The Supabase library is loaded on demand (DECISIONS OD14): it is not in any
+ * page's first-load JavaScript, and a guest-only site never downloads it.
+ */
+export function loadSupabase(): Promise<SupabaseClient | null> {
+  if (!isSupabaseConfigured() || typeof window === "undefined") return Promise.resolve(null);
+  client ??= import("@supabase/ssr").then(({ createBrowserClient }) => createBrowserClient(URL_VALUE, ANON_KEY));
+  client.catch(() => {
+    client = null;
+  });
   return client;
 }

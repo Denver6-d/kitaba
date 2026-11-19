@@ -542,3 +542,70 @@ The owner asked for a full dictionary, a large graded word set and tens of thous
   - `ass` (vulgar), informal spellings that are not standard written English (gonna, wanna, gotta, yeah…), and archaic forms (thou, thee, thy, ye, whilst).
   - They are a new `informal_and_archaic` group in the blocklist's `words` tier, which also removes sentences that use them.
   - The library stays at 18,466 words, because the next-ranked words take their place.
+
+### Open data, phase E: loading, offline, credits, performance (2026-11-20)
+
+- **OD13. The library loads on demand.**
+  - **Loader (`src/features/library/library.ts`).**
+    - The manifest is network-first (falling back to its cached copy), so a deploy with new content is seen at once.
+    - Data files are cache-first, because their names carry a content hash.
+    - Everything lives in one Cache Storage cache, `kitaba-content-v1`, shared with the service worker. The service worker keeps it across deploys, because hashed files never go stale.
+    - Every file is validated with zod (external input) and memoised in memory. A failed load is not remembered, so the next game retries.
+    - Any failure resolves to "no library words" and never to an error, so a game always starts from the bundled bank.
+    - **Why Cache Storage rather than an IndexedDB table (as planned).** The service worker can only serve Cache Storage. A second copy in IndexedDB would double the storage and need a Dexie schema bump in the synced database for data that is not the learner's. Parsed words are memoised in memory instead.
+  - **Games.**
+    - `buildSession` loads only the learner's level: the bank (all levels, so a short world still widens) plus the library words at that level.
+    - Every session now returns the map of words it uses, so the game screen and the results never look words up in the bank alone.
+    - Review finds library words by id, loading the level nearest the learner's words level first.
+    - Distractors avoid every loaded spelling, not just the bank's.
+    - A homophone without an example is never spoken alone, and modes that need an example (fix the mistake, sentence dictation) skip words that have none.
+    - The daily challenge draws from the bundled bank only, so it is the same for everyone at a level on a day whether or not the library loaded (OD15).
+  - **Dictation.** Sentence dictation draws from our own sentences plus the library sentences at the learner's level. After checking, it shows the sentence's credit and, when Tatoeba links one, its Arabic translation with that author's credit.
+  - **Mistakes from library sentences.** A misspelled word in a library sentence becomes an `x-` review card (with the sentence), as for free writing. Mapping it to a library id would need a synchronous lookup the checker does not have.
+  - **Attribution.** "Tatoeba #id · author", linked to the sentence, plus "CC BY 2.0 FR" linked to `/credits`. It appears wherever a Tatoeba sentence is shown:
+    - after an answer that used an example (fix the mistake, a homophone's sentence, the verdict line);
+    - after a boss sentence;
+    - in dictation, when the text is shown or revealed.
+  - **`/credits`** (menu and privacy page).
+    - It lists each source with its licence and what we took from it, and offers the Tatoeba list (id, language, author) as a download.
+    - It reproduces word for word the SCOWL, VarCon (with Ispell), dictionary-en and CMU notices. Step 07 (`07-notices.mjs`) generates them into `src/data/credits/notices.generated.ts`, which only `/credits` imports (checked by `check:bundle`).
+    - Lighthouse (mobile): 100 / 100 / 100.
+  - **Settings, "The full library offline".** It downloads every file into the content cache and shows progress as a percentage and the size in MB (5.4 MB stored; transfer is gzipped). It can also remove the copy. Lighthouse (mobile): 100 / 100 / 100.
+  - **No counts on the site.** The landing page's "N words" fact and the free-play "N words match" line are gone. With the library, every level and category has words, so the "no words" state of free play is gone too. A test checks the copy for content totals and the source for rendered list sizes.
+- **OD14. Performance and the bundle budget.**
+  - **Lazy Supabase.** `@supabase/ssr` was imported on every page, about 66 KB gzipped, even when accounts are not configured. It now loads with a dynamic `import()` only when accounts are configured. Until it loads, `ready` stays false, which every account screen already waits for. If the import fails, the learner stays a guest.
+  - **First-load JavaScript (gzipped, all scripts in the page's HTML).** "Before" was measured during this phase, with the library already wired in but Supabase not yet lazy; "after" is the final build:
+
+    | Page | Before lazy Supabase | After |
+    |---|---|---|
+    | `/` | 413 KB | 346 KB |
+    | `/play` | 421 KB | 354 KB |
+    | `/play/game` | 473 KB | 406 KB |
+    | `/write/free` | 488 KB | 422 KB |
+    | `/offline` | 367 KB | 300 KB |
+
+    CSS is 14 KB on every page.
+  - **What is left.** It is the framework: React and Next (about 116 KB), both i18n dictionaries plus zod (53 KB), Dexie (37 KB), Radix and the bundled bank (13–38 KB). The library itself adds no first-load bytes: it is fetched only by the pages that play.
+  - **Measured on localhost** (production build, no throttling): LCP 209 ms and CLS 0 on `/`.
+  - **`npm run check:bundle`** (`scripts/bundle-report.mjs`, run after the build) prints these numbers. It fails when:
+    - a page's first-load JS is over 440 KB gzipped (today's heaviest page plus 4%);
+    - first-load JS contains nspell, library chunk data, or the licence notices outside `/credits`.
+- **OD15. Phase E review fixes.** A code reviewer and a test engineer ran as separate, report-only agents, and both probed the loader with real files. Every confirmed finding was fixed, and the new tests are in `tests/features/library.test.ts`, `dictation-pool.test.ts` and `build-session.test.ts`.
+  - **A failed load was remembered until the page reloaded (both reviewers).** `wordsAt`/`sentencesAt` stored a successful `[]` when the manifest could not be read. They now treat that as a failure, so the level loads once the network is back.
+  - **Games could wait forever on a stalled connection.** Library loads in games, review, dictation and `/progress` now give up after 4 s (`withTimeout`) and use the bank. The load goes on in the background and is kept when it succeeds.
+  - **The daily challenge differed with and without the library.** It now uses the bank only.
+  - **Review dropped due library cards when the library was unreachable.** The word is rebuilt from its id (`w-exhale` → "exhale", no hint, no example). This happens only when the library cannot be reached: a word the reachable library no longer has was removed, and its card is skipped as before.
+  - **`/progress` downloaded the whole word library for writing-word ids (`x-…`), which can never be in it.** Those ids are now left out.
+  - **A failed Supabase load left a blank account page and a "not configured" leaderboard.** The account and leaderboard pages now show loading while it loads, and an error with "Try again" if it fails. It is also retried when the browser comes back online. The leaderboard no longer says "not configured" while loading.
+  - **Settings said "this browser cannot store the library" when it was only offline.** The status now tells "no storage" apart from "unreachable", and the latter has a retry. Keyboard focus moves to the live status during a download.
+  - **Long-lived tabs.** A tab open across a content deploy asked for files that no longer exist. A failed file now makes the loader read the manifest again, once.
+  - **Old files.** Hashed files from older content versions piled up in the content cache. They are pruned whenever a new manifest is read.
+  - **Download.** The offline download no longer includes the credits list (about 0.9 MB), which games never need. The abort signal now reaches `fetch`.
+  - **Dictation.**
+    - It no longer shows the previous text while library sentences load.
+    - The pool is a pure, tested helper.
+    - Library sentences far outnumber ours at each level, so the hand-written sentences come up less often. That is accepted: the library is the point.
+  - **`check:bundle`.** A script it cannot find now fails the check instead of counting as 0 bytes.
+  - **Not changed.**
+    - A Tatoeba example shown in "fix the mistake" is credited in the feedback right after the answer, not inside the puzzle, so the misspelled word cannot be found by following the link.
+    - External links open in a new tab without a spoken hint. This matches the existing privacy and credits links.
