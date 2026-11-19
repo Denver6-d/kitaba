@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GATE_PRE_PAINT } from "./first-visit";
 
 /**
  * Per-device preferences. Stored in localStorage (not synced) because they
@@ -46,11 +47,12 @@ export function applySettingsToDocument(s: Settings, doc: Document = document): 
 
 /**
  * Runs before React hydrates so the first paint already has the right
- * direction, theme and text size (no flash). Kept dependency-free on purpose.
+ * direction, theme and text size (no flash), and hides the page of a first
+ * visit until the level check has run (lib/first-visit.ts). Kept dependency-free on purpose.
  */
 export const PRE_PAINT_SCRIPT = `(function(){try{var s=JSON.parse(localStorage.getItem(${JSON.stringify(
   SETTINGS_KEY,
-)})||"{}");var e=document.documentElement;var l=s.lang==="en"?"en":"ar";e.lang=l;e.dir=l==="ar"?"rtl":"ltr";var t=s.theme==="dark"||s.theme==="light"?s.theme:"system";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);e.dataset.theme=d?"dark":"light";e.dataset.font=s.readableFont===true?"readable":"default";e.dataset.motion=s.motion==="reduce"||s.motion==="full"?s.motion:"system";var x=Number(s.textScale);if(x>=0.9&&x<=1.4)e.style.setProperty("--text-scale",String(x));}catch(_){}})();`;
+)})||"{}");var e=document.documentElement;var l=s.lang==="en"?"en":"ar";e.lang=l;e.dir=l==="ar"?"rtl":"ltr";var t=s.theme==="dark"||s.theme==="light"?s.theme:"system";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);e.dataset.theme=d?"dark":"light";e.dataset.font=s.readableFont===true?"readable":"default";e.dataset.motion=s.motion==="reduce"||s.motion==="full"?s.motion:"system";var x=Number(s.textScale);if(x>=0.9&&x<=1.4)e.style.setProperty("--text-scale",String(x));}catch(_){}${GATE_PRE_PAINT}})();`;
 
 /** True when motion should be reduced (OS setting or manual override). */
 export function prefersReducedMotion(): boolean {

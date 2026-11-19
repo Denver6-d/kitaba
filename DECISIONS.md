@@ -609,3 +609,27 @@ The owner asked for a full dictionary, a large graded word set and tens of thous
   - **Not changed.**
     - A Tatoeba example shown in "fix the mistake" is credited in the feedback right after the answer, not inside the puzzle, so the misspelled word cannot be found by following the link.
     - External links open in a new tab without a spoken hint. This matches the existing privacy and credits links.
+
+## First-visit level screen (2026-11-20)
+
+- **L1. One central first-visit redirect (supersedes E5).** A visitor with no stored level (`levelSource` null) is sent to `/welcome` on the first page they open, whatever it is, and then returned to it.
+  - **Which pages.** Every page is gated except `/welcome`, `/privacy`, `/credits`, `/offline`, `/auth/*` and `/account` (with `/account/reset`). The sign-in page counts as an auth route, so a returning learner on a new device can sign in before being asked. API, framework, content, dictionary, service-worker and other static requests are never gated (`shouldGate`, `lib/first-visit.ts`).
+  - **No flash.** The inline pre-paint script marks a gated page `data-gate="pending"` before first paint whenever this browser has never stored levels (a localStorage marker). CSS then hides `<main>`, showing only a quiet brass rule.
+    - On client-side navigation, `FirstVisitGate` sets the same mark in a layout effect.
+    - The gate (in the providers) reads the profile and either removes the mark or replaces the URL with `/welcome?next=…`.
+    - In a headless-browser check, a fresh visit to `/play/game?stage=w3-s2` showed 27 frames, all with the page hidden, before `/welcome`. A click on "Play" from `/privacy` never painted `/play`.
+  - **Return.** `next` is the path and query that were asked for. On the way back it is read with `returnPath`, which goes through `safeNext` (same-origin relative paths only, with the dot-segment and control-character guards of O3) and refuses `/welcome` itself, so there is no loop. Choosing, finishing the test and skipping all return to it (default `/play`).
+  - **Signed-in learners.** As before (E5), a learner whose account may hold levels waits for the first sync, or until sync reports offline or an error, before being asked. Levels that arrive from the cloud mean they are not asked.
+  - **When the page is simply shown.**
+    - IndexedDB is unavailable (the in-memory fallback, so nothing would be kept) or the profile cannot be read.
+    - The wait passes 8 seconds.
+    - Storage throws in the pre-paint script, which then marks nothing.
+  - **Later data changes.** A page is decided once. A later data change (a sync pull, "delete my data") never pulls the learner away from the page they are on; the next navigation is checked again.
+  - **The landing page is gated too, as asked.** It used to be exempt, so that the hero round was playable within 10 seconds (E5). Now "Skip for now" is one tap away, and it returns to `/`.
+  - **Welcome screen.** "Test my level" is now the primary action: first, a filled button at the largest size, with its description under it. "I choose my level" (outline) and "Skip for now" (text) sit below as secondary actions. Lighthouse (mobile) on `/welcome`: 100 / 100 / 100.
+  - **Tests (`tests/lib/first-visit.test.ts`):**
+    - which paths are gated;
+    - `next` round trips, open-redirect inputs and loop inputs;
+    - the decision table: no level, levels, loading, timeout, blocked storage, signed-in sync;
+    - the pre-paint script itself, run in a VM, including blocked storage;
+    - the welcome buttons' order and variants.

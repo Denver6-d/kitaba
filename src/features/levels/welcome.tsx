@@ -20,7 +20,7 @@ type Step =
  * First visit (no level stored), or "retake the placement test" from settings:
  * choose a level, take the adaptive test, or skip (A2).
  */
-export function Welcome({ startWithTest = false, onSkip }: { startWithTest?: boolean; onSkip: () => void }) {
+export function Welcome({ startWithTest = false, onSkip, next = "/play" }: { startWithTest?: boolean; onSkip: () => void; next?: string }) {
   const { t } = useI18n();
   const { setAll } = useLevels();
   const [step, setStep] = useState<Step>(() => (startWithTest ? { kind: "test", seed: Date.now() } : { kind: "menu" }));
@@ -51,7 +51,7 @@ export function Welcome({ startWithTest = false, onSkip }: { startWithTest?: boo
         <p className="text-hint">{t.levels.desc[step.level]}</p>
         <p className="text-ink-soft">{t.welcome.setAll(step.level)}</p>
         <Button asChild size="lg" className="h-12 px-8 text-base">
-          <Link href="/play">{t.placement.startPlaying}</Link>
+          <Link href={next}>{t.placement.startPlaying}</Link>
         </Button>
       </section>
     );
@@ -97,29 +97,23 @@ export function Welcome({ startWithTest = false, onSkip }: { startWithTest?: boo
         </h2>
         <p className="max-w-2xl text-ink-soft">{t.welcome.intro}</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <button type="button" onClick={() => setStep({ kind: "pick" })} className="sheet flex min-h-40 flex-col gap-3 p-6 text-start transition-colors hover:bg-brass-wash">
-          <ListChecks className="size-7 text-brass" aria-hidden="true" />
-          <span className="text-xl font-semibold">{t.welcome.choose}</span>
-          <span className="text-ink-soft">{t.welcome.chooseDesc}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setStep({ kind: "test", seed: Date.now() })}
-          className="flex min-h-40 flex-col gap-3 rounded-2xl border-2 border-brass-fill bg-brass-wash p-6 text-start transition-colors hover:bg-sheet"
-        >
-          <ClipboardCheck className="size-7 text-brass" aria-hidden="true" />
-          <span className="text-xl font-semibold">{t.welcome.test}</span>
-          <span>{t.welcome.testDesc}</span>
-        </button>
+      {/* The placement test is the recommended path: first, filled and largest. The other two are secondary. */}
+      <div className="space-y-3">
+        <Button type="button" size="lg" data-welcome="test" onClick={() => setStep({ kind: "test", seed: Date.now() })} className="h-auto min-h-16 w-full gap-3 px-6 py-4 text-xl font-semibold sm:w-auto sm:min-w-80">
+          <ClipboardCheck className="size-6" aria-hidden="true" />
+          {t.welcome.test}
+        </Button>
+        <p className="max-w-xl text-ink-soft">{t.welcome.testDesc}</p>
       </div>
-      <button
-        type="button"
-        onClick={() => void setAll(DEFAULT_LEVEL, "skip").then(onSkip)}
-        className="min-h-11 text-ink-soft underline underline-offset-4 hover:text-ink"
-      >
-        {t.welcome.skip}
-      </button>
+      <div className="flex flex-wrap items-center gap-3 border-t border-rule pt-5">
+        <Button type="button" variant="outline" data-welcome="choose" onClick={() => setStep({ kind: "pick" })} className="h-11 gap-2">
+          <ListChecks className="size-4" aria-hidden="true" />
+          {t.welcome.choose}
+        </Button>
+        <Button type="button" variant="ghost" data-welcome="skip" onClick={() => void setAll(DEFAULT_LEVEL, "skip").then(onSkip)} className="h-11 text-ink-soft underline underline-offset-4 hover:text-ink">
+          {t.welcome.skip}
+        </Button>
+      </div>
     </section>
   );
 }

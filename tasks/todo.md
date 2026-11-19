@@ -62,3 +62,7 @@
 
 ## Open data, phase E: loading, offline, credits
 - [x] On-demand loader with a shared content cache (OD13), library words in every game mode and in review, library sentences in dictation with credits and Arabic translations, SW content cache, download-all setting, /credits with notices, no counts, lazy Supabase and a bundle budget (OD14), Lighthouse, reviews
+
+## First-visit level screen
+- [x] Central client-side redirect to /welcome on the first visit from any gated page, no flash, return to the page asked for, safe `next`, no loop, cloud levels respected, blocked storage shows the page (L1)
+- [x] "Test my level" primary; tests; Arabic checklist

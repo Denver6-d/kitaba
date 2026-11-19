@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useId, useState } from "react";
 import { CalendarCheck, Crown, Flame, Lock, Play } from "lucide-react";
 import { CATEGORY_INFO } from "@/data/rules";
 import { BOSS_STAGE, dailyId, isStageUnlocked, isWorldUnlocked, nextStageToPlay, parseStageId, stageDef, stageId, STAGES_PER_WORLD, WORLDS } from "@/domain/games/campaign";
-import { LEVELS, type CefrLevel, type ProfileRecord, type StageRecord } from "@/domain/model";
+import { LEVELS, type CefrLevel, type StageRecord } from "@/domain/model";
 import { currentStreak, dayKey } from "@/domain/progress/streak";
 import { SPELLING_CATEGORIES } from "@/domain/spelling/categories";
 import { useI18n } from "@/i18n";
@@ -18,34 +17,21 @@ import { Star } from "@/features/games/results-panel";
 import { FREE_MODES, freePlayHref, type FreeMode } from "@/features/games/parse-request";
 import { LevelsCard } from "@/features/levels/levels-card";
 import { useLevels } from "@/features/levels/use-levels";
-import { useAccount } from "@/features/account/account-provider";
-
-/** A signed-in learner on a new device waits for the first sync before being asked for a level. */
-function useFirstVisit(profile: ProfileRecord | null): boolean {
-  const { user, sync, ready } = useAccount();
-  if (!profile || profile.levelSource !== null || !ready) return false;
-  if (user && sync?.status !== "synced" && sync?.status !== "offline" && sync?.status !== "error") return false;
-  return true;
-}
 
 export default function PlayPage() {
   const { t } = useI18n();
-  const router = useRouter();
   const data = useRepoQuery(async (r) => {
     const [stages, activity, due] = await Promise.all([r.games.stages(), r.activity.list(), r.words.dueCards(Date.now())]);
     return { stages, days: activity.map((a) => a.day), due: due.length };
   });
   const { profile, setArea } = useLevels();
-  const firstVisit = useFirstVisit(profile.status === "ready" ? profile.data : null);
-  useEffect(() => {
-    if (firstVisit) router.replace("/welcome");
-  }, [firstVisit, router]);
+  // A first visit (no level yet) is sent to /welcome by the central FirstVisitGate (lib/first-visit.ts).
 
   return (
     <Page title={t.play.title} intro={t.play.intro}>
       {data.status === "loading" && <LoadingBlock label={t.common.loading} />}
       {data.status === "error" && <ErrorBlock title={t.common.errorTitle} body={t.common.errorBody} onRetry={data.reload} retryLabel={t.common.retry} />}
-      {data.status === "ready" && profile.status === "ready" && !firstVisit && (
+      {data.status === "ready" && profile.status === "ready" && (
         <div className="space-y-14">
           <div className="space-y-6">
             <LevelsCard levels={profile.data.levels} onChange={setArea} />
@@ -55,7 +41,7 @@ export default function PlayPage() {
           <FreePlay level={profile.data.levels.words} onLevel={(l) => setArea("words", l)} />
         </div>
       )}
-      {(firstVisit || (data.status === "ready" && profile.status === "loading")) && <LoadingBlock label={t.common.loading} />}
+      {data.status === "ready" && profile.status === "loading" && <LoadingBlock label={t.common.loading} />}
     </Page>
   );
 }

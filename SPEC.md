@@ -116,7 +116,7 @@ The profile stores three levels (`levels: { words, sentences, tests }`, each A1â
 
 A session reads the profile each time it is built, so a change on the Play page applies to the very next game. A stage draws from its world's categories **at the learner's level**. It widens to the nearest levels (one below, one above, â€¦) only when fewer words than the stage needs remain. The shuffle-bag key includes the levels used, so a change starts a fresh pass. The game header shows the session's level.
 
-On the first visit (`levelSource = null`), `/play` sends the learner to `/welcome`. There they can choose a level (each comes with a one-line Arabic description), take the placement test, or skip (A2). A signed-in learner on a new device is redirected only after the first sync, so a level stored in the account is not asked for again.
+On the first visit (`levelSource = null`), any page except `/welcome`, privacy, credits, offline, auth and sign-in sends the learner to `/welcome?next=<that page>`, without showing the page first, and returns them there afterwards (DECISIONS L1). "Test my level" is the primary action. There they can choose a level (each comes with a one-line Arabic description), take the placement test, or skip (A2). A signed-in learner on a new device is redirected only after the first sync, so a level stored in the account is not asked for again.
 
 The placement test is 16 "pick the right spelling" items (about 3 minutes). It is adaptive: a staircase moves up after a right answer and down after a wrong one, and the step halves at each reversal. It ends with the level and a one-line explanation. Its result, or the chosen level, sets all three levels. Settings offer "retake the placement test".
 

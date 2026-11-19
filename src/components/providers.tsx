@@ -6,12 +6,14 @@ import { RepositoriesProvider } from "@/repositories/provider";
 import { ServiceWorkerRegistration } from "./service-worker";
 import { AchievementToast } from "@/features/rewards/achievement-toast";
 import { AccountProvider } from "@/features/account/account-provider";
+import { FirstVisitGate } from "@/features/levels/first-visit-gate";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <I18nProvider>
       <RepositoriesProvider>
         <AccountProvider>
+          <FirstVisitGate />
           {children}
           <ServiceWorkerRegistration />
           <AchievementToast />
