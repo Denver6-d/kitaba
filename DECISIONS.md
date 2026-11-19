@@ -633,3 +633,12 @@ The owner asked for a full dictionary, a large graded word set and tens of thous
     - the decision table: no level, levels, loading, timeout, blocked storage, signed-in sync;
     - the pre-paint script itself, run in a VM, including blocked storage;
     - the welcome buttons' order and variants.
+
+## Google sign-in behind a flag (2026-11-20)
+
+- **O5. Google is hidden unless `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true`.**
+  - **Why.** The Google provider is not configured for this project yet, so its button could only fail.
+  - **How.** `enabledOAuthProviders` in `lib/auth-redirect.ts` (pure, tested) keeps Google only when the flag is exactly `true` (surrounding spaces ignored). Anything else, or no value, hides it. GitHub and email sign-in are always shown when Supabase is configured.
+  - **Build time.** The flag is read by its literal name, so Next.js inlines it at build time. Changing it needs a rebuild.
+  - **Documentation.** It is a public switch with no secret. `.env.example` lists the key without a value, and the README documents it in English and in the Arabic OAuth steps (step 3: show the Google button).
+  - **Unchanged.** The OAuth flow itself (O1, O3, O4), the callback page and the privacy text ("if you sign in with Google or GitHub") stay as they were.

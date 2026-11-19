@@ -13,6 +13,19 @@ export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
 
 export const PROVIDER_LABELS: Readonly<Record<OAuthProvider, string>> = { google: "Google", github: "GitHub" };
 
+/**
+ * Providers shown on the sign-in screen. GitHub always; Google only when
+ * NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN is exactly "true" (default off), because a
+ * Google button for a project without the Google provider set up only fails.
+ * Email sign-in is separate and always shown.
+ */
+export function enabledOAuthProviders(googleFlag: string | undefined): readonly OAuthProvider[] {
+  return OAUTH_PROVIDERS.filter((p) => p !== "google" || googleFlag?.trim() === "true");
+}
+
+/** Read with the literal name, so Next.js inlines the public value at build time. */
+export const ENABLED_OAUTH_PROVIDERS: readonly OAuthProvider[] = enabledOAuthProviders(process.env.NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN);
+
 export const isOAuthProvider = (v: unknown): v is OAuthProvider => typeof v === "string" && (OAUTH_PROVIDERS as readonly string[]).includes(v);
 
 /** The callback URL for this site; null when the origin is not a plain http(s) origin. */

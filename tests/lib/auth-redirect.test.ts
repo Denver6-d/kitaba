@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { callbackProblem, callbackUrl, isOAuthProvider, OAUTH_PROVIDERS } from "@/lib/auth-redirect";
+import { readFileSync } from "node:fs";
+import { callbackProblem, callbackUrl, ENABLED_OAUTH_PROVIDERS, enabledOAuthProviders, isOAuthProvider, OAUTH_PROVIDERS } from "@/lib/auth-redirect";
 
 describe("OAuth providers", () => {
   it("offers Google and GitHub only (no Apple)", () => {
@@ -71,5 +72,25 @@ describe("callbackProblem edges", () => {
   });
   it("treats an empty error parameter as a failure, not as no error", () => {
     expect(callbackProblem(q("error="))).toBe("failed");
+  });
+});
+
+describe("Google sign-in flag (NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN)", () => {
+  it("hides Google by default and keeps GitHub", () => {
+    expect([...enabledOAuthProviders(undefined)]).toEqual(["github"]);
+    expect([...enabledOAuthProviders("")]).toEqual(["github"]);
+  });
+  it("shows Google only for exactly true", () => {
+    expect([...enabledOAuthProviders("true")]).toEqual(["google", "github"]);
+    expect([...enabledOAuthProviders(" true ")]).toEqual(["google", "github"]);
+    for (const v of ["false", "1", "yes", "TRUE", "True", "on"]) expect([...enabledOAuthProviders(v)], v).toEqual(["github"]);
+  });
+  it("is off in this build when the flag is not set", () => {
+    if (process.env.NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN === undefined) expect(ENABLED_OAUTH_PROVIDERS).not.toContain("google");
+    expect(ENABLED_OAUTH_PROVIDERS).toContain("github");
+  });
+  it("reads the flag by its literal name, so Next.js inlines it at build time", () => {
+    const src = readFileSync(new URL("../../src/lib/auth-redirect.ts", import.meta.url), "utf8");
+    expect(src).toContain("process.env.NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN");
   });
 });

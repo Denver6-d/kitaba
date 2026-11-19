@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAccount } from "./account-provider";
 import {
   callbackUrl,
-  OAUTH_PROVIDERS,
+  ENABLED_OAUTH_PROVIDERS,
   PROVIDER_LABELS,
   type OAuthProvider,
 } from "@/lib/auth-redirect";
@@ -40,7 +40,10 @@ export function useAuthErrorText() {
   };
 }
 
-/** Google and GitHub sign-in (Supabase OAuth with PKCE). Client ids and secrets live only in the Supabase dashboard. */
+/**
+ * GitHub sign-in, and Google when NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true (Supabase OAuth with PKCE).
+ * Client ids and secrets live only in the Supabase dashboard.
+ */
 function OAuthButtons() {
   const { t } = useI18n();
   const { client } = useAccount();
@@ -73,7 +76,7 @@ function OAuthButtons() {
   };
   return (
     <div className="space-y-3">
-      {OAUTH_PROVIDERS.map((p) => (
+      {ENABLED_OAUTH_PROVIDERS.map((p) => (
         <Button
           key={p}
           type="button"

@@ -23,7 +23,7 @@ The app answers one question for Arabic speakers: **"can I spell English words c
 - As a learner, I hear a sentence or a longer message read one sentence at a time, type it, and see a word-by-word comparison.
 - As a returning learner, I keep my daily streak, play the daily challenge and review my own mistakes when they are due.
 - As a learner who wants to compete, I opt in to a weekly leaderboard under a nickname and can leave any time.
-- As a returning user, I sign in with Google, GitHub or email, my guest progress is merged, and I sync across devices.
+- As a returning user, I sign in with GitHub or email (or Google, once it is switched on), my guest progress is merged, and I sync across devices.
 
 ## 2. Capability map
 
@@ -37,7 +37,7 @@ The app answers one question for Arabic speakers: **"can I spell English words c
 | `campaign` | 8 worlds × 10 stages, stars, unlocks, bosses, daily challenge |
 | `levels` | Three stored learner levels (words, sentences/messages, tests), first-visit welcome, adaptive placement test (§6.6) |
 | `progress` | XP, levels, streaks, daily goal, achievements, stats |
-| `accounts` | Supabase auth (Google and GitHub OAuth, email), offline-tolerant sync, first-login merge, sign-out, account deletion |
+| `accounts` | Supabase auth (GitHub OAuth, Google OAuth behind `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN`, email), offline-tolerant sync, first-login merge, sign-out, account deletion |
 | `leaderboard` | Opt-in nickname, weekly spelling score, RPC submission with plausibility checks |
 | `writing` | Sentences and messages (§6.7): free writing with an on-device spell checker, sentence and message dictation, mistakes to SM-2, history |
 

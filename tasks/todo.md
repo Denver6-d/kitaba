@@ -66,3 +66,6 @@
 ## First-visit level screen
 - [x] Central client-side redirect to /welcome on the first visit from any gated page, no flash, return to the page asked for, safe `next`, no loop, cloud levels respected, blocked storage shows the page (L1)
 - [x] "Test my level" primary; tests; Arabic checklist
+
+## Google sign-in flag
+- [x] Google hidden unless NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true; GitHub and email always shown; .env.example, README (en/ar), tests (O5)
