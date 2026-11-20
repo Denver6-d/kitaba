@@ -17,7 +17,7 @@ export function WelcomeView() {
   // The page the visitor first asked for (same-origin path only, never /welcome).
   const next = returnPath(params.get("next"));
   return (
-    <div className="mx-auto max-w-3xl px-4 pt-10 pb-10 sm:px-6 sm:pt-14">
+    <div className="mx-auto max-w-3xl px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
       <h1 className="sr-only">{t.welcome.title}</h1>
       {hydrated ? <Welcome startWithTest={params.get("test") === "1"} next={next} onSkip={() => router.replace(next)} /> : <LoadingBlock label={t.common.loading} />}
     </div>

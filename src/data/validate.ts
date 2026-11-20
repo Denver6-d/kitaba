@@ -60,7 +60,11 @@ export function validateContent(words: readonly SpellingWord[], requiredIds: rea
   }
 
   for (const id of requiredIds) if (!seenIds.has(id)) issues.push(`${id}: V1 word is missing (its SRS cards would be orphaned)`);
-  for (const c of SPELLING_CATEGORIES) if (!CATEGORY_INFO[c]) issues.push(`category ${c}: no rule text`);
+  for (const c of SPELLING_CATEGORIES) {
+    const info = CATEGORY_INFO[c];
+    if (!info) issues.push(`category ${c}: no rule text`);
+    else if (!/[؀-ۿ]/.test(info.trick.ar) || info.trick.en.trim() === "") issues.push(`category ${c}: no memory trick`);
+  }
 
   const byCategory = Object.fromEntries(SPELLING_CATEGORIES.map((c) => [c, words.filter((w) => w.category === c).length]));
   const byLevel = Object.fromEntries(LEVELS.map((l) => [l, words.filter((w) => w.level === l).length]));

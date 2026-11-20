@@ -11,6 +11,9 @@ import { checkText, isMistake, type Speller } from "@/domain/writing/check";
 import { loadBlocklist } from "../../scripts/content/lib/text.mjs";
 import { realSpeller } from "../helpers/speller";
 
+/** These two read the whole library and can exceed the 5 s default on a slower or busy machine (DECISIONS R11). */
+const SLOW_DATA_TEST_MS = 60_000;
+
 /**
  * The open-data library in public/content/v1 (DECISIONS "Open data"). Part of
  * `npm run validate:content`: every chunk must match its schema and its hash,
@@ -98,7 +101,7 @@ describe("open-data library: words", () => {
       expect(findWordToken(ex![0].split(" "), w.word), `${w.word} in "${ex![0]}"`).not.toBe(-1);
     }
     expect(withExample / library.length).toBeGreaterThan(0.9);
-  });
+  }, SLOW_DATA_TEST_MS);
 
   it("gives every one of the 3,000 most frequent words a reviewed Arabic hint (phase D)", () => {
     const missing = library.filter((w) => w.rank <= 3000 && !w.extra?.ar).map((w) => w.word);
@@ -167,7 +170,7 @@ describe("open-data library: sentences", () => {
         if (i > 0 && t !== low && !/^I'/.test(t)) expect(names.has(t.replace(/'s$/, "")), `"${t}" in ${s.text}`).toBe(true);
       }
     }
-  });
+  }, SLOW_DATA_TEST_MS);
 
   it("spell-checks clean with the app's own checker and the real dictionary", () => {
     const flagged = [...sentences, ...examples]

@@ -23,7 +23,23 @@ type Phase =
   | { readonly kind: "done"; readonly session: BuiltSession; readonly outcome: FinishOutcome | null; readonly saveFailed: boolean };
 
 /** Builds a session for a request, plays it, saves it and shows the result. "Again" builds a fresh round. */
-export function GameRunner({ request, title, emptyText, emptyAction }: { request: GameRequest; title: string; emptyText?: string; emptyAction?: React.ReactNode }) {
+export function GameRunner({
+  request,
+  title,
+  meta = null,
+  exitHref = "/play",
+  onExit,
+  emptyText,
+  emptyAction,
+}: {
+  request: GameRequest;
+  title: string;
+  meta?: string | null;
+  exitHref?: string;
+  onExit?: () => void;
+  emptyText?: string;
+  emptyAction?: React.ReactNode;
+}) {
   const { t } = useI18n();
   const { repos, outbox } = useRepoContext();
   const [settings] = useSettings();
@@ -86,7 +102,7 @@ export function GameRunner({ request, title, emptyText, emptyAction }: { request
     // Arabic hints fade as a word is mastered; sound-alikes keep theirs (the meaning tells them apart).
     const showMeaning = (wordId: string) => !extra?.has(wordId) && (words.get(wordId)?.category === "homophones" || hintLevel(mastery[wordId] ?? 0) !== "none");
     return (
-      <GameSession key={phase.round} items={phase.session.items} config={phase.session.config} words={words} onFinish={onFinish} title={title} showMeaning={showMeaning} level={phase.session.level} />
+      <GameSession key={phase.round} items={phase.session.items} config={phase.session.config} words={words} onFinish={onFinish} title={title} showMeaning={showMeaning} level={phase.session.level} meta={meta} exitHref={exitHref} onExit={onExit} />
     );
   }
 
@@ -101,6 +117,8 @@ export function GameRunner({ request, title, emptyText, emptyAction }: { request
       timed={phase.session.config.durationMs !== null}
       isStage={stageId !== null && parseStageId(stageId) !== null}
       nextHref={next ? `/play/game?stage=${next}` : null}
+      title={title}
+      meta={meta}
       onAgain={() => {
         setPhase({ kind: "loading" });
         setRound((r) => r + 1);

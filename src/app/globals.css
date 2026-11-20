@@ -363,3 +363,56 @@ html[data-gate="pending"] main::before {
 html[data-motion="reduce"][data-gate="pending"] main::before {
   animation: none;
 }
+
+/* ---------------------------------------------------------------------------
+   Game screens (DESIGN.md V3, phase B). Every animation here ends in a still
+   state, so the reduced-motion rule above turns it into an instant change.
+   ------------------------------------------------------------------------- */
+
+/* The audio button's slow expanding rings. They stop once the learner starts typing. */
+.audio-rings::before,
+.audio-rings::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1.5px solid var(--gold);
+  opacity: 0;
+  pointer-events: none;
+}
+.audio-rings[data-ringing="true"]::before {
+  animation: audio-ring 2.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+.audio-rings[data-ringing="true"]::after {
+  animation: audio-ring 2.8s cubic-bezier(0.2, 0.6, 0.3, 1) 1.4s infinite;
+}
+@keyframes audio-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+/* A letter box lights up gold as its letter is typed, then settles. */
+.letter-in {
+  animation: letter-in 700ms ease-out both;
+}
+@keyframes letter-in {
+  0% {
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: scale(0.94);
+  }
+  18% {
+    transform: scale(1);
+  }
+  100% {
+    border-color: var(--line-strong);
+    color: var(--fg);
+    transform: none;
+  }
+}

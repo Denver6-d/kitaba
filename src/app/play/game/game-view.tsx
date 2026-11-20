@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { isStageUnlocked, parseStageId, stageDef } from "@/domain/games/campaign";
 import { useI18n } from "@/i18n";
 import { useRepoQuery } from "@/repositories/provider";
@@ -12,17 +12,18 @@ import { GameRunner } from "@/features/games/game-runner";
 import { parseGameRequest } from "@/features/games/parse-request";
 
 export function GameView() {
-  const { t, lang, dir } = useI18n();
+  const { t, lang } = useI18n();
   const params = useSearchParams();
   const request = parseGameRequest(params);
   const stages = useRepoQuery((r) => r.games.stages());
-  const Back = dir === "rtl" ? ChevronRight : ChevronLeft;
 
   let title: string;
+  let meta: string | null = null;
   if (request.kind === "stage") {
     const def = stageDef(request.id);
     const p = parseStageId(request.id);
-    title = def && p ? `${def.world.name[lang]} · ${def.boss ? t.play.boss : t.play.stage(p.stage)}` : t.play.title;
+    title = def ? def.world.name[lang] : t.play.title;
+    if (def && p) meta = `${t.play.world(p.world)} / ${def.boss ? t.play.boss : t.play.stage(p.stage)}`;
   } else if (request.kind === "daily") title = t.play.daily;
   else if (request.kind === "review") title = t.review.title;
   else title = t.modes[request.mode]?.name ?? t.play.freePlay;
@@ -43,14 +44,10 @@ export function GameView() {
         {t.play.lockedHint}
       </EmptyBlock>
     );
-  } else body = <GameRunner key={JSON.stringify(request)} request={request} title={title} />;
+  } else body = <GameRunner key={JSON.stringify(request)} request={request} title={title} meta={meta} />;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pt-6 pb-10 sm:px-6 sm:pt-10">
-      <Link href="/play" className="mb-4 inline-flex min-h-11 items-center gap-1 rounded-md text-fg-2 hover:text-fg">
-        <Back className="size-4" aria-hidden="true" />
-        {t.game.backToMap}
-      </Link>
+    <div className="mx-auto max-w-3xl px-4 pt-6 pb-16 sm:px-6 sm:pt-10">
       <h1 className="sr-only">{title}</h1>
       {body}
     </div>

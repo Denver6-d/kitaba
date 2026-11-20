@@ -23,6 +23,8 @@ import { useI18n } from "@/i18n";
 import { useSettings } from "@/lib/settings-store";
 import { Button } from "@/components/ui/button";
 import { bankSpellings } from "@/features/games/build-session";
+import { GameHeading, GameTopBar } from "@/features/games/ui/game-top-bar";
+import { CorrectLine } from "@/features/games/ui/correction";
 
 /** British/American pairs depend on the chosen variant, so they stay out of the placement test. */
 const PLACEMENT_WORDS: readonly SpellingWord[] = spellingWords.filter((w) => w.category !== "british-american");
@@ -59,7 +61,7 @@ interface Run {
  * question at a time, harder after a right answer and easier after a wrong one.
  * Render it only on the client, after the learner asked for it (it is random).
  */
-export function PlacementTest({ seed, onDone }: { seed: number; onDone: (r: PlacementResult) => void }) {
+export function PlacementTest({ seed, onDone, onExit }: { seed: number; onDone: (r: PlacementResult) => void; onExit: () => void }) {
   const { t } = useI18n();
   const [settings] = useSettings();
   const [rng] = useState(() => seededRng(seed));
@@ -97,23 +99,17 @@ export function PlacementTest({ seed, onDone }: { seed: number; onDone: (r: Plac
   const n = state.answers.length + 1;
 
   return (
-    <section aria-labelledby="placement-h" className="panel space-y-6 p-5 sm:p-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id="placement-h" className="text-2xl font-light">
-          {t.placement.title}
-        </h2>
-        <p className="text-sm text-fg-2 tabular">{t.placement.progress(n, PLACEMENT_ITEMS)}</p>
-      </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-        <div className="h-full rounded-full bg-gold transition-[width]" style={{ width: `${((n - 1) / PLACEMENT_ITEMS) * 100}%` }} />
-      </div>
-      <div className="space-y-1">
-        <p className="text-lg font-semibold">{t.placement.question}</p>
-        <p className="text-fg-2">
-          {t.placement.meaning}: <span lang="ar">{word.ar}</span>
+    <section aria-labelledby="placement-h" className="mx-auto max-w-2xl space-y-8 pt-2 sm:space-y-10">
+      <GameTopBar exitHref="/welcome" onExit={onExit} exitLabel={t.placement.quit} progress={(n - 1) / PLACEMENT_ITEMS} progressLabel={t.placement.progress(n, PLACEMENT_ITEMS)} />
+      <GameHeading id="placement-h" title={t.placement.title} meta={t.placement.progress(n, PLACEMENT_ITEMS)} />
+      <div className="space-y-2 text-center">
+        <p className="text-fg-2">{t.placement.question}</p>
+        <p className="text-lg">
+          <span className="text-fg-3">{t.placement.meaning}: </span>
+          <span lang="ar">{word.ar}</span>
         </p>
         {item.context && (
-          <p dir="ltr" lang="en" className="text-fg-2">
+          <p dir="ltr" lang="en" className="text-xl">
             {item.context}
           </p>
         )}
@@ -127,14 +123,14 @@ export function PlacementTest({ seed, onDone }: { seed: number; onDone: (r: Plac
                 type="button"
                 disabled={answered}
                 onClick={() => setPicked(o)}
-                className={`flex min-h-14 w-full items-center gap-3 rounded-[10px] border-2 px-4 text-start font-word text-xl sm:text-2xl ${
+                className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border px-4 text-start font-word text-[clamp(1.25rem,4.5vw,1.5rem)] transition-colors ${
                   look === "right"
                     ? "border-fg bg-raised text-fg"
                     : look === "wrong"
-                      ? "border-error bg-error-tint text-error line-through"
+                      ? "border-error border-dashed text-error line-through"
                       : look === "dim"
-                        ? "border-line opacity-50"
-                        : "border-line-strong bg-canvas hover:border-fg-2"
+                        ? "border-line text-fg-3"
+                        : "border-line-strong bg-surface hover:border-fg-2 hover:bg-raised"
                 }`}
               >
                 {o}
@@ -147,17 +143,21 @@ export function PlacementTest({ seed, onDone }: { seed: number; onDone: (r: Plac
       <div className="flex min-h-14 flex-wrap items-center justify-between gap-3" aria-live="polite">
         {answered && (
           <>
-            <p className={`font-semibold ${right ? "text-fg" : "text-error"}`}>
-              {right ? t.placement.correct : t.placement.wrong("")}
-              {!right && (
-                <span dir="ltr" lang="en" className="font-word">
+            {right ? (
+              <CorrectLine text={t.placement.correct} />
+            ) : (
+              <p className="text-lg">
+                <span className="text-fg-2">{t.placement.wrong("")}</span>
+                <span dir="ltr" lang="en" className="font-word text-xl">
                   {item.answer}
                 </span>
-              )}
-            </p>
+              </p>
+            )}
             <Button
               ref={nextRef}
-              className="h-11 px-6"
+              variant="primary"
+              size="lg"
+              className="w-full sm:w-auto sm:min-w-40"
               onClick={() => advance(right)}
             >
               {t.common.next}

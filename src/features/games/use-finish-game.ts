@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { starsFor, starsForTimed, summarize, xpForGame, type GameState, type GameSummary } from "@/domain/games/engine";
 import { levelInfo } from "@/domain/progress/levels";
+import { currentStreak, dayKey } from "@/domain/progress/streak";
 import type { StageRecord } from "@/domain/model";
 import { useRepos } from "@/repositories/provider";
 import type { SubmitStatus } from "@/repositories/types";
@@ -19,6 +20,8 @@ export interface FinishOutcome {
   readonly xp: number;
   /** Set when this game moved the learner up a level. */
   readonly levelUp: number | null;
+  /** The daily streak after this game (the result screen shows it). */
+  readonly streak: number;
   /** Resolves when the leaderboard answers (null when nothing was sent). */
   readonly leaderboard: Promise<SubmitStatus | null>;
 }
@@ -40,7 +43,8 @@ export function useFinishGame(): (session: BuiltSession, state: GameState) => Pr
             ? starsForTimed(summary.accuracy, summary.correct)
             : starsFor(summary.accuracy, summary.answered, session.boss);
       const xp = xpForGame(summary, stars ?? 0);
-      const xpBefore = (await repos.activity.list()).reduce((n, a) => n + a.xp, 0);
+      const activityBefore = await repos.activity.list();
+      const xpBefore = activityBefore.reduce((n, a) => n + a.xp, 0);
       const { previous, best } = await repos.games.saveSession(
         {
           mode: session.mode,
@@ -56,11 +60,14 @@ export function useFinishGame(): (session: BuiltSession, state: GameState) => Pr
         stars ?? 0,
       );
       await repos.activity.log(session.mode === "review" ? "review" : "game", summary.seconds, xp);
+      // The game just logged today, so today counts towards the streak.
+      const today = dayKey(new Date());
+      const streak = currentStreak([...activityBefore.map((a) => a.day), today], today);
       await checkAchievements();
       const before = levelInfo(xpBefore).level;
       const after = levelInfo(xpBefore + xp).level;
       const leaderboard = submit({ points: summary.points, correct: summary.correct, total: summary.answered, durationS: summary.seconds });
-      return { summary, stars, previous, best, xp, levelUp: after > before ? after : null, leaderboard };
+      return { summary, stars, previous, best, xp, levelUp: after > before ? after : null, streak, leaderboard };
     },
     [repos, checkAchievements, submit],
   );

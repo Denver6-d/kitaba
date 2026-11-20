@@ -668,3 +668,41 @@ The owner approved a full visual redesign (DESIGN.md V3 replaces the V1/V2 direc
   - **`AlertDialogAction` defaults to `outline`** (gold is never a default, R5). The "clear all data" confirmation is `destructive`.
   - **Smaller fixes.** Dialog footers reach the edges again after the padding change. The raw radius variables were renamed (`--card-radius`…) so `@theme` no longer refers to itself. The result stars animate `fillOpacity` on the gold token instead of the old brass value. The switch thumb travels its full track. The remaining decorative gold went neutral: combo, "new best", XP, level-up, the demo label, the welcome level codes (now also `lang="en"`). The icon's colours are now tested against the tokens.
   - **Kept, on purpose.** The Google mark keeps Google's brand colours, the one place raw hex colours are allowed. `Card`, `MomentLabel`, `LevelChip` and `Field` have few callers yet; phase B builds the welcome, game, correction and result screens on them. The in-game level chips use `chipVariants` rather than `LevelChip`, because they hold an Arabic screen-reader prefix that must not be marked `lang="en"`.
+- **R11. Two slow data tests get a longer timeout (owner's call).** `tests/data/library.test.ts` reads the whole open-data library in two tests ("links every example inside the word's own chunk…" and "contains no blocked word…"). On a slower or busy machine they passed Vitest's 5 s default. Only those two now take a 60 s timeout (`SLOW_DATA_TEST_MS`); every other test keeps the default. `.env.example` lost its two GitHub lines (R7), with the owner's go-ahead.
+
+### Phase B: welcome, game, correction and result screens
+
+- **R12. Letter boxes show typed letters only.** The brief asks for letter boxes that light up as the learner types. Empty boxes for the whole word would tell the learner how many letters it has, which gives away part of the answer in a spelling test (and differs between US and UK spellings). So a box appears when its letter is typed, lights up gold, then settles; one dashed box marks where the next letter goes. The boxes mirror the labelled input and are hidden from screen readers, which read the input. Missing Letters and Word Scramble already show the length, so nothing changes there. After Check the boxes give way to "You wrote".
+- **R13. The audio button is gold.** The brief names "a big round gold audio button" as well as a gold Check. R5's "one gold button per screen" is about the pill actions (Check, Next, Start…), and there is still exactly one of those at a time. The round audio button is the prompt itself, the thing the learner listens to. Its rings stop as soon as the learner types, so nothing moves during typing.
+- **R14. Game layout.** The game no longer sits in a card: it uses the canvas, centred, at most 42 rem wide.
+  - **Top row:** close (×), the thin gold progress bar (an ARIA progressbar), and the level chip. A combo chip appears from ×2. Timed rounds put the score and the clock where the bar would be.
+  - **Under it:** the title (the world's name for a stage, otherwise the mode), then "World 3 / Stage 2 / Word 4 of 10".
+  - **Close.** The "back to the map" link above the game is gone; the close button replaces it. On `/review`, where the session is embedded in the page, close ends the session through a callback (`onExit`), because a link to the same route would not reset it. The placement test uses the same top row; its close returns to the welcome menu.
+  - **Score.** A small score chip sits beside the combo and level chips in untimed rounds; timed rounds show the score and the clock in place of the bar.
+  - **After Check** the big audio button and its pills step aside, so the only gold controls are the correction's small audio button and Next.
+  - **The input** has a visible label above it ("Type the word"). It stays the same single mounted element (B1). Every button around it keeps `keepInputFocus`, including the audio button.
+- **R15. Correction.**
+  - "You wrote" shows the learner's own letters: wrong and extra letters are struck through in the error colour, and a missing letter is an error caret with a wavy underline. Each mark carries screen-reader text ("missing letter"…).
+  - The correct spelling is large, in Inter. The letters the learner got wrong or left out are gold and underlined, with screen-reader text. `correctionRuns` (`domain/spelling/correction.ts`, pure, tested) derives them from the existing letter diff. When the learner wrote nothing ("I don't know"), no letter is singled out.
+  - The mint rule card holds the rule's name, the rule, a memory trick and the word's example sentence. Every one of the 15 rule categories now has an original memory trick in Arabic and English (`trick` in `data/rules.ts`), and content validation fails without one. The card ends with "Added to your review" and the next review date.
+  - Sentences show the correct sentence and no rule card (a sentence has no single rule).
+  - A right answer gets a check in a ring and one line, nothing louder.
+- **R16. Stage result.** A mint card holds the stars (gold with a dark-gold edge, so they keep an outline on mint), "World 1 / Stage 1" as its label, the heading, the next-star line and three tiles: accuracy, XP and the daily streak. `nextStarGoal` (pure, tested against `starsFor`) words the next-star line, including the word counts for timed rounds. It counts from the stage's best, so a learner who already holds three stars is not told to earn a second. The streak is computed when the game is saved (`FinishOutcome.streak`). Points and best combo left the result: the owner's design names three tiles. The words going to review are pills with their Arabic meaning. Gold "Next stage" sits beside outline "Replay" (or gold "Replay" when there is no next stage), with a quiet link to the map.
+- **R17. Welcome.** A small label, then the heading "Let's find your spelling level first" and one line. The five level chips are a static preview, a list labelled "Levels A1 to C1". Below them come the big gold "Test my level" (described by its "3 minutes, recommended" tag), the outline "I choose my level" and a quiet "Skip for now (A2)". Choosing a level lists the levels as cards with their chip. The placement result is a mint moment card with one gold "Start playing". The gentle breathing of the gold button is phase C (motion).
+- **R18. Phase B review fixes.** A code reviewer ran as a separate, report-only agent. It confirmed that the single answer field stays mounted and that every new button keeps focus in it (B1). What changed:
+  - **Empty correct spelling (fixed).** In "fix the mistake", picking the wrong word and then typing it correctly is marked wrong with an empty letter diff, and the big correct spelling rendered blank. `correctionRuns` now falls back to the plain word whenever its runs do not spell the expected word (empty diff, or the other US/UK form). Tested.
+  - **Hint before the pick (fixed).** The Arabic meaning showed while the learner was still hunting for the misspelled word in "fix the mistake", which pointed at it. It now appears only after the pick.
+  - **Score in untimed rounds restored** as a small chip, so the combo multiplier has a score to multiply (R14).
+  - **Smaller fixes.**
+    - The big audio button hides after Check.
+    - The next-star line counts from the stage's best result.
+    - Timed goals ignore the boss threshold, as `starsForTimed` does.
+    - A right answer still credits its Tatoeba example (CC BY).
+    - Only the result's heading and goal are a live region; the counting numbers are outside it.
+    - The streak reuses the activity list read for XP.
+    - The credit line takes its colour as a prop, so on mint it cannot fall back to `fg-2`.
+    - The letter boxes lost their unused verdict tones.
+  - **Kept.**
+    - The "Word N of M" line also counts sentence items in boss rounds.
+    - The game's sr-only h1 repeats the visible title, so every state of the page has an h1.
+    - Loading and empty states have no close button; the empty state links back to Play.

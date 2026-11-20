@@ -6,9 +6,9 @@ import { tatoebaUrl, type TatoebaCredit } from "@/data/play-word";
  * author's name and a link): "Tatoeba #1276 · CK", linked to the sentence.
  * The licence itself is named on /credits, which is linked from the menu.
  */
-export function TatoebaCreditLine({ credit, className = "" }: { credit: TatoebaCredit; className?: string }) {
+export function TatoebaCreditLine({ credit, className = "", tone = "text-fg-2" }: { credit: TatoebaCredit; className?: string; tone?: string }) {
   return (
-    <p dir="ltr" lang="en" className={`text-xs text-fg-2 ${className}`}>
+    <p dir="ltr" lang="en" className={`text-xs ${tone} ${className}`}>
       <a href={tatoebaUrl(credit.id)} target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">
         Tatoeba #{credit.id} · {credit.author}
       </a>{" "}

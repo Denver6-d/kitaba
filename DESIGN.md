@@ -2,7 +2,7 @@
 
 > **V3, "calm luxury" (owner-approved, 2026-11-20).** This replaces the V1/V2 direction ("ink on a ruled line", light and dark themes, malachite and brass). It takes the restraint of linear.app as a reference for discipline, not for looks: our identity is a deep green-black canvas, one warm gold, light mint "moment" cards and big, light type. The V2 text is in git history. Decisions: DECISIONS.md, section "Redesign".
 >
-> Rollout: phase A (tokens, fonts, dark only, digits, header and menu, shared components) is done. Phase B (welcome, game, correction and result screens) and phase C (landing, motion, sound and haptics, mobile pass) follow; the screen and motion specs below are their brief.
+> Rollout: phase A (tokens, fonts, dark only, digits, header and menu, shared components) and phase B (welcome, game, correction and result screens; DECISIONS R12–R17) are done. Phase C (landing, motion, sound and haptics, mobile pass) follows; the landing and motion specs below are its brief.
 
 `src/app/globals.css` implements the tokens. Components use the Tailwind names (`bg-canvas`, `text-fg-2`, `bg-gold`…) and never a raw hex value. The few colours that must exist outside CSS (browser chrome, manifest, icon) live in `src/config/theme.ts`, and a test keeps them equal to the CSS.
 
@@ -78,7 +78,7 @@ No gradients, no glow washes, no glassmorphism, no emoji. The header, the bottom
 
 ## Screens (phases B and C)
 1. **First-visit welcome:** small label, a large light heading ("let us find your spelling level first"), one short line, the level chips A1–C1 as a preview, one big gold pill "Test my level" with a small "3 minutes, recommended" tag, an outline pill "I choose my level", a quiet link "Skip for now (A2)". The gold button breathes gently.
-2. **Game screens:** top row with a close button, a thin gold progress bar and the level chip; title and "world / stage / word N of 10"; a big round gold audio button with slow expanding rings; "slower" and "in a sentence" pills; letter boxes that light up one by one as the learner types; the hint line; a labelled input; a gold "Check".
+2. **Game screens:** top row with a close button, a thin gold progress bar and the level chip; title and "world / stage / word N of 10"; a big round gold audio button with slow expanding rings; "slower" and "in a sentence" pills; letter boxes that light up one by one as the learner types; the hint line; a labelled input; a gold "Check". Letter boxes appear for typed letters only, so they never reveal the word's length (DECISIONS R12).
 3. **Correction:** the learner's answer with the wrong letters struck through or underlined in the error colour; the correct spelling with the key letters in gold and an audio button; a mint rule card (rule title, a short Arabic explanation with a memory trick, an example sentence); "added to your review"; a gold "Next".
 4. **Stage result:** a mint card with 1–3 stars, the stage name, a heading, how to earn the next star, three stat tiles (accuracy, XP, streak); the words going to review as pills; gold "Next stage" and outline "Replay".
 5. **Landing:** header; hero with a large light heading about mastering English spelling word by word, a short line, gold "Test my level" and outline "Try a round", beside a real live mini game card on wide screens (a word typed letter by letter, the audio button, a mint rule card); "three steps in every round"; the path of 8 worlds; the mint honest banner (we teach spelling, we do not promise fluency or check grammar); a minimal footer. Word and sentence counts are never shown.

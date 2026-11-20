@@ -194,3 +194,17 @@ export function starsForTimed(accuracy: number, correct: number): number {
 export function xpForGame(summary: GameSummary, stars: number): number {
   return summary.correct * 3 + (summary.answered - summary.correct) + stars * 5;
 }
+
+/** What the learner needs for the next star (DESIGN.md V3, stage result). Null once all three are earned. */
+export type NextStarGoal =
+  | { readonly star: 1 | 2 | 3; readonly kind: "accuracy"; readonly percent: number }
+  | { readonly star: 1 | 2 | 3; readonly kind: "words"; readonly words: number; readonly percent: number };
+
+export function nextStarGoal(stars: number, opts: { boss?: boolean; timed?: boolean } = {}): NextStarGoal | null {
+  if (stars >= 3) return null;
+  const star = (Math.max(0, stars) + 1) as 1 | 2 | 3;
+  const percent = star === 3 ? 95 : star === 2 ? 80 : opts.boss ? 70 : 60;
+  // Timed rounds ignore the boss threshold, like starsForTimed.
+  if (opts.timed) return { star, kind: "words", words: star === 3 ? 20 : star === 2 ? 15 : 10, percent: star === 1 ? 60 : percent };
+  return { star, kind: "accuracy", percent };
+}

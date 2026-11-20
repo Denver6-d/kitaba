@@ -81,7 +81,11 @@
 - [x] Pill Button (primary is never the default), Chip, Card, Field, Segmented, Switch, Tabs, dialogs; one gold action per screen
 
 ### Phase B: welcome, game, correction, result
-- [ ] Not started
+- [x] Welcome: label, light heading, level preview, gold test with tag, outline choose, quiet skip; mint placement result
+- [x] Game: top row (close, gold progress, level chip), title and world / stage / word, gold audio button with rings, slower and sentence pills, letter boxes, hint, labelled input, gold Check
+- [x] Correction: marked answer, gold key letters with audio, mint rule card with memory tricks (15 categories), review note
+- [x] Stage result: mint card with stars, next-star line, accuracy / XP / streak tiles, review pills, Next stage and Replay
+- [x] Placement test on the shared game top row; review session closes in place
 
 ### Phase C: landing, motion, sound and haptics, mobile pass, Lighthouse
 - [ ] Not started

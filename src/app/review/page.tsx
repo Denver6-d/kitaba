@@ -19,7 +19,7 @@ export default function ReviewPage() {
   return (
     <Page title={t.review.title} intro={t.review.intro} width="narrow">
       {started ? (
-        <GameRunner request={{ kind: "review" }} title={t.review.title} emptyText={t.review.nothingDue} />
+        <GameRunner request={{ kind: "review" }} title={t.review.title} onExit={() => setStarted(false)} emptyText={t.review.nothingDue} />
       ) : due.status !== "ready" ? (
         <LoadingBlock label={t.common.loading} />
       ) : due.data.length === 0 ? (

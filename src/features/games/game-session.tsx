@@ -11,10 +11,10 @@ import {
   type MouseEvent,
 } from "react";
 import { flushSync } from "react-dom";
-import { Check, Eye, Turtle, Volume2 } from "lucide-react";
+import { Check, Eye, Turtle } from "lucide-react";
 import type { PlayWord } from "@/data/play-word";
 import { TatoebaCreditLine } from "@/features/library/credit-line";
-import { CATEGORY_INFO } from "@/data/rules";
+import { CATEGORY_INFO, type CategoryInfo } from "@/data/rules";
 import {
   createGame,
   currentItem,
@@ -38,7 +38,11 @@ import {
   type AnswerInputEvent,
 } from "@/domain/spelling/answer-input";
 import { Button } from "@/components/ui/button";
-import { LetterDiff } from "./letter-diff";
+import { AudioButton } from "./ui/audio-button";
+import { LetterBoxes } from "./ui/letter-boxes";
+import { GameHeading, GameTopBar } from "./ui/game-top-bar";
+import { RuleCard } from "./ui/rule-card";
+import { AnswerMarks, CorrectionHeader, CorrectLine } from "./ui/correction";
 import { useRecordAnswer } from "./use-record-answer";
 
 interface Verdict {
@@ -60,6 +64,11 @@ interface Props {
   readonly showMeaning: (wordId: string) => boolean;
   /** The learner level this session was built for, shown next to the title. */
   readonly level?: string | null;
+  /** "World 3 / Stage 2" for campaign stages, shown under the title. */
+  readonly meta?: string | null;
+  /** Where the close button goes. */
+  readonly exitHref?: string;
+  readonly onExit?: (() => void) | undefined;
 }
 
 const TICK_MS = 250;
@@ -88,6 +97,9 @@ export function GameSession({
   title,
   showMeaning,
   level = null,
+  meta = null,
+  exitHref = "/play",
+  onExit,
 }: Props) {
   const { t, lang, num } = useI18n();
   const [settings] = useSettings();
@@ -108,6 +120,8 @@ export function GameSession({
   const areaRef = useRef<HTMLDivElement>(null);
   const finishedRef = useRef(false);
   const liveId = useId();
+  const headingId = useId();
+  const inputId = useId();
 
   const item = currentItem(game);
   const timed = config.durationMs !== null;
@@ -327,88 +341,85 @@ export function GameSession({
     item.mode === "review" ||
     item.kind === "sentence";
 
+  const progress = game.results.length / game.items.length;
+  const itemLine = t.game.itemOf(game.index + 1, game.items.length);
+  const typingStarted = input.state.value !== "";
+  // After Check the field is cleared for the next word, and "You wrote" shows the answer instead.
+  const showBoxes = showInput && item.kind !== "sentence" && !answered;
+  const tone = verdict ? (verdict.correct ? "correct" : "wrong") : "idle";
+  const meaningLine =
+    word.ar && (item.kind === "typed" || (item.kind === "fix" && fixPick !== null)) && !item.masked && !item.letters && (showMeaning(item.wordId) || answered || voice !== "ready") ? (
+      <p className="text-center text-fg-2">
+        <span className="text-fg-3">{t.game.hint}: </span>
+        <span lang="ar">{word.ar}</span>
+      </p>
+    ) : null;
+
   return (
-    <section
-      aria-label={t.game.areaLabel}
-      className="panel relative space-y-6 p-5 sm:p-8"
-    >
+    <section aria-labelledby={headingId} className="mx-auto max-w-2xl space-y-8 sm:space-y-10">
       {/* Always mounted, so screen readers announce each verdict when its text changes. */}
       <p id={liveId} className="sr-only" aria-live="polite">
-        {verdict
-          ? verdict.correct
-            ? t.game.correct
-            : `${t.game.wrong}: ${item.answer}`
-          : ""}
+        {verdict ? (verdict.correct ? t.game.correct : `${t.game.wrong}: ${item.answer}`) : ""}
       </p>
 
-      <header className="flex flex-wrap items-center justify-between gap-3 text-sm">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold">{title}</span>
-          {level && (
-            <span className={`${chipVariants({ tone: "level-active", size: "sm" })} font-latin tabular`} title={t.levels.inGame}>
-              <span className="sr-only">{t.levels.inGame}: </span>
-              {level}
-            </span>
-          )}
-          {!timed && (
-            <span className="text-fg-2 tabular">
-              {t.game.itemOf(game.index + 1, game.items.length)}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {game.combo >= 3 && (
-            <span
-              className="rounded-full bg-raised px-2.5 py-1 font-semibold text-fg tabular"
-              aria-label={t.game.comboLabel(mult)}
-            >
-              {t.game.combo(mult)}
-            </span>
-          )}
-          <span
-            className="rounded-full border border-line px-2.5 py-1 tabular"
-            aria-label={t.game.score}
-          >
-            {num(game.points)}
-          </span>
-          {timed && left !== null && (
-            <span
-              className={`rounded-full px-2.5 py-1 font-semibold tabular ${left < 10_000 ? "bg-error-tint text-error" : "bg-muted"}`}
-              aria-label={t.game.timeLeft}
-              role="timer"
-            >
-              {num(Math.ceil(left / 1000))}
-              {t.common.seconds}
-            </span>
-          )}
-        </div>
-      </header>
+      <GameTopBar
+        exitHref={exitHref}
+        onExit={onExit}
+        exitLabel={t.game.quit}
+        progress={timed ? undefined : progress}
+        progressLabel={itemLine}
+        status={
+          timed ? (
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <span className="rounded-full border border-line px-3 py-1 tabular" aria-label={t.game.score}>
+                {num(game.points)}
+              </span>
+              {left !== null && (
+                <span
+                  className={`rounded-full border px-3 py-1 font-medium tabular ${left < 10_000 ? "border-error/60 text-error" : "border-line"}`}
+                  aria-label={t.game.timeLeft}
+                  role="timer"
+                >
+                  {num(Math.ceil(left / 1000))}
+                  {t.common.seconds}
+                </span>
+              )}
+            </div>
+          ) : undefined
+        }
+        chip={
+          <div className="flex shrink-0 items-center gap-2">
+            {!timed && (
+              <span className={`${chipVariants({ tone: "neutral", size: "sm" })} tabular`} aria-label={t.game.score}>
+                {num(game.points)}
+              </span>
+            )}
+            {game.combo >= 3 && (
+              <span className={chipVariants({ tone: "neutral", size: "sm" })} aria-label={t.game.comboLabel(mult)}>
+                {t.game.combo(mult)}
+              </span>
+            )}
+            {level && (
+              <span className={`${chipVariants({ tone: "level-active", size: "sm" })} font-latin tabular`} title={t.levels.inGame}>
+                <span className="sr-only">{t.levels.inGame}: </span>
+                {level}
+              </span>
+            )}
+          </div>
+        }
+      />
 
-      {!timed && (
-        <div
-          className="h-1 overflow-hidden rounded-full bg-line"
-          aria-hidden="true"
-        >
-          <div
-            className="h-full rounded-full bg-gold transition-[width] duration-300"
-            style={{
-              width: `${(game.results.length / game.items.length) * 100}%`,
-            }}
-          />
-        </div>
-      )}
+      <GameHeading id={headingId} title={title} meta={[meta, timed ? null : itemLine].filter(Boolean).join(" / ")} />
 
       {notStarted ? (
-        <div className="space-y-4 py-6 text-center">
+        <div className="space-y-6 py-4 text-center">
           <p className="text-fg-2">{t.modes[item.mode]?.desc}</p>
-          <Button variant="primary"
+          <Button
+            variant="primary"
             size="lg"
-            className="h-12 px-8 text-base"
             onClick={() => {
               // Render the input now, then focus it inside the same tap (iOS opens the keyboard only then).
-              flushSync(() =>
-                dispatch({ type: "start", t: performance.now() }),
-              );
+              flushSync(() => dispatch({ type: "start", t: performance.now() }));
               inputRef.current?.focus();
             }}
           >
@@ -418,6 +429,52 @@ export function GameSession({
       ) : (
         <>
           <div ref={areaRef} className="space-y-6">
+            {listenLike && !answered && (
+              <div className="flex flex-col items-center gap-5">
+                {canSpeak ? (
+                  <>
+                    <AudioButton
+                      label={t.game.listen}
+                      onPlay={() => item.speak && speak(item.speak)}
+                      onMouseDown={keepInputFocus}
+                      ringing={!typingStarted && !answered}
+                    />
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Button variant="outline" size="sm" onMouseDown={keepInputFocus} onClick={() => speak(item.answer, 0.6)}>
+                        <Turtle className="size-4" strokeWidth={1.5} aria-hidden="true" />
+                        {t.game.slow}
+                      </Button>
+                      {item.kind !== "sentence" && word.example && (
+                        <Button variant="outline" size="sm" onMouseDown={keepInputFocus} onClick={() => speak(word.example ?? "")}>
+                          {t.game.example}
+                        </Button>
+                      )}
+                    </div>
+                  </>
+                ) : voice === "checking" ? (
+                  <p className="text-sm text-fg-2">{t.common.loading}</p>
+                ) : (
+                  <div className="w-full space-y-3">
+                    <p role="note" className="rounded-2xl border border-line bg-surface p-4 text-sm text-fg-2">
+                      {t.game.noVoice}
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setRevealed(true);
+                        setRevealing(true);
+                      }}
+                      disabled={revealing || answered}
+                    >
+                      <Eye className="size-4" aria-hidden="true" />
+                      {t.game.showWord}
+                    </Button>
+                  </div>
+                )}
+                {canSpeak && usingOtherAccent && <p className="text-center text-sm text-fg-2">{t.game.otherAccent}</p>}
+              </div>
+            )}
+
             <Prompt
               item={item}
               word={word}
@@ -435,91 +492,16 @@ export function GameSession({
                 sentence: t.game.sentencePrompt,
                 meaning: t.game.meaning,
               }}
-              lang={lang}
               revealing={revealing}
-              // Without a voice the meaning is the only prompt left, so it never fades then.
-              meaningShown={
-                showMeaning(item.wordId) || answered || voice !== "ready"
-              }
+              title={title}
             />
 
-            {listenLike && (
-              <div className="flex flex-wrap items-center gap-2">
-                {canSpeak ? (
-                  <>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      onMouseDown={keepInputFocus}
-                      onClick={() => item.speak && speak(item.speak)}
-                      className="h-11 gap-2 px-5"
-                    >
-                      <Volume2 className="size-5" aria-hidden="true" />
-                      {t.game.listen}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onMouseDown={keepInputFocus}
-                      onClick={() => speak(item.answer, 0.6)}
-                      className="h-11 gap-2"
-                    >
-                      <Turtle className="size-4" aria-hidden="true" />
-                      {t.game.slow}
-                    </Button>
-                    {item.kind !== "sentence" && word.example && (
-                      <Button
-                        variant="quiet"
-                        size="lg"
-                        onMouseDown={keepInputFocus}
-                        onClick={() => speak(word.example ?? "")}
-                        className="h-11"
-                      >
-                        {t.game.example}
-                      </Button>
-                    )}
-                  </>
-                ) : voice === "checking" ? (
-                  <p className="text-sm text-fg-2">{t.common.loading}</p>
-                ) : (
-                  <div className="w-full space-y-3">
-                    <p
-                      role="note"
-                      className="rounded-lg bg-raised p-3 text-sm"
-                    >
-                      {t.game.noVoice}
-                    </p>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setRevealed(true);
-                        setRevealing(true);
-                      }}
-                      disabled={revealing || answered}
-                      className="h-11 gap-2"
-                    >
-                      <Eye className="size-4" aria-hidden="true" />
-                      {t.game.showWord}
-                    </Button>
-                  </div>
-                )}
-                {canSpeak && usingOtherAccent && (
-                  <p className="w-full text-sm text-fg-2">
-                    {t.game.otherAccent}
-                  </p>
-                )}
-              </div>
+            {item.kind === "choice" && (
+              <ChoiceOptions item={item} answered={answered} picked={verdict?.answer ?? null} onPick={(o) => submit(o)} hint={t.game.choiceKeys} />
             )}
 
-            {item.kind === "choice" && (
-              <ChoiceOptions
-                item={item}
-                answered={answered}
-                picked={verdict?.answer ?? null}
-                onPick={(o) => submit(o)}
-                hint={t.game.choiceKeys}
-              />
-            )}
+            {showBoxes && <LetterBoxes value={input.state.value} />}
+            {meaningLine}
           </div>
 
           {showInput && (
@@ -530,22 +512,17 @@ export function GameSession({
               }}
               className="space-y-2"
             >
-              {item.kind === "fix" && (
-                <p className="text-sm font-medium">{t.game.fixType}</p>
-              )}
+              <label htmlFor={inputId} className="block text-sm font-medium text-fg-2">
+                {item.kind === "fix" ? t.game.fixType : item.kind === "sentence" ? t.game.typeSentence : t.game.typeHere}
+              </label>
               <SpellingInput
                 ref={inputRef}
+                id={inputId}
                 state={input.state}
                 dispatch={onInputEvent}
                 onEnter={onEnter}
-                label={
-                  item.kind === "sentence"
-                    ? t.game.typeSentence
-                    : t.game.typeHere
-                }
-                tone={
-                  verdict ? (verdict.correct ? "correct" : "wrong") : "idle"
-                }
+                label={item.kind === "fix" ? t.game.fixType : item.kind === "sentence" ? t.game.typeSentence : t.game.typeHere}
+                tone={tone}
                 describedBy={liveId}
                 size={item.kind === "sentence" ? "md" : "lg"}
                 // The input is mounted again only when switching between item kinds (mixed rounds).
@@ -559,54 +536,45 @@ export function GameSession({
               verdict={verdict}
               item={item}
               word={word}
-              rule={info.rule[lang]}
-              category={info.label[lang]}
+              info={info}
+              lang={lang}
+              onListen={canSpeak ? () => speak(item.answer, 0.85) : null}
             />
           )}
 
           {(answered || showInput) && (
-            <div className="flex flex-wrap items-center gap-3 max-sm:sticky max-sm:bottom-0 max-sm:-mx-5 max-sm:border-t max-sm:border-line max-sm:bg-surface max-sm:px-5 max-sm:py-3">
+            <div className="flex flex-wrap items-center gap-3 max-sm:sticky max-sm:bottom-0 max-sm:-mx-4 max-sm:border-t max-sm:border-line max-sm:bg-canvas max-sm:px-4 max-sm:py-3">
               {answered ? (
-                <Button variant="primary"
+                <Button
+                  variant="primary"
                   ref={nextRef}
                   size="lg"
                   onMouseDown={showInput ? keepInputFocus : undefined}
                   onClick={goNext}
-                  className="h-12 flex-1 px-8 text-base sm:flex-none"
+                  className="flex-1 sm:flex-none sm:min-w-48"
                 >
-                  {game.index + 1 >= game.items.length
-                    ? t.game.finish
-                    : t.game.next}
+                  {game.index + 1 >= game.items.length ? t.game.finish : t.game.next}
                 </Button>
               ) : (
                 showInput && (
                   <>
-                    <Button variant="primary"
+                    <Button
+                      variant="primary"
                       size="lg"
                       onMouseDown={keepInputFocus}
                       onClick={onEnter}
                       disabled={input.state.value.trim() === ""}
-                      className="h-12 flex-1 px-8 text-base sm:flex-none"
+                      className="flex-1 sm:flex-none sm:min-w-48"
                     >
                       {t.game.check}
                     </Button>
-                    <Button
-                      variant="quiet"
-                      size="lg"
-                      onMouseDown={keepInputFocus}
-                      onClick={() => submit("", { forcedWrong: true })}
-                      className="h-12"
-                    >
+                    <Button variant="quiet" size="lg" onMouseDown={keepInputFocus} onClick={() => submit("", { forcedWrong: true })}>
                       {t.game.dontKnow}
                     </Button>
                   </>
                 )
               )}
-              {answered && showInput && (
-                <p className="text-sm text-fg-2 max-sm:hidden">
-                  {t.game.pressEnter}
-                </p>
-              )}
+              {answered && showInput && <p className="text-sm text-fg-3 max-sm:hidden">{t.game.pressEnter}</p>}
             </div>
           )}
         </>
@@ -622,57 +590,39 @@ function Prompt({
   answered,
   onPickToken,
   labels,
-  lang,
   revealing,
-  meaningShown,
+  title,
 }: {
   item: GameItem;
   word: PlayWord;
   fixPick: number | null;
   answered: boolean;
   onPickToken: (i: number) => void;
-  labels: Record<
-    | "fix"
-    | "fixWrong"
-    | "missing"
-    | "scramble"
-    | "choice"
-    | "sentence"
-    | "meaning",
-    string
-  >;
-  lang: "ar" | "en";
+  labels: Record<"fix" | "fixWrong" | "missing" | "scramble" | "choice" | "sentence" | "meaning", string>;
   revealing: boolean;
-  meaningShown: boolean;
+  /** The screen title; a prompt that only repeats it is left out. */
+  title: string;
 }) {
   // Library words below the most frequent 3,000 have no Arabic hint (DECISIONS OD4): the line is simply left out.
   const meaning = word.ar ? (
     <p className="text-fg-2">
-      {labels.meaning}: <span lang="ar">{word.ar}</span>
+      <span className="text-fg-3">{labels.meaning}: </span>
+      <span lang="ar">{word.ar}</span>
     </p>
   ) : null;
   if (revealing) {
     return (
-      <p
-        dir="ltr"
-        lang="en"
-        aria-live="polite"
-        className="py-2 font-word text-4xl"
-      >
-        {item.kind === "sentence" ? item.answer : item.answer}
+      <p dir="ltr" lang="en" aria-live="polite" className="text-center font-word text-[clamp(2rem,9vw,3.25rem)] break-words">
+        {item.answer}
       </p>
     );
   }
   switch (item.kind) {
     case "fix":
       return (
-        <div className="space-y-3">
-          <p className="text-sm font-medium">{labels.fix}</p>
-          <p
-            dir="ltr"
-            lang="en"
-            className="flex flex-wrap gap-x-1.5 gap-y-2 text-xl leading-relaxed sm:text-2xl"
-          >
+        <div className="space-y-4">
+          <p className="text-fg-2">{labels.fix}</p>
+          <p dir="ltr" lang="en" className="flex flex-wrap gap-x-1 gap-y-2 text-[clamp(1.25rem,4.5vw,1.6rem)] leading-relaxed">
             {(item.tokens ?? []).map((tok, i) => {
               const isWrong = i === item.wrongIndex;
               const picked = fixPick === i;
@@ -684,12 +634,12 @@ function Prompt({
                   onClick={() => onPickToken(i)}
                   disabled={fixPick !== null || answered}
                   aria-pressed={picked}
-                  className={`min-h-11 rounded-md px-1.5 transition-colors ${
+                  className={`min-h-11 rounded-xl px-1.5 transition-colors ${
                     reveal
-                      ? "bg-error-tint text-error underline decoration-wavy decoration-error underline-offset-4"
+                      ? "text-error underline decoration-error decoration-wavy underline-offset-4"
                       : picked
-                        ? "bg-muted"
-                        : "hover:bg-muted"
+                        ? "bg-raised line-through decoration-fg-3"
+                        : "hover:bg-raised"
                   }`}
                 >
                   {tok}
@@ -697,15 +647,13 @@ function Prompt({
               );
             })}
           </p>
-          {fixPick !== null && fixPick !== item.wrongIndex && (
-            <p className="text-sm text-error">{labels.fixWrong}</p>
-          )}
+          {fixPick !== null && fixPick !== item.wrongIndex && <p className="text-sm text-error">{labels.fixWrong}</p>}
         </div>
       );
     case "choice":
       return (
-        <div className="space-y-2">
-          <p className="text-sm font-medium">{labels.choice}</p>
+        <div className="space-y-2 text-center">
+          {labels.choice !== title && <p className="text-fg-2">{labels.choice}</p>}
           {item.context && (
             <p dir="ltr" lang="en" className="text-xl">
               {item.context}
@@ -715,19 +663,19 @@ function Prompt({
         </div>
       );
     case "sentence":
-      return <p className="text-sm font-medium">{labels.sentence}</p>;
+      return <p className="text-center text-fg-2">{labels.sentence}</p>;
     case "typed":
       if (item.masked) {
         return (
-          <div className="space-y-2">
-            <p className="text-sm font-medium">{labels.missing}</p>
+          <div className="space-y-3 text-center">
+            <p className="text-fg-2">{labels.missing}</p>
             <p
               dir="ltr"
               lang="en"
-              className="py-1 font-word text-4xl tracking-[0.25em] sm:text-5xl"
+              className="font-word text-[clamp(2rem,9vw,3.25rem)] tracking-[0.2em] break-all"
               aria-label={item.masked.replace(/_/g, " blank ")}
             >
-              {item.masked}
+              {[...item.masked].map((ch, i) => (ch === "_" ? <span key={i} className="text-gold">_</span> : <span key={i}>{ch}</span>))}
             </p>
             {meaning}
           </div>
@@ -735,19 +683,11 @@ function Prompt({
       }
       if (item.letters) {
         return (
-          <div className="space-y-3">
-            <p className="text-sm font-medium">{labels.scramble}</p>
-            <ul
-              dir="ltr"
-              lang="en"
-              className="flex flex-wrap gap-2"
-              aria-label={item.letters.join(" ")}
-            >
+          <div className="space-y-4 text-center">
+            <p className="text-fg-2">{labels.scramble}</p>
+            <ul dir="ltr" lang="en" className="flex flex-wrap justify-center gap-2" aria-label={item.letters.join(" ")}>
               {item.letters.map((l, i) => (
-                <li
-                  key={i}
-                  className="grid size-12 place-items-center rounded-[10px] border border-line-strong bg-canvas font-word text-2xl uppercase"
-                >
+                <li key={i} className="grid size-12 place-items-center rounded-xl border border-line-strong bg-surface font-word text-2xl uppercase">
                   {l}
                 </li>
               ))}
@@ -756,7 +696,7 @@ function Prompt({
           </div>
         );
       }
-      return meaningShown && meaning ? <div lang={lang}>{meaning}</div> : null;
+      return null;
   }
 }
 
@@ -774,46 +714,35 @@ function ChoiceOptions({
   hint: string;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <ul className="grid gap-3 sm:grid-cols-2" dir="ltr" lang="en">
         {(item.options ?? []).map((o, i) => {
-          const isAnswer = o === item.answer;
-          const state = !answered
-            ? "idle"
-            : isAnswer
-              ? "right"
-              : o === picked
-                ? "wrong"
-                : "dim";
+          const state = !answered ? "idle" : o === item.answer ? "right" : o === picked ? "wrong" : "dim";
           return (
             <li key={o}>
               <button
                 type="button"
                 onClick={() => onPick(o)}
                 disabled={answered}
-                className={`flex min-h-14 w-full items-center gap-3 rounded-[10px] border-2 px-4 text-start font-word text-xl transition-colors ${
+                className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border px-4 text-start font-word text-[clamp(1.25rem,4.5vw,1.5rem)] transition-colors ${
                   state === "right"
                     ? "border-fg bg-raised text-fg"
                     : state === "wrong"
-                      ? "border-error bg-error-tint text-error line-through"
+                      ? "border-error border-dashed text-error line-through"
                       : state === "dim"
-                        ? "border-line opacity-60"
-                        : "border-line-strong bg-canvas hover:border-fg-2"
+                        ? "border-line text-fg-3"
+                        : "border-line-strong bg-surface hover:border-fg-2 hover:bg-raised"
                 }`}
               >
-                <span className="grid size-7 shrink-0 place-items-center rounded-md border border-line font-sans text-sm text-fg-2">
-                  {i + 1}
-                </span>
-                {o}
+                <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line font-sans text-sm text-fg-2 no-underline">{i + 1}</span>
+                <span className="min-w-0 break-words">{o}</span>
                 {state === "right" && <Check className="ms-auto size-5 shrink-0" aria-hidden="true" />}
               </button>
             </li>
           );
         })}
       </ul>
-      {!answered && (
-        <p className="text-sm text-fg-2 max-sm:hidden">{hint}</p>
-      )}
+      {!answered && <p className="text-center text-sm text-fg-3 max-sm:hidden">{hint}</p>}
     </div>
   );
 }
@@ -822,78 +751,80 @@ function Feedback({
   verdict,
   item,
   word,
-  rule,
-  category,
+  info,
+  lang,
+  onListen,
 }: {
   verdict: Verdict;
   item: GameItem;
   word: PlayWord;
-  rule: string;
-  category: string;
+  info: CategoryInfo;
+  lang: "ar" | "en";
+  onListen: (() => void) | null;
 }) {
   const { t } = useI18n();
   const v = verdict.check?.verdict;
+  const review = verdict.nextReviewDays !== null ? t.review.nextReview(verdict.nextReviewDays) : null;
+
+  if (verdict.correct) {
+    return (
+      <div className="space-y-2">
+        <CorrectLine text={v === "other-variant" ? t.game.otherVariant(item.answer) : t.game.correct} />
+        {review && <p className="text-sm text-fg-2">{review}</p>}
+        {word.exampleCredit && (item.kind === "sentence" || word.example) && <TatoebaCreditLine credit={word.exampleCredit} />}
+      </div>
+    );
+  }
+
+  const diff = verdict.check?.diff ?? null;
+  const wrote = verdict.answer.trim() !== "" && item.kind !== "choice" && diff && diff.length > 0;
   return (
-    <div
-      className={`space-y-3 rounded-xl border-s-4 p-4 ${verdict.correct ? "border-line-strong bg-raised" : "border-error bg-error-tint"}`}
-    >
-      {verdict.correct ? (
-        <p className="answer-sweep inline-block pb-2 text-lg font-semibold text-fg">
-          {v === "other-variant"
-            ? t.game.otherVariant(item.answer)
-            : t.game.correct}
-        </p>
-      ) : (
-        <div className="space-y-2">
-          <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-fg-2">{t.game.wrong}</span>
-            <strong dir="ltr" lang="en" className="font-word text-2xl">
-              {item.answer}
-            </strong>
-          </p>
-          {verdict.answer.trim() !== "" &&
-            item.kind !== "choice" &&
-            verdict.check &&
-            verdict.check.diff.length > 0 && (
-              <p className="flex flex-wrap items-baseline gap-x-3">
-                <span className="text-sm text-fg-2">
-                  {t.game.yourAnswer}
-                </span>
-                <LetterDiff
-                  segments={verdict.check.diff}
-                  labels={{ missing: "+", extra: "−", wrong: "≠" }}
-                />
-              </p>
-            )}
+    <div className="space-y-6">
+      {wrote && (
+        <div className="space-y-1">
+          <p className="text-sm text-fg-2">{t.game.youWrote}</p>
+          <AnswerMarks segments={diff} labels={t.game.marks} />
         </div>
       )}
-      {item.kind !== "sentence" && (
-        <>
-          <p className="text-fg-2">
-            <span className="font-semibold">
-              {t.game.rule} · {category}:
-            </span>{" "}
-            {rule}
+      {item.kind === "sentence" ? (
+        <div className="space-y-2">
+          <p className="text-sm text-fg-2">{t.game.wrong}</p>
+          <p dir="ltr" lang="en" className="font-word text-xl leading-relaxed sm:text-2xl">
+            {item.answer}
           </p>
-          {(word.ar || word.example) && (
-            <p className="text-sm text-fg-2">
-              {word.ar && <span lang="ar">{word.ar}</span>}
-              {word.ar && word.example && " · "}
-              {word.example && (
-                <span dir="ltr" lang="en">
-                  {word.example}
-                </span>
-              )}
-            </p>
-          )}
-          {word.example && word.exampleCredit && <TatoebaCreditLine credit={word.exampleCredit} />}
+          {word.exampleCredit && <TatoebaCreditLine credit={word.exampleCredit} />}
+        </div>
+      ) : (
+        <>
+          <CorrectionHeader
+            label={t.game.wrong}
+            segments={verdict.answer.trim() === "" ? null : diff}
+            word={item.answer}
+            keyLabel={t.game.keyLetter}
+            listenLabel={t.game.listenCorrect}
+            onListen={onListen}
+            onMouseDown={keepInputFocus}
+          />
+          <RuleCard
+            label={t.game.rule}
+            title={info.label[lang]}
+            rule={info.rule[lang]}
+            trickLabel={t.game.trick}
+            trick={info.trick[lang]}
+            exampleLabel={t.game.exampleLabel}
+            example={word.example}
+            footer={
+              <>
+                {word.example && word.exampleCredit && <TatoebaCreditLine credit={word.exampleCredit} tone="text-on-mint-2" />}
+                {review && (
+                  <p className="border-t border-on-mint/15 pt-3 text-sm text-on-mint-2">
+                    <span className="font-medium text-on-mint">{t.game.addedToReview}</span> {review}
+                  </p>
+                )}
+              </>
+            }
+          />
         </>
-      )}
-      {item.kind === "sentence" && word.exampleCredit && <TatoebaCreditLine credit={word.exampleCredit} />}
-      {verdict.nextReviewDays !== null && (
-        <p className="text-sm text-fg-2">
-          {t.review.nextReview(verdict.nextReviewDays)}
-        </p>
       )}
     </div>
   );

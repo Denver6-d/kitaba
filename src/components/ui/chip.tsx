@@ -32,9 +32,15 @@ function Chip({ className, tone, size, ...props }: React.ComponentProps<"span"> 
 }
 
 /** A CEFR level chip; level codes are Latin, so they are set in the Latin face. */
-function LevelChip({ level, active = false, className, ...props }: { level: string; active?: boolean } & Omit<React.ComponentProps<"span">, "children">) {
+function LevelChip({
+  level,
+  active = false,
+  size,
+  className,
+  ...props
+}: { level: string; active?: boolean; size?: VariantProps<typeof chipVariants>["size"] } & Omit<React.ComponentProps<"span">, "children">) {
   return (
-    <Chip tone={active ? "level-active" : "level"} className={cn("font-latin tabular", className)} lang="en" dir="ltr" {...props}>
+    <Chip tone={active ? "level-active" : "level"} size={size} className={cn("font-latin tabular", className)} lang="en" dir="ltr" {...props}>
       {level}
     </Chip>
   )
