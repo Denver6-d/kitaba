@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { DEFAULT_SETTINGS, motionAllowed, parseSettings, PRE_PAINT_SCRIPT, SETTINGS_KEY } from "@/lib/settings";
 import { feedbackFor } from "@/lib/feedback";
+import { hasUserActivation } from "@/lib/user-activation";
 import { canVibrate, HAPTIC_PATTERNS, vibrate } from "@/lib/haptics";
 import { TONES } from "@/lib/sound";
 
@@ -31,14 +32,25 @@ describe("entry fade-ups respect reduced motion (DESIGN.md V3, motion)", () => {
   });
 });
 
-describe("sounds and haptics (off by default)", () => {
-  it("are both off in the default settings and for older stored settings", () => {
-    expect(DEFAULT_SETTINGS.sounds).toBe(false);
-    expect(DEFAULT_SETTINGS.haptics).toBe(false);
-    expect(parseSettings(JSON.stringify({ sounds: true })).haptics).toBe(false);
+describe("sounds and haptics (on by default, DECISIONS M5)", () => {
+  it("are both on in the default settings and for settings saved before the toggles existed", () => {
+    expect(DEFAULT_SETTINGS.sounds).toBe(true);
+    expect(DEFAULT_SETTINGS.haptics).toBe(true);
+    expect(parseSettings(JSON.stringify({ lang: "en" }))).toMatchObject({ sounds: true, haptics: true });
   });
-  it("trigger nothing unless the learner turned them on", () => {
-    for (const kind of ["correct", "wrong", "star", "cleared"] as const) expect(feedbackFor(kind, DEFAULT_SETTINGS)).toEqual({ tone: null, haptic: null });
+  it("keep a learner's saved choice, on or off", () => {
+    expect(parseSettings(JSON.stringify({ sounds: false, haptics: false }))).toMatchObject({ sounds: false, haptics: false });
+    expect(parseSettings(JSON.stringify({ sounds: false }))).toMatchObject({ sounds: false, haptics: true });
+    expect(parseSettings(JSON.stringify({ sounds: true, haptics: false }))).toMatchObject({ sounds: true, haptics: false });
+  });
+  it("play nothing before the learner has interacted with the page (autoplay rules)", () => {
+    expect(hasUserActivation({ userActivation: { hasBeenActive: false } })).toBe(false);
+    expect(hasUserActivation({ userActivation: { hasBeenActive: true } })).toBe(true);
+    expect(hasUserActivation({})).toBe(true);
+  });
+  it("trigger the event's tone and vibration by default, and nothing once turned off", () => {
+    for (const kind of ["correct", "wrong", "star"] as const) expect(feedbackFor(kind, DEFAULT_SETTINGS)).toEqual({ tone: kind, haptic: kind });
+    for (const kind of ["correct", "wrong", "star", "cleared"] as const) expect(feedbackFor(kind, { sounds: false, haptics: false })).toEqual({ tone: null, haptic: null });
     expect(feedbackFor("star", { sounds: true, haptics: false })).toEqual({ tone: "star", haptic: null });
     expect(feedbackFor("wrong", { sounds: false, haptics: true })).toEqual({ tone: null, haptic: "wrong" });
     expect(feedbackFor("cleared", { sounds: true, haptics: true }).haptic).toBeNull();

@@ -23,7 +23,7 @@ import { WORDS } from "./04-words.mjs";
 const SCRIPT = fileURLToPath(import.meta.url);
 const DIR = join(PIPELINE, "hints");
 export const HINTS_OUT = join(WORK, "hints.json");
-export const TOP = 3000;
+export const TOP = 4500;
 
 /** Problems with one hint, or [] when it is fine. */
 export function hintProblems(text) {

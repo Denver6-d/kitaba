@@ -1,5 +1,5 @@
 /**
- * Optional vibration (DESIGN.md V3, "Sound and haptics"). Off by default, and
+ * Optional vibration (DESIGN.md V3, "Sound and haptics"). On by default (DECISIONS M5), and
  * only where the browser supports `navigator.vibrate` (Android browsers; iOS
  * Safari has none). Patterns stay short so they never feel like an alert.
  */

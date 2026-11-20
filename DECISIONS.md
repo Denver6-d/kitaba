@@ -755,3 +755,53 @@ The owner approved a full visual redesign (DESIGN.md V3 replaces the V1/V2 direc
   - **Left as is.**
     - `Reveal` and the header observer have no DOM test, because the suite runs in Node without a DOM library and adding one needs the owner's approval. Their CSS contract and the pre-paint rule are tested, and both were checked in headless Chrome.
     - iOS keyboard behaviour still needs a check on a real iPhone.
+
+## Manual-test fixes (2026-11-21)
+
+Fixes from the owner's manual test, in one commit. A code reviewer ran as a separate, report-only agent at the end (M6).
+
+- **M1. No empty box after the last letter (supersedes part of R12).** The letter boxes showed one dashed "next letter" box after the typed letters, so "__ght → right" ended with five letters and an empty box. `LetterBoxes` now draws the typed letters only; the input's caret already marks the position. The length stays hidden where it was hidden: no box exists before its letter is typed. Missing Letters and Word Scramble show the length by design, as before. Tested with server rendering (`tests/features/game-fixes.test.ts`).
+- **M2. "Next" sometimes did nothing (root cause).** The symptom was a click that did nothing while focus stayed in the answer field. That pins it down: Next's `mousedown` keeps focus in the field (B1), so the press landed on Next, and a press anywhere else would have moved focus. A browser fires `click` on a button only when press and release land on that same button. After Check, Next could move under a still pointer:
+  - the "Added to your review" note is written after an async save and mounted when it returns. In headless Chrome Next moved 55 px about 30 ms after Check;
+  - the pressed button shrinks to 0.98;
+  - on phones the sticky bar follows the keyboard inset.
+
+  When the release lands beside the moved button, the click goes to an ancestor and nothing happens. Reproduced in headless Chrome over CDP with real mouse events: press Next, let the layout above it grow by 55 px, release at the same point. The game stayed on the answered word with the field focused, exactly as reported. **Fix, in the shared `GameSession` (every mode):**
+  - the review note's line is rendered from the start, hidden until the note arrives, so nothing moves;
+  - a press on Next is remembered (item, position, time). A window click listener moves on when the release is within 12 px and 1.5 s of that press, for the same answered item, even if the click went to an ancestor. Next's own `onClick` skips a click the listener already handled, so a click never advances twice. Keyboard activation is unchanged.
+
+  The rule is a pure function (`lib/press.ts`) with a regression test, and the wiring is checked by a source test. The suite runs without a DOM library (R25). In the browser, the same CDP script fails before the fix and passes after it (3 of 3), and a full daily challenge advanced exactly one word per Next, with a mouse at 1280 px and with touch at 390 px.
+- **M3. Rules content.**
+  - verb-endings: consonant + y becomes "ied" only before -ed (study → studied), and y stays before -ing (studying). Doubling applies to one-syllable words that end consonant-vowel-consonant (stop → stopping, but read → reading). The rule adds longer words whose stressed last syllable ends that way (begin → beginning, occur → occurred), because the bank has occurred, preferred and regretted (review finding, M6). Both languages.
+  - Tricks are written per category around one example word. Each category now lists the words its trick names (`trickWords`). `trickFor` adds "مثال:" / "Example:" when the missed word is not one of them. The p/b trick names no word, so it is never prefixed. Tested, along with a check that every listed word appears in both languages' trick.
+  - The ie/ei Arabic trick is now "كلمة friend تنتهي بـ end: الصديق يبقى معك حتى النهاية." The English one says the same ("friend ends in end…").
+  - Roadmap (SPEC §10): per-word memory tricks for the most commonly misspelled words.
+- **M4. A hint on every game word.** Some words showed an Arabic hint and some none. Library words outside the top 3,000 had none (OD4, OD11), and the line was simply left out.
+  - **Pool rule (`hintedPoolAtLevel`, pure, tested).** Campaign stages, bosses, free play and the daily challenge draw only words that have a hint. At each level, nearest first, words with their own Arabic hint come first. Words whose only hint is the fallback come in only while the level is short of the words the game needs. Words with neither never play. The daily is bank-only (OD15), and every bank word has its hint.
+  - **Fallback hint (`domain/spelling/hint.ts`, pure, tested).** It is the word's example sentence with the word hidden, plus the sentence's Arabic translation when Tatoeba links one. It must never give the spelling away:
+    - every token that looks like the word is hidden. That covers the word itself and its British spelling, a form containing it ("alright" for right), and a part of it of 4+ letters. It also covers any token sharing its first four letters ("powerful" for powerless, "singing" for singers), a token starting with its stem ("cities" for city, "knives" for knife), and a token sharing a run of five letters ("disbelief" for believe). Hyphens are ignored ("co-operation"), and two-letter words hide their own inflections ("goes" for go). The rule errs on the side of hiding;
+    - the blank is always the same five underscores, so it does not tell the length;
+    - an example that does not contain the word gives no hint.
+
+    The translation's own Tatoeba author is credited after the answer, beside the example's credit; a translation without a known author is not shown. A content test checks every fallback in the library: no visible token contains the word or shares its first four letters.
+  - **Example translations in the library.** Step 09 now writes `[text, author, [araId, arabic, author]?]` for each example. It takes the translation from the dictation chunks, which hold every example (OD10). Schema, loader and pipeline are tested. 389 of the 17,434 library examples carry a translation.
+  - **More reliable hints.** Six new batches (`batch-11` … `batch-16.json`), written for this project in the bank's style and validated by step 06. They cover all 1,291 library words ranked 3,001–4,500 that had no hint, which completes the B1 band that every world plays. Step 06's `TOP` is now 4,500, and the content test requires a hint for every A1–B1 library word.
+  - **Counts (recorded here only, never on the site).** Library hints: 3,483 (2,192 + 1,291). Words with their own Arabic hint, bank plus library: A1 673, A2 1,328, B1 2,541, B2 298, C1 234. Fallback-only: B2 3,140 (59 with a translation), C1 10,918 (124). Never played, with neither: B2 87, C1 838. Every campaign stage still fills at each of its world's levels with hinted words (content test).
+  - **Not changed.** Hint fading (G-4) still hides a mastered word's hint in listen-like modes until the answer, so a learner may still see no hint before answering a word they know well. Review plays the learner's own mistakes as before: a word from their writing keeps its "from your writing" label, and a library word rebuilt offline (OD15) has no hint.
+- **M5. Sounds and vibration on by default (owner's call; supersedes R22's default and the SPEC "never" line).**
+  - The defaults are now on. The toggles in Settings turn them off.
+  - **Saved choices are kept.** Settings are stored whole, so a stored "off" cannot be told from a default someone never touched. Any stored value (on or off) is therefore kept. Only settings saved before the toggles existed, with no value, take the new default. A learner who changed any setting since phase C keeps sound off until they turn it on.
+  - **Autoplay.** Nothing plays or vibrates before the learner has interacted with the page (`navigator.userActivation.hasBeenActive`, `lib/user-activation.ts`). A game only reaches its first sound through an answer, so this is a safety net. The AudioContext is still created at the first tone.
+  - The Settings hints, DESIGN.md, SPEC.md and README say "on by default". Tests cover the defaults, kept choices and the activation rule.
+- **M6. Review fixes.** A code reviewer ran as a separate, report-only agent. It found no critical issue and confirmed that Next cannot advance twice. What changed:
+  - **Verb-endings rule (important).** It now covers stressed final syllables (M3).
+  - **Fallback masking (important).** Running the masking over the whole library left a related form visible in 19 words ("powerful" beside powerless, "grandson" beside granddaughters…). The matching was widened (M4), and a content test now covers every fallback.
+  - **Arabic direction.** The hint and the translation carry `dir="rtl"`, so their punctuation sits right in the English interface.
+  - **Screen readers.** The blank's underscores are hidden from assistive technology, and an sr-only "hidden word" is read in the interface language.
+  - **Next on touch.** When the window listener moves on, it also cancels the click, so a link or button that ended up under the finger is not activated as well.
+  - **Review line height.** The reserved review line now keeps two lines' height, so a wrapping note cannot move Next.
+  - **Homophone choice items.** A homophone sentence that is already the prompt is not repeated as the hint.
+  - **Translation credit.** A translation whose author index is missing is not shown.
+  - **Tests.** Boundary tests for the press rule were added.
+  - **Speed.** Hint checks are memoised per word.
+  - **Left as is.** The Next wiring is still checked by a source test, because the suite has no DOM library (R25). It was checked in headless Chrome instead (M2).

@@ -9,6 +9,8 @@ import { TatoebaCreditLine } from "@/features/library/credit-line";
 import { loadSupabase } from "@/lib/supabase/client";
 import { CONTENT_BASE, CONTENT_CACHE, createLibrary, withTimeout, type Library, type LibraryDeps } from "@/features/library/library";
 import { buildItem } from "@/domain/games/items";
+import { ALL_STAGE_IDS } from "@/domain/games/campaign";
+import { hintFor } from "@/domain/spelling/hint";
 import { sameLevels } from "@/domain/model";
 import { seededRng } from "@/domain/shared/random";
 import { newCard } from "@/domain/spelling/srs";
@@ -149,7 +151,7 @@ describe("items without an example (library words)", () => {
 
 describe("buildSession with the library", () => {
   const NOW = Date.UTC(2026, 10, 20, 12);
-  async function deps(library: Library, level: "B2" | "C1" = "C1") {
+  async function deps(library: Library, level: "B1" | "B2" | "C1" = "C1") {
     const repos = createRepositories({ store: createMemoryStore(), now: () => NOW, newId: () => "id" });
     await repos.profile.save({ levels: sameLevels(level), levelSource: "choice", levelsAt: NOW });
     return { repos, meta: createMemoryOutbox(), accent: "us" as const, rng: seededRng(7), now: NOW, library };
@@ -157,11 +159,35 @@ describe("buildSession with the library", () => {
 
   it("plays library words at the learner's level, and returns every word it uses", async () => {
     const lib = createLibrary({ fetch: fileFetch() });
-    const s = await buildSession({ kind: "free", mode: "listen", level: null, category: null }, await deps(lib));
+    // B1 library words all have an Arabic hint (DECISIONS M4), so they play beside the bank's.
+    const s = await buildSession({ kind: "free", mode: "listen", level: null, category: null }, await deps(lib, "B1"));
     expect(s.items.length).toBe(10);
     for (const i of s.items) expect(s.words.get(i.wordId), i.wordId).toBeDefined();
-    expect([...s.words.values()].some((w) => w.library)).toBe(true);
+    const seen = new Set<boolean>();
+    for (let round = 0; round < 6; round += 1) {
+      const r = await buildSession({ kind: "free", mode: "listen", level: null, category: null }, { ...(await deps(lib, "B1")), rng: seededRng(round + 11) });
+      for (const w of r.words.values()) seen.add(Boolean(w.library));
+    }
+    expect(seen.has(true)).toBe(true);
   });
+
+  it("plays only words with a hint, at every level and in every kind of game (DECISIONS M4)", async () => {
+    const lib = createLibrary({ fetch: fileFetch() });
+    const requests = [
+      ...ALL_STAGE_IDS.map((id) => ({ kind: "stage", id }) as const),
+      { kind: "daily" } as const,
+      { kind: "free", mode: "missing", level: null, category: null } as const,
+      { kind: "free", mode: "choice", level: null, category: "ie-ei" } as const,
+    ];
+    for (const level of ["B1", "B2", "C1"] as const) {
+      const d = await deps(lib, level);
+      for (const req of requests) {
+        const s = await buildSession(req, d);
+        expect(s.items.length, `${JSON.stringify(req)} at ${level}`).toBeGreaterThan(0);
+        for (const w of s.words.values()) expect(hintFor(w), `${w.word} (${JSON.stringify(req)} at ${level})`).not.toBeNull();
+      }
+    }
+  }, 120_000);
 
   it("still starts a game from the bundled bank when the library cannot load", async () => {
     const lib = createLibrary({ fetch: fileFetch([], { offline: true }) });

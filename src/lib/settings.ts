@@ -10,10 +10,14 @@ export const settingsSchema = z.object({
   textScale: z.number().min(0.9).max(1.4).catch(1),
   readableFont: z.boolean().catch(false),
   motion: z.enum(["system", "reduce", "full"]).catch("system"),
-  /** Optional feedback tones; off by default. */
-  sounds: z.boolean().catch(false),
-  /** Optional vibration on supported phones; off by default. */
-  haptics: z.boolean().catch(false),
+  /**
+   * Feedback tones; on by default (DECISIONS M5). A value already stored is kept, on or off:
+   * settings are saved whole, so a stored "off" may be the learner's choice. Only settings
+   * saved before the toggles existed (no value) take the new default.
+   */
+  sounds: z.boolean().catch(true),
+  /** Vibration on phones that support it; on by default, with the same rule as sounds. */
+  haptics: z.boolean().catch(true),
   /** American or British English: sets the voice and the expected spelling (DECISIONS V6). */
   accent: z.enum(["us", "uk"]).catch("us"),
 });

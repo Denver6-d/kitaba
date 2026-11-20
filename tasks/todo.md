@@ -93,3 +93,10 @@
 - [x] Sounds (correct, wrong, star) and vibration, both off by default, Settings toggles
 - [x] Mobile: 360–1440 px audited, touch targets, keyboard inset for sticky Check bars
 - [x] Lighthouse 100 / 100 / 100 (accessibility, best practices, SEO), mobile and desktop
+
+## Manual-test fixes (DECISIONS M1–M6)
+- [x] No empty letter box after the last letter; length never shown where it is hidden
+- [x] "Next" after Check: root cause (button moved between press and release), fix in GameSession, regression test, browser check
+- [x] Every game word has a hint: hinted pool, masked-example fallback with Tatoeba translation, hints for library ranks 3,001–4,500
+- [x] Rules: verb-endings wording, "Example:" prefix for category tricks, ie/ei Arabic trick, roadmap item
+- [x] Sounds and vibration on by default, saved choices kept, nothing before a user gesture

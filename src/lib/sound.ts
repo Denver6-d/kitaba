@@ -1,7 +1,7 @@
 /**
  * Optional feedback tones synthesised with Web Audio (no audio files, no
- * dependency). Off by default; the AudioContext is only created after the
- * learner turned sounds on and a game plays its first tone.
+ * dependency). On by default (DECISIONS M5); the AudioContext is only created
+ * when a game plays its first tone, which always follows a tap or a key.
  */
 let ctx: AudioContext | null = null;
 

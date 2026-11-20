@@ -45,7 +45,7 @@ const json = (value) => `${JSON.stringify(value)}\n`;
  * Packs one level's words into chunks of at most `budget` bytes.
  * A homophone without an example is published under its fallback category.
  */
-export function wordChunks(words, level, { examples = {}, exampleText = {}, hints = {}, budget = CHUNK_BYTES } = {}) {
+export function wordChunks(words, level, { examples = {}, exampleText = {}, exampleArabic = {}, hints = {}, budget = CHUNK_BYTES } = {}) {
   const chunks = [];
   let cur = null;
   const fresh = () => ({ level, authors: [], examples: {}, words: {}, _authors: new Map(), _bytes: 0 });
@@ -58,25 +58,39 @@ export function wordChunks(words, level, { examples = {}, exampleText = {}, hint
     const extra = { ...(w.uk ? { uk: w.uk } : {}), ...(homophone ? { c: w.confusables } : {}), ...(ar ? { ar } : {}), ...(exId ? { ex: exId } : {}) };
     const row = Object.keys(extra).length ? [w.word, w.rank, extra] : [w.word, w.rank];
     const ex = exId ? exampleText[exId] : undefined;
-    const size = JSON.stringify(row).length + (ex ? JSON.stringify(ex).length + exId.length + 8 : 0);
+    const tr = exId ? exampleArabic[exId] : undefined;
+    const size = JSON.stringify(row).length + (ex ? JSON.stringify(ex).length + exId.length + 8 : 0) + (tr ? JSON.stringify(tr).length + 4 : 0);
     if (cur._bytes + size > budget && cur._bytes > 0) {
       chunks.push(cur);
       cur = fresh();
     }
     if (ex) {
       const [text, author] = ex;
-      let a = -1;
-      if (author) {
-        if (!cur._authors.has(author)) cur._authors.set(author, cur.authors.push(author) - 1);
-        a = cur._authors.get(author);
-      }
-      cur.examples[exId] = [text, a];
+      const authorIndex = (name) => {
+        if (!cur._authors.has(name)) cur._authors.set(name, cur.authors.push(name) - 1);
+        return cur._authors.get(name);
+      };
+      const a = author ? authorIndex(author) : -1;
+      // The Arabic translation linked on Tatoeba travels with the example: it is part of the fallback hint (DECISIONS M4).
+      cur.examples[exId] = tr ? [text, a, [tr.id, tr.text, authorIndex(tr.author)]] : [text, a];
     }
     (cur.words[category] ??= []).push(row);
     cur._bytes += size;
   }
   if (cur._bytes > 0) chunks.push(cur);
   return chunks.map((c) => ({ level: c.level, authors: c.authors, examples: c.examples, words: c.words }));
+}
+
+/**
+ * Arabic translations of the example sentences, by example id. Every example is in the
+ * published dictation chunks (OD10), where 05-sentences attached its reviewed translation.
+ */
+export function exampleArabicFrom(sentences) {
+  const out = {};
+  for (const chunk of Object.values(sentences.chunks)) {
+    for (const [id, , , ar] of chunk.rows) if (ar) out[`t${id}`] = { id: ar[0], text: ar[1], author: chunk.authors[ar[2]] };
+  }
+  return out;
 }
 
 export async function run({ force = false } = {}) {
@@ -89,7 +103,7 @@ export async function run({ force = false } = {}) {
 
     const files = {};
     for (const level of LEVELS) {
-      const parts = wordChunks(words, level, { examples: sentences?.examples, exampleText: sentences?.exampleText, hints });
+      const parts = wordChunks(words, level, { examples: sentences?.examples, exampleText: sentences?.exampleText, exampleArabic: sentences ? exampleArabicFrom(sentences) : {}, hints });
       parts.forEach((chunk, i) => (files[`words-${level}-${i + 1}`] = emit(`words-${level}-${i + 1}`, "json", json(chunk))));
     }
     if (sentences) {

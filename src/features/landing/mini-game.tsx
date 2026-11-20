@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { spellingWordById } from "@/data/words";
 import type { SpellingWord } from "@/data/schema";
-import { CATEGORY_INFO } from "@/data/rules";
+import { CATEGORY_INFO, trickFor } from "@/data/rules";
 import { checkAnswer, expectedSpelling } from "@/domain/spelling/check";
 import { letterDiff } from "@/domain/spelling/diff";
 import { useI18n } from "@/i18n";
@@ -187,7 +187,7 @@ export function MiniGame() {
                 title={info.label[lang]}
                 rule={info.rule[lang]}
                 trickLabel={t.game.trick}
-                trick={info.trick[lang]}
+                trick={trickFor(info, expected, lang)}
                 exampleLabel={t.game.exampleLabel}
                 example={word.example}
                 headingLevel={2}

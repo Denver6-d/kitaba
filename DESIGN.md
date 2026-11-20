@@ -91,7 +91,7 @@ No gradients, no glow washes, no glassmorphism, no emoji. The header, the bottom
 - No animation blocks input; everything stays at 60 fps. Under `prefers-reduced-motion` or the manual setting every motion is an instant state change.
 
 ## Sound and haptics
-Short synthesised Web Audio sounds (correct, wrong, star) and `navigator.vibrate` where supported. Both are off by default, with toggles in Settings. No audio files. `lib/feedback.ts` decides, `lib/sound.ts` and `lib/haptics.ts` play; the vibration toggle is disabled where the browser cannot vibrate (DECISIONS R22).
+Short synthesised Web Audio sounds (correct, wrong, star) and `navigator.vibrate` where supported. Both are on by default (owner's call, DECISIONS M5), with toggles in Settings to turn them off; a choice already saved is kept, and nothing plays before the learner has interacted with the page. No audio files. `lib/feedback.ts` decides, `lib/sound.ts` and `lib/haptics.ts` play; the vibration toggle is disabled where the browser cannot vibrate (DECISIONS R22).
 
 ## Accessibility floor
 - Visible focus: a 2 px gold outline, 3 px offset.

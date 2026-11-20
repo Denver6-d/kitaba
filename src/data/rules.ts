@@ -11,6 +11,12 @@ export interface CategoryInfo {
   readonly rule: Bilingual;
   /** A short memory trick for the mint rule card (DESIGN.md V3, correction). Original wording. */
   readonly trick: Bilingual;
+  /**
+   * The example words the trick names (written as in the trick, in both languages). When the
+   * missed word is not one of them, the trick is shown as an example (`trickFor`). Empty when
+   * the trick names no word to spell.
+   */
+  readonly trickWords: readonly string[];
 }
 
 export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
@@ -24,6 +30,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "قسّم الكلمة وانطقها في ذهنك كما تُكتب: Wed-nes-day.",
       en: "Say it in your head the way it is written: Wed-nes-day.",
     },
+    trickWords: ["wednesday"],
   },
   homophones: {
     label: { ar: "كلمات متشابهة النطق", en: "Homophones and confusables" },
@@ -35,6 +42,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "في there كلمة here: كلتاهما عن المكان.",
       en: "there has here inside it: both are about places.",
     },
+    trickWords: ["there", "here"],
   },
   "double-letters": {
     label: { ar: "الحروف المضاعفة", en: "Double letters" },
@@ -46,6 +54,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "في necessary قميص له ياقة واحدة (c) وكُمّان (ss).",
       en: "necessary is a shirt with one collar (c) and two sleeves (ss).",
     },
+    trickWords: ["necessary"],
   },
   "silent-letters": {
     label: { ar: "الحروف الصامتة", en: "Silent letters" },
@@ -57,6 +66,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "انطق الحرف الصامت في ذهنك وأنت تكتب: k-nife و w-rite.",
       en: "Say the silent letter in your head as you write: k-nife, w-rite.",
     },
+    trickWords: ["knife", "write"],
   },
   "ie-ei": {
     label: { ar: "الترتيب ie أم ei", en: "ie or ei" },
@@ -65,9 +75,10 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       en: "Usually i before e, except after c (receive) or when it sounds like 'ay' (eight). Some exceptions must be learned.",
     },
     trick: {
-      ar: "الصديق friend يبقى معك حتى النهاية end.",
-      en: "A friend stays with you to the end.",
+      ar: "كلمة friend تنتهي بـ end: الصديق يبقى معك حتى النهاية.",
+      en: "friend ends in end: a friend stays with you to the end.",
     },
+    trickWords: ["friend"],
   },
   plurals: {
     label: { ar: "الجمع", en: "Plurals" },
@@ -79,17 +90,19 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "y بعد حرف ساكن تصبح ies (babies)، وبعد حرف متحرك تبقى (boys).",
       en: "y after a consonant becomes ies (babies); after a vowel it stays (boys).",
     },
+    trickWords: ["babies", "boys"],
   },
   "verb-endings": {
     label: { ar: "نهايات الأفعال ed و ing", en: "-ed and -ing endings" },
     rule: {
-      ar: "احذف حرف e الأخير قبل ing، وضاعف الحرف الساكن الأخير في الكلمات القصيرة (stop → stopping)، والساكن ثم y يصبح ied.",
-      en: "Drop a final e before -ing, double the last consonant in short words (stop → stopping), and consonant + y becomes ied.",
+      ar: "احذف حرف e الأخير قبل ing (make → making). ضاعف الحرف الساكن الأخير في الكلمة ذات المقطع الواحد التي تنتهي بساكن ثم متحرك ثم ساكن (stop → stopping، لكن read → reading)، وفي الكلمة الأطول إذا كان النبر على مقطعها الأخير (begin → beginning، occur → occurred). الساكن ثم y يصبح ied قبل ed فقط (study → studied)، ويبقى y قبل ing (studying).",
+      en: "Drop a final e before -ing (make → making). Double the last consonant of a one-syllable word that ends consonant-vowel-consonant (stop → stopping, but read → reading), and of a longer word whose stressed last syllable ends that way (begin → beginning, occur → occurred). Consonant + y becomes ied only before -ed (study → studied); y stays before -ing (studying).",
     },
     trick: {
       ar: "حرف e الأخير يُفسح المكان لـ ing: make تصبح making.",
       en: "A final e makes room for -ing: make becomes making.",
     },
+    trickWords: ["make", "making"],
   },
   "adverbs-ly": {
     label: { ar: "الظروف المنتهية بـ ly", en: "-ly adverbs" },
@@ -101,6 +114,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "الصفة تبقى كاملة ثم تأتي ly: careful و ly تعطي carefully، ومن هنا ll.",
       en: "Keep the whole adjective, then add ly: careful + ly = carefully, hence ll.",
     },
+    trickWords: ["careful", "carefully"],
   },
   prefixes: {
     label: { ar: "البادئات", en: "Prefixes" },
@@ -112,6 +126,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "افصل البادئة عن الكلمة: mis و spell تعطي misspell.",
       en: "Split the prefix off: mis + spell = misspell.",
     },
+    trickWords: ["misspell"],
   },
   suffixes: {
     label: { ar: "اللواحق", en: "Suffixes" },
@@ -123,6 +138,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "إذا بقيت قبل النهاية كلمة كاملة فالنهاية غالبًا able: accept و able تعطي acceptable.",
       en: "If a whole word is left before the ending, it is usually -able: acceptable.",
     },
+    trickWords: ["acceptable"],
   },
   "british-american": {
     label: { ar: "البريطانية والأمريكية", en: "British and American" },
@@ -134,6 +150,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "الأمريكية أقصر غالبًا: color أقصر من colour.",
       en: "American is usually shorter: color is shorter than colour.",
     },
+    trickWords: ["color", "colour"],
   },
   "p-b": {
     label: { ar: "الحرفان P و B", en: "P and B" },
@@ -145,6 +162,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "أمسك ورقة أمام فمك: تتحرك مع p وتبقى ساكنة مع b.",
       en: "Hold a sheet of paper in front of your mouth: it moves for p, not for b.",
     },
+    trickWords: [],
   },
   "v-f": {
     label: { ar: "الحرفان V و F", en: "V and F" },
@@ -156,6 +174,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "fan همس بلا صوت، و van طنين تشعر به في حلقك.",
       en: "fan is a whisper, van is a buzz you can feel in your throat.",
     },
+    trickWords: ["fan", "van"],
   },
   "short-vowels": {
     label: { ar: "الحروف المتحركة القصيرة", en: "Short vowels" },
@@ -167,6 +186,7 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "لكل مقطع حرف متحرك واحد على الأقل: cat و pen و sit.",
       en: "Every syllable has at least one vowel letter: cat, pen, sit.",
     },
+    trickWords: ["cat", "pen", "sit"],
   },
   "vowel-confusion": {
     label: { ar: "خلط e و i و a", en: "e, i and a confusion" },
@@ -178,5 +198,20 @@ export const CATEGORY_INFO: Readonly<Record<SpellingCategory, CategoryInfo>> = {
       ar: "في separate تجد a part، وفي definite تجد finite.",
       en: "separate has a part in it; definite has finite in it.",
     },
+    trickWords: ["separate", "definite"],
   },
 };
+
+/** "مثال:" / "Example:" before a trick whose example word is not the word that was missed. */
+export const TRICK_EXAMPLE_PREFIX: Bilingual = { ar: "مثال:", en: "Example:" };
+
+/**
+ * The memory trick to show after a miss. Tricks are written per category around one example
+ * word; when the missed word is not that example, the trick is marked as an example, so the
+ * learner does not read it as being about their own word.
+ */
+export function trickFor(info: CategoryInfo, missedWord: string, lang: keyof Bilingual): string {
+  const w = missedWord.trim().toLowerCase();
+  const own = info.trickWords.length === 0 || info.trickWords.some((t) => t.toLowerCase() === w);
+  return own ? info.trick[lang] : `${TRICK_EXAMPLE_PREFIX[lang]} ${info.trick[lang]}`;
+}

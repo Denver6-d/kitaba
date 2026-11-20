@@ -18,6 +18,7 @@ export function wordsFromChunk(chunk: WordChunk): PlayWord[] {
     for (const [word, , extra] of rows ?? []) {
       const ex = extra?.ex ? chunk.examples[extra.ex] : undefined;
       const author = ex && ex[1] >= 0 ? chunk.authors[ex[1]] : undefined;
+      const tr = ex?.[2];
       out.push({
         id: libraryWordId(word),
         word,
@@ -29,6 +30,8 @@ export function wordsFromChunk(chunk: WordChunk): PlayWord[] {
         ...(extra?.c ? { confusables: extra.c } : {}),
         ...(ex ? { example: ex[0] } : {}),
         ...(ex && author && extra?.ex?.startsWith("t") ? { exampleCredit: { id: Number(extra.ex.slice(1)), author } } : {}),
+        // A translation is shown only with its author's credit (CC BY).
+        ...(tr && chunk.authors[tr[2]] ? { exampleAr: { text: tr[1], credit: { id: tr[0], author: chunk.authors[tr[2]]! } } } : {}),
       });
     }
   }

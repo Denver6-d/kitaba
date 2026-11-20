@@ -8,7 +8,8 @@ import { drawFromBag, returnToBag, type BagState } from "@/domain/games/shuffle-
 import { buildItems } from "@/domain/games/session";
 import type { CefrLevel, GameMode, SrsCardRecord } from "@/domain/model";
 import { dayKey } from "@/domain/progress/streak";
-import { poolAtLevel } from "@/domain/levels/pool";
+import { hintedPoolAtLevel } from "@/domain/levels/pool";
+import { hintKind } from "@/domain/spelling/hint";
 import { seededRng, shuffle, type Rng } from "@/domain/shared/random";
 import type { Accent } from "@/domain/spelling/check";
 import { getLibrary, LIBRARY_WAIT_MS, withTimeout, type Library } from "@/features/library/library";
@@ -155,7 +156,8 @@ async function buildItemsFor(req: GameRequest, deps: Deps): Promise<Omit<BuiltSe
       const count = def.timed ? BEE_WORDS : def.items;
       const all = await wordsFor(level, library);
       const inWorld = all.filter((w) => def.world.categories.includes(w.category));
-      const { pool, levels: used } = poolAtLevel(inWorld, level, def.timed ? STAGE_MIN_TIMED : count + SPARE);
+      // Only words with a hint play: their own Arabic hint first, the example-based fallback when a level is short (DECISIONS M4).
+      const { pool, levels: used } = hintedPoolAtLevel(inWorld, level, def.timed ? STAGE_MIN_TIMED : count + SPARE, hintKind);
       // The level is part of the bag key: changing it starts a fresh pass at once.
       const key = `stage:${def.id}:${used.join("")}`;
       const { items, words } = await drawAndBuild(deps.meta, key, pool, count + SPARE, deps.rng, (ws) => buildItems(def.modes, ws, ctxFor(all), count));
@@ -169,7 +171,7 @@ async function buildItemsFor(req: GameRequest, deps: Deps): Promise<Omit<BuiltSe
       const level = levels?.tests ?? "A2";
       const rng = seededRng(seedFrom(`${day}:${level}`));
       const all: PlayWord[] = [...spellingWords];
-      const { pool } = poolAtLevel(all, level, 60);
+      const { pool } = hintedPoolAtLevel(all, level, 60, hintKind);
       const picked = shuffle(pool, rng).slice(0, DAILY_MODES.length + SPARE);
       const items = buildItems(DAILY_MODES, picked, ctxFor(all, rng), DAILY_MODES.length);
       return {
@@ -189,7 +191,7 @@ async function buildItemsFor(req: GameRequest, deps: Deps): Promise<Omit<BuiltSe
       const count = timed ? BEE_WORDS : FREE_ITEMS;
       const all = await wordsFor(level, library);
       const inCategory = all.filter((w) => req.category === null || w.category === req.category);
-      const { pool, levels: used } = poolAtLevel(inCategory, level, req.category === null ? count + SPARE : FREE_MIN_CATEGORY);
+      const { pool, levels: used } = hintedPoolAtLevel(inCategory, level, req.category === null ? count + SPARE : FREE_MIN_CATEGORY, hintKind);
       const key = `free:${used.join("")}:${req.category ?? "all"}`;
       const { items, words } = await drawAndBuild(deps.meta, key, pool, count + SPARE, deps.rng, (ws) => buildItems(req.mode as ItemMode, ws, ctxFor(all), count));
       return { items, config: timed ? BEE : UNTIMED, stageId: null, mode: req.mode, boss: false, level, words };

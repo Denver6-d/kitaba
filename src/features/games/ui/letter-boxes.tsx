@@ -1,7 +1,7 @@
 /**
  * The typed word, one letter per box (DESIGN.md V3). A box appears and lights
- * up as its letter is typed; an empty dashed box shows where the next letter
- * goes. It mirrors the labelled input below it and is hidden from assistive
+ * up as its letter is typed. There is no empty box after the last letter: the
+ * caret in the input marks where the next letter goes (DECISIONS M1). It mirrors the labelled input below it and is hidden from assistive
  * technology, which reads the input. Boxes appear for typed letters only, so
  * they never reveal the length of the word being tested (DECISIONS R12). The
  * game hides them once the answer is checked ("You wrote" takes over).
@@ -20,7 +20,6 @@ export function LetterBoxes({ value }: { value: string }) {
           {ch === " " ? " " : ch}
         </span>
       ))}
-      <span className={`border border-dashed border-line-strong/70 ${BOX}`} />
     </div>
   );
 }

@@ -15,7 +15,7 @@ import { flushSync } from "react-dom";
 import { Check, Eye, Turtle } from "lucide-react";
 import type { PlayWord } from "@/data/play-word";
 import { TatoebaCreditLine } from "@/features/library/credit-line";
-import { CATEGORY_INFO, type CategoryInfo } from "@/data/rules";
+import { CATEGORY_INFO, trickFor, type CategoryInfo } from "@/data/rules";
 import {
   createGame,
   currentItem,
@@ -33,6 +33,7 @@ import { useI18n } from "@/i18n";
 import { useSpeech } from "@/lib/speech";
 import { useSettings } from "@/lib/settings-store";
 import { giveFeedback } from "@/lib/feedback";
+import { pressActivates, type Press } from "@/lib/press";
 import { SpellingInput, useAnswerInput } from "@/components/spelling-input";
 import {
   reduceAnswerInput,
@@ -43,6 +44,8 @@ import { AudioButton } from "./ui/audio-button";
 import { LetterBoxes } from "./ui/letter-boxes";
 import { GameHeading, GameTopBar } from "./ui/game-top-bar";
 import { RuleCard } from "./ui/rule-card";
+import { HintLine } from "./ui/hint-line";
+import { hintFor } from "@/domain/spelling/hint";
 import { AnswerMarks, CorrectionHeader, CorrectLine } from "./ui/correction";
 import { useRecordAnswer } from "./use-record-answer";
 
@@ -119,6 +122,12 @@ export function GameSession({
   const [now, setNow] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
+  /** The last press on Next, so a release beside a button that moved still counts (DECISIONS M2). */
+  const nextPressRef = useRef<Press | null>(null);
+  /** The click event the window listener already turned into "next", so Next's own onClick skips it. */
+  const handledClickRef = useRef<Event | null>(null);
+  const goNextRef = useRef<() => void>(() => undefined);
+  const answeredKeyRef = useRef<string | null>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const finishedRef = useRef(false);
   const liveId = useId();
@@ -204,6 +213,38 @@ export function GameSession({
     if (takesTyping(following))
       inputRef.current?.focus({ preventScroll: true });
   }, [item, answered, game.items, game.index, input]);
+
+  useEffect(() => {
+    goNextRef.current = goNext;
+    answeredKeyRef.current = item && answered ? item.key : null;
+  });
+
+  // "Next" can move under a still pointer between press and release (the review note arrives,
+  // the pressed button shrinks, the phone's sticky bar follows the keyboard). The browser then
+  // sends the click to an ancestor and Next did nothing. A press on Next that is released within
+  // a finger's slop, for the same answered item, still moves on (DECISIONS M2).
+  useEffect(() => {
+    const onClick = (e: globalThis.MouseEvent) => {
+      const press = nextPressRef.current;
+      nextPressRef.current = null;
+      if (pressActivates(press, { x: e.clientX, y: e.clientY, t: e.timeStamp }, answeredKeyRef.current)) {
+        handledClickRef.current = e;
+        // The press was for Next: the click must not also activate whatever ended up under the finger.
+        e.preventDefault();
+        e.stopPropagation();
+        goNextRef.current();
+      }
+    };
+    const onCancel = () => {
+      nextPressRef.current = null;
+    };
+    window.addEventListener("click", onClick, true);
+    window.addEventListener("pointercancel", onCancel, true);
+    return () => {
+      window.removeEventListener("click", onClick, true);
+      window.removeEventListener("pointercancel", onCancel, true);
+    };
+  }, []);
 
   // Typing while a verdict is showing moves on and keeps the typed letters: the
   // input reducer stores them, and the "item" event carries them to the next word.
@@ -348,12 +389,11 @@ export function GameSession({
   // After Check the field is cleared for the next word, and "You wrote" shows the answer instead.
   const showBoxes = showInput && item.kind !== "sentence" && !answered;
   const tone = verdict ? (verdict.correct ? "correct" : "wrong") : "idle";
+  // Every game word has a hint (DECISIONS M4): its Arabic hint, or its example with the word hidden.
+  const hint = hintFor(word);
   const meaningLine =
-    word.ar && (item.kind === "typed" || (item.kind === "fix" && fixPick !== null)) && !item.masked && !item.letters && (showMeaning(item.wordId) || answered || voice !== "ready") ? (
-      <p className="text-center text-fg-2">
-        <span className="text-fg-3">{t.game.hint}: </span>
-        <span lang="ar">{word.ar}</span>
-      </p>
+    hint && (item.kind === "typed" || (item.kind === "fix" && fixPick !== null)) && !item.masked && !item.letters && (showMeaning(item.wordId) || answered || voice !== "ready") ? (
+      <HintLine hint={hint} label={t.game.hint} blankLabel={t.game.hiddenWord} uiLang={lang} className="text-center" />
     ) : null;
 
   return (
@@ -492,6 +532,8 @@ export function GameSession({
                 choice: t.game.choicePrompt,
                 sentence: t.game.sentencePrompt,
                 meaning: t.game.meaning,
+                blank: t.game.hiddenWord,
+                uiLang: lang,
               }}
               revealing={revealing}
               title={title}
@@ -551,7 +593,14 @@ export function GameSession({
                   ref={nextRef}
                   size="lg"
                   onMouseDown={showInput ? keepInputFocus : undefined}
-                  onClick={goNext}
+                  onPointerDown={(e) => {
+                    nextPressRef.current = { itemKey: item.key, x: e.clientX, y: e.clientY, t: e.timeStamp };
+                  }}
+                  onClick={(e) => {
+                    // Keyboard and plain clicks; a press the window listener already handled is skipped.
+                    if (handledClickRef.current === e.nativeEvent) return;
+                    goNext();
+                  }}
                   className="flex-1 sm:flex-none sm:min-w-48"
                 >
                   {game.index + 1 >= game.items.length ? t.game.finish : t.game.next}
@@ -599,18 +648,16 @@ function Prompt({
   fixPick: number | null;
   answered: boolean;
   onPickToken: (i: number) => void;
-  labels: Record<"fix" | "fixWrong" | "missing" | "scramble" | "choice" | "sentence" | "meaning", string>;
+  labels: Record<"fix" | "fixWrong" | "missing" | "scramble" | "choice" | "sentence" | "meaning" | "blank", string> & { uiLang: "ar" | "en" };
   revealing: boolean;
   /** The screen title; a prompt that only repeats it is left out. */
   title: string;
 }) {
-  // Library words below the most frequent 3,000 have no Arabic hint (DECISIONS OD4): the line is simply left out.
-  const meaning = word.ar ? (
-    <p className="text-fg-2">
-      <span className="text-fg-3">{labels.meaning}: </span>
-      <span lang="ar">{word.ar}</span>
-    </p>
-  ) : null;
+  // Games only play words with a hint (DECISIONS M4); a word without one shows no line.
+  const hint = hintFor(word);
+  // A choice item that already shows the blanked sentence (homophones) does not repeat it as the hint.
+  const repeatsContext = item.kind === "choice" && Boolean(item.context) && hint?.kind === "sentence";
+  const meaning = hint && !repeatsContext ? <HintLine hint={hint} label={labels.meaning} blankLabel={labels.blank} uiLang={labels.uiLang} /> : null;
   if (revealing) {
     return (
       <p dir="ltr" lang="en" aria-live="polite" className="text-center font-word text-[clamp(2rem,9vw,3.25rem)] break-words">
@@ -771,8 +818,13 @@ function Feedback({
     return (
       <div className="space-y-2">
         <CorrectLine text={v === "other-variant" ? t.game.otherVariant(item.answer) : t.game.correct} />
-        {review && <p className="text-sm text-fg-2">{review}</p>}
+        {item.kind !== "sentence" && (
+          // Rendered from the start (hidden until the note arrives), so Next does not move (DECISIONS M2).
+          <p className={`min-h-5 text-sm text-fg-2 ${review ? "" : "invisible"}`}>{review}</p>
+        )}
         {word.exampleCredit && (item.kind === "sentence" || word.example) && <TatoebaCreditLine credit={word.exampleCredit} />}
+        {/* The fallback hint showed the example's Arabic translation: credit its own author (CC BY). */}
+        {!word.ar && word.exampleAr && item.kind !== "sentence" && <TatoebaCreditLine credit={word.exampleAr.credit} />}
       </div>
     );
   }
@@ -811,17 +863,17 @@ function Feedback({
             title={info.label[lang]}
             rule={info.rule[lang]}
             trickLabel={t.game.trick}
-            trick={info.trick[lang]}
+            trick={trickFor(info, item.answer, lang)}
             exampleLabel={t.game.exampleLabel}
             example={word.example}
             footer={
               <>
                 {word.example && word.exampleCredit && <TatoebaCreditLine credit={word.exampleCredit} tone="text-on-mint-2" />}
-                {review && (
-                  <p className="border-t border-on-mint/15 pt-3 text-sm text-on-mint-2">
-                    <span className="font-medium text-on-mint">{t.game.addedToReview}</span> {review}
-                  </p>
-                )}
+                {!word.ar && word.exampleAr && <TatoebaCreditLine credit={word.exampleAr.credit} tone="text-on-mint-2" />}
+                {/* Rendered from the start (hidden until the note arrives), so Next does not move (DECISIONS M2). */}
+                <p className={`min-h-[calc(2lh+0.75rem)] border-t border-on-mint/15 pt-3 text-sm text-on-mint-2 ${review ? "" : "invisible"}`}>
+                  <span className="font-medium text-on-mint">{t.game.addedToReview}</span> {review ?? t.common.loading}
+                </p>
               </>
             }
           />

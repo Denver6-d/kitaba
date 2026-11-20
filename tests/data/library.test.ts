@@ -3,7 +3,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { manifestSchema, sentenceChunkSchema, wordChunkSchema, type SentenceChunk, type WordChunk } from "@/data/library-schema";
 import { spellingWords } from "@/data/words";
+import { wordsFromChunk } from "@/data/library";
 import { ALL_STAGE_IDS, stageDef } from "@/domain/games/campaign";
+import { hintFor } from "@/domain/spelling/hint";
 import { findWordToken } from "@/domain/games/items";
 import { LEVELS } from "@/domain/model";
 import { SPELLING_CATEGORIES } from "@/domain/spelling/categories";
@@ -103,23 +105,53 @@ describe("open-data library: words", () => {
     expect(withExample / library.length).toBeGreaterThan(0.9);
   }, SLOW_DATA_TEST_MS);
 
-  it("gives every one of the 3,000 most frequent words a reviewed Arabic hint (phase D)", () => {
-    const missing = library.filter((w) => w.rank <= 3000 && !w.extra?.ar).map((w) => w.word);
+  it("gives every one of the 4,500 most frequent words (every A1-B1 word) a reviewed Arabic hint (phase D, M4)", () => {
+    const missing = library.filter((w) => w.rank <= 4500 && !w.extra?.ar).map((w) => w.word);
     expect(missing).toEqual([]);
-    expect(library.filter((w) => w.extra?.ar).length).toBeGreaterThan(2000);
+    for (const l of ["A1", "A2", "B1"]) expect(library.filter((w) => w.level === l && !w.extra?.ar).map((w) => w.word), l).toEqual([]);
+    expect(library.filter((w) => w.extra?.ar).length).toBeGreaterThan(3400);
   });
 
-  it("keeps every campaign stage fillable at each of its world's levels, bank plus library", () => {
+  it("carries the Tatoeba Arabic translation of an example, credited to its own author (fallback hints, M4)", () => {
+    const withTr = wordChunks.flatMap((c) => Object.values(c.examples).flatMap((e) => (e[2] ? [{ tr: e[2], c }] : [])));
+    expect(withTr.length).toBeGreaterThan(100);
+    for (const { tr, c } of withTr) {
+      expect(c.authors[tr[2]], String(tr[0])).toBeTruthy();
+      expect(credits).toContain(`
+${tr[0]}	ara	${c.authors[tr[2]]}`);
+    }
+  });
+
+  it("gives every library word without an Arabic hint a usable fallback, or keeps it out of games (M4)", () => {
+    const words = wordChunks.flatMap((c) => wordsFromChunk(c));
+    const noHint = words.filter((w) => !w.ar);
+    const fallback = noHint.filter((w) => hintFor(w) !== null);
+    // Most have an example that contains the word; the rest never play (hintedPoolAtLevel).
+    expect(fallback.length / noHint.length).toBeGreaterThan(0.9);
+    for (const w of fallback) {
+      const h = hintFor(w);
+      expect(h?.kind).toBe("sentence");
+      if (h?.kind !== "sentence") continue;
+      // No visible token may contain the word or share its first four letters (a relative that shows the spelling).
+      const word = w.word.replace(/-/g, "");
+      const shown = h.masked.toLowerCase().replace(/-/g, "").split(/[^a-z']+/).filter(Boolean);
+      const leaks = shown.filter((t) => t.includes(word) || (word.length >= 4 && t.length >= 4 && t.slice(0, 4) === word.slice(0, 4)));
+      expect(leaks, `${w.word}: ${h.masked}`).toEqual([]);
+    }
+  }, SLOW_DATA_TEST_MS);
+
+  it("keeps every campaign stage fillable at each of its world's levels with hinted words only, bank plus library", () => {
+    const all = [...spellingWords, ...wordChunks.flatMap((c) => wordsFromChunk(c))];
     for (const id of ALL_STAGE_IDS) {
       const d = stageDef(id);
       if (!d) throw new Error(id);
       const inWorld = (c: string) => (d.world.categories as readonly string[]).includes(c);
       for (const l of d.levels) {
-        const n = spellingWords.filter((w) => inWorld(w.category) && w.level === l).length + library.filter((w) => inWorld(w.category) && w.level === l).length;
+        const n = all.filter((w) => inWorld(w.category) && w.level === l && hintFor(w) !== null).length;
         expect(n, `${id} at ${l}`).toBeGreaterThanOrEqual(d.timed ? 25 : d.items + 2);
       }
     }
-  });
+  }, SLOW_DATA_TEST_MS);
 });
 
 describe("open-data library: sentences", () => {

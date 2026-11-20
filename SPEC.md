@@ -146,7 +146,7 @@ Leaderboard: `submit_score(p_points, p_correct, p_total, p_duration_s)` checks o
 ## 7. Acceptance criteria
 1. The removed V1 features have no route, navigation entry, module or test left.
 2. The first character typed in any input is always kept, including the first keystroke of a timed round and the first keystroke on a new item (regression test).
-3. Content: ≥ 1,500 unique words, all 15 categories, all 5 levels, ≥ 800 unique dictation sentences. Every word has an Arabic hint and an example that contains it. Validated by `npm run validate:content` and the test suite.
+3. Content: ≥ 1,500 unique words, all 15 categories, all 5 levels, ≥ 800 unique dictation sentences. Every word has an Arabic hint and an example that contains it. Every word a game plays shows a hint: its own Arabic hint, or, when a level runs short, its example with the word hidden (DECISIONS M4). Validated by `npm run validate:content` and the test suite.
 4a. The levels chosen on the Play page (words, sentences, tests) are stored, read by every session build, and take effect in the next game (regression tests in `tests/features/build-session.test.ts`).
 4. Seven modes, 80 campaign stages with stars and unlocks, 8 bosses, a daily challenge, XP and levels, a streak.
 5. Spelling inputs: `autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false"`, the right `inputmode`, and they stay visible above the virtual keyboard.
@@ -159,7 +159,10 @@ Leaderboard: `submit_score(p_points, p_correct, p_total, p_duration_s)` checks o
 ## 8. Boundaries
 - **Always:** keep domain logic pure and tested; use logical CSS properties; keep English answer areas `dir="ltr" lang="en"`; respect reduced motion; validate external input with zod; write original content only.
 - **Ask first:** any new dependency; adding a git remote or pushing.
-- **Never:** a service_role key or provider secret in the repo or client; analytics or tracking; AI APIs; sending a learner's text anywhere; claiming to check grammar; content copied from copyrighted books or word lists; sounds on by default.
+- **Never:** a service_role key or provider secret in the repo or client; analytics or tracking; AI APIs; sending a learner's text anywhere; claiming to check grammar; content copied from copyrighted books or word lists; a sound before the learner has interacted with the page. (Sounds and vibration are on by default since DECISIONS M5, with toggles in Settings.)
 
 ## 9. Out of scope
 Typing speed, keyboard layouts, grammar or style checking (the writing section checks spelling and a few rule-based confusables only), professional-writing checklists, Apple sign-in (needs a paid account), teacher or class mode, recorded audio (speech is Web Speech only).
+
+## 10. Roadmap
+- Per-word memory tricks for the most commonly misspelled words (today a trick is per category and names one example word; DECISIONS M3).

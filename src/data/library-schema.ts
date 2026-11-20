@@ -49,19 +49,26 @@ const sentenceText = z
 /** Tatoeba usernames, credited next to each sentence (CC BY 2.0 FR). */
 const authors = z.array(z.string().min(1).max(64));
 
+/** [Tatoeba id, Arabic text, author index]: a translation linked on Tatoeba. */
+const arabicTranslation = z.tuple([z.number().int().positive(), z.string().min(1).max(200).refine((s) => /[؀-ۿ]/.test(s) && !/[A-Za-z]/.test(s), "Arabic"), z.number().int().min(0)]);
+
 export const wordChunkSchema = z
   .object({
     level: z.enum(LEVELS),
     authors,
-    /** Example sentences of this chunk's words: id → [text, author index, or -1 for our own sentences]. */
-    examples: z.record(z.string().regex(/^(t|o)\d+$/), z.tuple([sentenceText, z.number().int().min(-1)])),
+    /**
+     * Example sentences of this chunk's words: id → [text, author index (or -1 for our own
+     * sentences), Arabic translation linked on Tatoeba?]. The translation is part of the
+     * fallback hint (DECISIONS M4).
+     */
+    examples: z.record(
+      z.string().regex(/^(t|o)\d+$/),
+      z.union([z.tuple([sentenceText, z.number().int().min(-1)]), z.tuple([sentenceText, z.number().int().min(-1), arabicTranslation])]),
+    ),
     words: z.partialRecord(z.enum(SPELLING_CATEGORIES), z.array(libraryRowSchema)),
   })
   .strict();
 export type WordChunk = z.infer<typeof wordChunkSchema>;
-
-/** [Tatoeba id, Arabic text, author index]: a translation linked on Tatoeba. */
-const arabicTranslation = z.tuple([z.number().int().positive(), z.string().min(1).max(200).refine((s) => /[؀-ۿ]/.test(s) && !/[A-Za-z]/.test(s), "Arabic"), z.number().int().min(0)]);
 
 /** [Tatoeba id, text, author index, Arabic translation?] */
 export const sentenceRowSchema = z.union([

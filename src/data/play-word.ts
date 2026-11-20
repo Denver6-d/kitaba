@@ -10,7 +10,8 @@ export interface TatoebaCredit {
 /**
  * A word a game can play. Hand-written bank words (SpellingWord) always have
  * an Arabic hint and an example; open-data library words may have neither
- * (DECISIONS OD4, OD10), and every game handles that.
+ * (DECISIONS OD4, OD10). Games only play words that have a hint: the Arabic one,
+ * or the fallback built from the example (DECISIONS M4).
  */
 export interface PlayWord {
   readonly id: string;
@@ -23,6 +24,8 @@ export interface PlayWord {
   readonly confusables?: readonly string[] | undefined;
   /** Set when the example sentence comes from Tatoeba. */
   readonly exampleCredit?: TatoebaCredit | undefined;
+  /** The example's Arabic translation linked on Tatoeba (credited to its own author), when one exists. */
+  readonly exampleAr?: { readonly text: string; readonly credit: TatoebaCredit } | undefined;
   /** True for open-data library words (not the hand-written bank). */
   readonly library?: boolean | undefined;
 }
