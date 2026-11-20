@@ -7,14 +7,14 @@ import { safeNext } from "./safe-next";
  * another site. Supabase must also list that exact URL as an allowed redirect.
  */
 
-/** Providers offered in the UI. Apple is not offered (it needs a paid developer account). */
-export const OAUTH_PROVIDERS = ["google", "github"] as const;
+/** OAuth providers the code supports. Google only (DECISIONS R7); Apple needs a paid developer account. */
+export const OAUTH_PROVIDERS = ["google"] as const;
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
 
-export const PROVIDER_LABELS: Readonly<Record<OAuthProvider, string>> = { google: "Google", github: "GitHub" };
+export const PROVIDER_LABELS: Readonly<Record<OAuthProvider, string>> = { google: "Google" };
 
 /**
- * Providers shown on the sign-in screen. GitHub always; Google only when
+ * Providers shown on the sign-in screen: Google only when
  * NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN is exactly "true" (default off), because a
  * Google button for a project without the Google provider set up only fails.
  * Email sign-in is separate and always shown.

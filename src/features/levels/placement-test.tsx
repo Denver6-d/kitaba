@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { spellingWords } from "@/data/words";
 import type { SpellingWord } from "@/data/schema";
@@ -96,23 +97,23 @@ export function PlacementTest({ seed, onDone }: { seed: number; onDone: (r: Plac
   const n = state.answers.length + 1;
 
   return (
-    <section aria-labelledby="placement-h" className="sheet space-y-6 p-5 sm:p-8">
+    <section aria-labelledby="placement-h" className="panel space-y-6 p-5 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id="placement-h" className="text-xl font-semibold">
+        <h2 id="placement-h" className="text-2xl font-light">
           {t.placement.title}
         </h2>
-        <p className="text-sm text-ink-soft tabular">{t.placement.progress(n, PLACEMENT_ITEMS)}</p>
+        <p className="text-sm text-fg-2 tabular">{t.placement.progress(n, PLACEMENT_ITEMS)}</p>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-        <div className="h-full rounded-full bg-brass-fill transition-[width]" style={{ width: `${((n - 1) / PLACEMENT_ITEMS) * 100}%` }} />
+        <div className="h-full rounded-full bg-gold transition-[width]" style={{ width: `${((n - 1) / PLACEMENT_ITEMS) * 100}%` }} />
       </div>
       <div className="space-y-1">
         <p className="text-lg font-semibold">{t.placement.question}</p>
-        <p className="text-hint">
+        <p className="text-fg-2">
           {t.placement.meaning}: <span lang="ar">{word.ar}</span>
         </p>
         {item.context && (
-          <p dir="ltr" lang="en" className="text-ink-soft">
+          <p dir="ltr" lang="en" className="text-fg-2">
             {item.context}
           </p>
         )}
@@ -126,17 +127,18 @@ export function PlacementTest({ seed, onDone }: { seed: number; onDone: (r: Plac
                 type="button"
                 disabled={answered}
                 onClick={() => setPicked(o)}
-                className={`ruled min-h-14 w-full rounded-[10px] border-2 px-4 text-start font-mono text-xl sm:text-2xl ${
+                className={`flex min-h-14 w-full items-center gap-3 rounded-[10px] border-2 px-4 text-start font-word text-xl sm:text-2xl ${
                   look === "right"
-                    ? "border-correct bg-[var(--correct-wash)] text-correct"
+                    ? "border-fg bg-raised text-fg"
                     : look === "wrong"
-                      ? "border-error bg-[var(--error-wash)] text-error line-through"
+                      ? "border-error bg-error-tint text-error line-through"
                       : look === "dim"
-                        ? "border-rule opacity-50"
-                        : "border-rule-strong bg-paper hover:border-brass-fill"
+                        ? "border-line opacity-50"
+                        : "border-line-strong bg-canvas hover:border-fg-2"
                 }`}
               >
                 {o}
+                {look === "right" && <Check className="ms-auto size-6 shrink-0" aria-hidden="true" />}
               </button>
             </li>
           );
@@ -145,10 +147,10 @@ export function PlacementTest({ seed, onDone }: { seed: number; onDone: (r: Plac
       <div className="flex min-h-14 flex-wrap items-center justify-between gap-3" aria-live="polite">
         {answered && (
           <>
-            <p className={`font-semibold ${right ? "text-correct" : "text-error"}`}>
+            <p className={`font-semibold ${right ? "text-fg" : "text-error"}`}>
               {right ? t.placement.correct : t.placement.wrong("")}
               {!right && (
-                <span dir="ltr" lang="en" className="font-mono">
+                <span dir="ltr" lang="en" className="font-word">
                   {item.answer}
                 </span>
               )}

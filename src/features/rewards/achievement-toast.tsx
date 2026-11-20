@@ -29,11 +29,11 @@ export function AchievementToast() {
       {ids.length > 0 && (
         <Link
           href="/progress#achievements"
-          className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-2xl border border-brass-fill/60 bg-sheet px-4 py-3 shadow-float animate-in fade-in slide-in-from-bottom-2"
+          className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-2xl border border-line-strong bg-raised px-4 py-3 animate-in fade-in slide-in-from-bottom-2"
         >
-          <Award className="size-6 shrink-0 text-brass" aria-hidden="true" />
+          <Award className="size-6 shrink-0 text-fg-2" aria-hidden="true" />
           <span className="text-sm">
-            <span className="block text-xs text-ink-soft">{t.progress.newUnlock}</span>
+            <span className="block text-xs text-fg-2">{t.progress.newUnlock}</span>
             <span className="font-semibold">{ids.map((id) => ACHIEVEMENT_TEXT[id]?.[lang].title ?? id).join(" · ")}</span>
           </span>
         </Link>

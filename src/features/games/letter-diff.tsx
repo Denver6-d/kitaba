@@ -7,21 +7,21 @@ import type { DiffSegment } from "@/domain/spelling/diff";
  */
 export function LetterDiff({ segments, labels }: { segments: readonly DiffSegment[]; labels: { missing: string; extra: string; wrong: string } }) {
   return (
-    <span dir="ltr" lang="en" className="font-mono text-xl tracking-wide">
+    <span dir="ltr" lang="en" className="font-word text-xl tracking-wide">
       {segments.map((s, i) => {
         switch (s.kind) {
           case "same":
             return <span key={i}>{s.text}</span>;
           case "missing":
             return (
-              <ins key={i} className="rounded bg-[var(--correct-wash)] px-0.5 text-correct underline decoration-2 underline-offset-4">
+              <ins key={i} className="rounded bg-raised px-0.5 text-fg underline decoration-2 underline-offset-4">
                 <span className="sr-only">({labels.missing}) </span>
                 {s.text}
               </ins>
             );
           case "extra":
             return (
-              <del key={i} className="rounded bg-[var(--error-wash)] px-0.5 text-error decoration-2">
+              <del key={i} className="rounded bg-error-tint px-0.5 text-error decoration-2">
                 <span className="sr-only">({labels.extra}) </span>
                 {s.text}
               </del>
@@ -29,11 +29,11 @@ export function LetterDiff({ segments, labels }: { segments: readonly DiffSegmen
           case "wrong":
             return (
               <span key={i} className="inline-flex items-baseline">
-                <del className="rounded-s bg-[var(--error-wash)] px-0.5 text-error decoration-2">
+                <del className="rounded-s bg-error-tint px-0.5 text-error decoration-2">
                   <span className="sr-only">({labels.wrong}) </span>
                   {s.text}
                 </del>
-                <ins className="rounded-e bg-[var(--correct-wash)] px-0.5 text-correct underline decoration-2 underline-offset-4">{s.expected}</ins>
+                <ins className="rounded-e bg-raised px-0.5 text-fg underline decoration-2 underline-offset-4">{s.expected}</ins>
               </span>
             );
         }

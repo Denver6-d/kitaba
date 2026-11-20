@@ -2,119 +2,108 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Theme is chosen by data-theme on <html> (set before paint by an inline script). */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-/* Landing story, wide layout: decided by CSS before first paint (no layout shift when GSAP loads).
-   Must match the GSAP matchMedia condition in features/landing/story.tsx. */
-@custom-variant story-wide {
-  @media (min-width: 900px) and (prefers-reduced-motion: no-preference) {
-    &:where(:root:not([data-motion="reduce"]) *) {
-      @slot;
-    }
-  }
-}
-
 /* ---------------------------------------------------------------------------
-   Design tokens (see DESIGN.md). Kitaba names first, shadcn aliases after.
+   Design tokens (DESIGN.md V3, "calm luxury"). Dark only. Every colour, radius
+   and font in the app comes from here: components use the Tailwind names in
+   @theme below (bg-canvas, text-fg-2, bg-gold…), never raw hex values.
+   Contrast (WCAG 2.x) is recorded in DESIGN.md and DECISIONS R2.
    ------------------------------------------------------------------------- */
 :root {
-  color-scheme: light;
-  --paper: #eef1ec;
-  --sheet: #f8faf6;
-  --ink: #14302e;
-  --ink-soft: #566b67;
-  --rule: #ccd6cf;
-  --rule-strong: #a9b8ae;
-  --brass: #86600f;
-  --brass-fill: #c8962e;
-  --brass-wash: rgb(200 150 46 / 0.14);
-  --correct: #2f6b4f;
-  --correct-wash: rgb(47 107 79 / 0.1);
-  --error: #a3313f;
-  --error-wash: rgb(163 49 63 / 0.1);
-  --hint: #5a5a8c;
-  --key: #ffffff;
-  --key-edge: #c5d0c8;
-  --shadow-sheet: 0 1px 0 var(--rule), 0 12px 32px -18px rgb(20 48 46 / 0.28);
-  --shadow-float: 0 18px 48px -24px rgb(20 48 46 / 0.4);
+  color-scheme: dark;
+
+  /* Surfaces, darkest to lightest. */
+  --canvas: #0b110f;
+  --surface: #121a17;
+  --raised: #16201c;
+  /* Hairline borders; line-strong outlines form controls (3.4:1, WCAG 1.4.11). */
+  --line: rgb(232 236 233 / 0.08);
+  --line-strong: rgb(232 236 233 / 0.4);
+
+  /* Text. */
+  --fg: #e8ece9;
+  --fg-2: #a9b4af;
+  --fg-3: #9aa5a0;
+
+  /* The only accent: one primary button per screen, progress, stars, the active level chip, target letters. */
+  --gold: #e2b657;
+  --gold-hover: #f0cb78;
+  --on-gold: #17140b;
+
+  /* "Moment" cards: rule explanation, results, honest banner. */
+  --mint: #e9f1ec;
+  --on-mint: #13201a;
+  --on-mint-2: #33463d;
+  --mint-label: #6a5214;
+
+  /* Errors: always paired with a strike-through, underline or icon. */
+  --error: #f2a27e;
+  --error-tint: rgb(242 162 126 / 0.1);
+
+  --radius-control: 999px;
+  --card-radius: 1.5rem;
+  --card-radius-lg: 1.75rem;
+  --field-radius: 0.875rem;
 
   --text-scale: 1;
-  --font-ui: var(--font-hanken), var(--font-cairo), system-ui, sans-serif;
-  --font-arabic: var(--font-cairo), system-ui, sans-serif;
-  --font-display-latin: var(--font-literata), Georgia, serif;
-  --font-type: var(--font-atkinson-mono), ui-monospace, monospace;
+  /* Arabic UI in IBM Plex Sans Arabic; English words and Latin text in Inter. */
+  --font-ui: var(--font-plex-arabic), var(--font-inter), system-ui, sans-serif;
+  --font-latin-face: var(--font-inter), system-ui, sans-serif;
+  --font-word-face: var(--font-inter), system-ui, sans-serif;
 
-  /* shadcn aliases */
-  --background: var(--paper);
-  --foreground: var(--ink);
-  --card: var(--sheet);
-  --card-foreground: var(--ink);
-  --popover: var(--sheet);
-  --popover-foreground: var(--ink);
-  --primary: var(--ink);
-  --primary-foreground: var(--sheet);
-  --secondary: color-mix(in oklab, var(--rule) 45%, var(--sheet));
-  --secondary-foreground: var(--ink);
-  --muted: color-mix(in oklab, var(--rule) 35%, var(--paper));
-  --muted-foreground: var(--ink-soft);
-  --accent: var(--brass-wash);
-  --accent-foreground: var(--ink);
+  /* shadcn aliases (Radix primitives in components/ui). */
+  --background: var(--canvas);
+  --foreground: var(--fg);
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  --popover: var(--raised);
+  --popover-foreground: var(--fg);
+  --primary: var(--gold);
+  --primary-foreground: var(--on-gold);
+  --secondary: var(--raised);
+  --secondary-foreground: var(--fg);
+  --muted: var(--raised);
+  --muted-foreground: var(--fg-2);
+  --accent: var(--raised);
+  --accent-foreground: var(--fg);
   --destructive: var(--error);
-  --border: var(--rule);
-  --input: var(--rule-strong);
-  --ring: var(--brass-fill);
-  --radius: 0.5rem;
+  --border: var(--line);
+  --input: var(--line-strong);
+  --ring: var(--gold);
+  --radius: 0.875rem;
 }
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --paper: #0d1c1b;
-  --sheet: #132625;
-  --ink: #e4ebe5;
-  --ink-soft: #93a7a2;
-  --rule: #24403d;
-  --rule-strong: #35534f;
-  --brass: #d9ae52;
-  --brass-fill: #d9ae52;
-  --brass-wash: rgb(217 174 82 / 0.14);
-  --correct: #7cc3a0;
-  --correct-wash: rgb(124 195 160 / 0.12);
-  --error: #f08a95;
-  --error-wash: rgb(240 138 149 / 0.12);
-  --hint: #b5b5e8;
-  --key: #18302e;
-  --key-edge: #2b4a46;
-  --shadow-sheet: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 0 0 1px var(--rule);
-  --shadow-float: 0 18px 48px -24px rgb(0 0 0 / 0.7), 0 0 0 1px var(--rule);
-  --primary: var(--ink);
-  --primary-foreground: var(--paper);
+/* English UI: Inter first (Plex Arabic still covers any Arabic in it). */
+:root[lang="en"] {
+  --font-ui: var(--font-inter), var(--font-plex-arabic), system-ui, sans-serif;
 }
 
-/* Arabic UI: Cairo first. Latin fonts carry an Arial-based metric fallback that
-   contains Arabic glyphs, so Arabic text must never fall through a Latin stack. */
-:root[lang="ar"] {
-  --font-ui: var(--font-cairo), system-ui, sans-serif;
-}
-
+/* Reading-friendly option: Lexend for Latin text and words. Arabic stays in Plex. */
 :root[data-font="readable"] {
-  --font-ui: var(--font-lexend), var(--font-cairo), system-ui, sans-serif;
-  --font-type: var(--font-lexend), ui-monospace, monospace;
-  --font-display-latin: var(--font-lexend), system-ui, sans-serif;
+  --font-latin-face: var(--font-lexend), system-ui, sans-serif;
+  --font-word-face: var(--font-lexend), system-ui, sans-serif;
+}
+:root[lang="en"][data-font="readable"] {
+  --font-ui: var(--font-lexend), var(--font-plex-arabic), system-ui, sans-serif;
 }
 
 @theme inline {
-  --color-paper: var(--paper);
-  --color-sheet: var(--sheet);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-rule: var(--rule);
-  --color-rule-strong: var(--rule-strong);
-  --color-brass: var(--brass);
-  --color-brass-fill: var(--brass-fill);
-  --color-brass-wash: var(--brass-wash);
-  --color-correct: var(--correct);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-gold: var(--gold);
+  --color-gold-hover: var(--gold-hover);
+  --color-on-gold: var(--on-gold);
+  --color-mint: var(--mint);
+  --color-on-mint: var(--on-mint);
+  --color-on-mint-2: var(--on-mint-2);
+  --color-mint-label: var(--mint-label);
   --color-error: var(--error);
-  --color-hint: var(--hint);
+  --color-error-tint: var(--error-tint);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -136,62 +125,71 @@
   --color-card: var(--card);
 
   --font-sans: var(--font-ui);
-  --font-mono: var(--font-type);
-  --font-display: var(--font-display-latin);
-  --font-arabic: var(--font-arabic);
+  --font-latin: var(--font-latin-face);
+  --font-word: var(--font-word-face);
 
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
-
-  --shadow-sheet: var(--shadow-sheet);
-  --shadow-float: var(--shadow-float);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 1.75rem;
+  --radius-card: var(--card-radius);
+  --radius-card-lg: var(--card-radius-lg);
+  --radius-field: var(--field-radius);
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-  /* Body text: 17 px on phones, 18 px from 768 px up (DESIGN.md "Type"), scaled by the text-size setting. */
+  /* Body text: 17 px on phones, 18 px from 768 px up, scaled by the text-size setting. */
   html {
     font-size: calc(106.25% * var(--text-scale));
     font-family: var(--font-ui);
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+    background: var(--canvas);
   }
   body {
-    background: var(--paper);
-    color: var(--ink);
+    background: var(--canvas);
+    color: var(--fg);
     line-height: 1.6;
     font-feature-settings: "kern";
   }
   html[lang="ar"] body {
     line-height: 1.75;
   }
+  /* Headings are large and light (DESIGN.md "Type"). */
+  :where(h1, h2) {
+    font-weight: 300;
+    letter-spacing: -0.01em;
+  }
   :where(h1, h2, h3) {
     text-wrap: balance;
     line-height: 1.2;
+    overflow-wrap: anywhere;
   }
   p {
     text-wrap: pretty;
   }
-  /* Visible keyboard focus on everything interactive (DESIGN.md: accessibility floor). */
+  /* Visible keyboard focus on everything interactive. */
   :focus-visible {
-    outline: 2px solid var(--brass-fill);
-    outline-offset: 2px;
-    border-radius: 4px;
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
   }
-  :lang(ar) {
-    font-family: var(--font-arabic);
+  /* English text inside the Arabic UI uses the Latin face. */
+  :where([lang="en"]) {
+    font-family: var(--font-latin-face);
   }
-  /* Typed English stays in the typing face even inside the Arabic UI. */
+  /* Typed English uses the word face, with Inter's unambiguous l and I. */
   :where(textarea, input)[lang="en"] {
-    font-family: var(--font-type);
+    font-family: var(--font-word-face);
+    font-feature-settings: "cv05", "cv08";
   }
   ::selection {
-    background: var(--brass-wash);
+    background: rgb(226 182 87 / 0.3);
+    color: var(--fg);
   }
 }
 
@@ -202,23 +200,29 @@
 }
 
 @layer utilities {
-  .sheet {
-    background: var(--sheet);
-    box-shadow: var(--shadow-sheet);
-    border-radius: 1rem;
+  /* The standard card: surface, hairline border, large radius. */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--card-radius);
+  }
+  /* Focus on a mint card: dark outline, because gold on mint is only 1.65:1. */
+  .moment.moment :focus-visible {
+    outline-color: var(--on-mint);
+  }
+  /* A "moment" card: light mint, dark text (rule explanation, results, honest banner). */
+  .moment {
+    background: var(--mint);
+    color: var(--on-mint);
+    border-radius: var(--card-radius-lg);
+  }
+  /* The face for English words being spelled: Inter, with l, I and 1 told apart. */
+  .font-word {
+    font-family: var(--font-word-face);
+    font-feature-settings: "cv05", "cv08", "tnum";
   }
   .tabular {
     font-variant-numeric: tabular-nums;
-  }
-  /* The baseline rule under writing surfaces: the signature element. */
-  .ruled {
-    background-image: linear-gradient(to top, var(--rule) 1px, transparent 1px);
-    background-repeat: repeat-y;
-    background-size: 100% 2.6em;
-  }
-  .font-latin-display {
-    font-family: var(--font-display-latin);
-    font-optical-sizing: auto;
   }
   .sr-only-focusable:not(:focus):not(:focus-within) {
     position: absolute;
@@ -256,16 +260,15 @@ html[data-motion="reduce"] *::after {
   }
 }
 
-/* Game feedback (DESIGN.md "Game feel"): a short shake for a wrong answer and a
-   brass underline sweep for a right one. Both collapse to nothing under reduced motion. */
-/* The landing round fades in once, from the first paint (no flash). */
+/* Game feedback: a short shake for a wrong answer and a gold underline sweep for a right one.
+   Both collapse to nothing under reduced motion. Phase B replaces these with the new game feel. */
 .hero-reveal {
-  animation: hero-reveal 600ms ease-out both;
+  animation: hero-reveal 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 @keyframes hero-reveal {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -303,7 +306,7 @@ html[data-motion="reduce"] *::after {
   bottom: 0;
   height: 2px;
   border-radius: 2px;
-  background: var(--brass-fill);
+  background: var(--gold);
   transform-origin: left;
   animation: rule-draw 180ms ease-out both;
 }
@@ -322,8 +325,8 @@ html[data-motion="reduce"] *::after {
 /*
  * First visit (lib/first-visit.ts): the pre-paint script marks a gated page
  * when this browser has never stored a level. The page stays hidden until the
- * level check runs, so it never flashes before /welcome. Only a quiet brass
- * rule shows meanwhile (static under reduced motion).
+ * level check runs, so it never flashes before /welcome. Only a quiet gold
+ * line shows meanwhile (static under reduced motion).
  */
 html[data-gate="pending"] main > * {
   visibility: hidden;
@@ -341,7 +344,7 @@ html[data-gate="pending"] main::before {
   width: 4rem;
   height: 2px;
   border-radius: 999px;
-  background: var(--brass-fill);
+  background: var(--gold);
   animation: gate-pulse 1.2s ease-in-out infinite alternate;
 }
 @keyframes gate-pulse {

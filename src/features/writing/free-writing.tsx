@@ -1,5 +1,6 @@
 "use client";
 
+import { chipVariants } from "@/components/ui/chip";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { scenarioById, scenarios, type Scenario } from "@/data/writing";
@@ -149,28 +150,28 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
   if (!scenario) return <ErrorBlock title={t.common.errorTitle} body={t.common.errorBody} />;
 
   const task = (
-    <section aria-labelledby="w-task" className="sheet space-y-3 p-5 sm:p-6">
+    <section aria-labelledby="w-task" className="panel space-y-3 p-5 sm:p-6">
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="rounded-full border border-brass-fill/60 px-2.5 py-0.5 text-brass tabular" title={t.levels.inGame}>
+        <span className={`${chipVariants({ tone: "level-active", size: "sm" })} font-latin tabular`} title={t.levels.inGame}>
           <span className="sr-only">{t.levels.inGame}: </span>
           {level}
         </span>
         <span className="rounded-full bg-muted px-2.5 py-0.5">{t.writing.kinds[scenario.kind]}</span>
-        <span className="text-ink-soft">{t.writing.target(scenario.minWords)}</span>
+        <span className="text-fg-2">{t.writing.target(scenario.minWords)}</span>
       </div>
-      <h2 id="w-task" className="text-xl font-semibold sm:text-2xl">
+      <h2 id="w-task" className="text-2xl font-light sm:text-2xl">
         <span className="sr-only">{t.writing.task}: </span>
         {lang === "ar" ? scenario.ar : scenario.en}
       </h2>
       {lang === "ar" && (
-        <p dir="ltr" lang="en" className="text-sm text-ink-soft">
+        <p dir="ltr" lang="en" className="text-sm text-fg-2">
           {scenario.en}
         </p>
       )}
       {scenario.words && scenario.words.length > 0 && (
         <p className="text-sm">
-          <span className="text-ink-soft">{t.writing.helpWords}: </span>
-          <span dir="ltr" lang="en" className="font-mono">
+          <span className="text-fg-2">{t.writing.helpWords}: </span>
+          <span dir="ltr" lang="en" className="font-word">
             {scenario.words.join(" · ")}
           </span>
         </p>
@@ -185,7 +186,7 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
       <div className="space-y-6">
         {task}
         <section className="space-y-3" aria-labelledby="w-res">
-          <h2 id="w-res" ref={resultRef} tabIndex={-1} className="text-lg font-semibold outline-none">
+          <h2 id="w-res" ref={resultRef} tabIndex={-1} className="text-xl font-light outline-none">
             {issues.filter(isMistake).length === 0 ? t.writing.noMistakes : `${t.writing.mistakesFound(issues.filter(isMistake).length)} · ${t.writing.tapHint}`}
           </h2>
           <MarkedText text={phase.text} issues={issues} selected={selected} onSelect={setSelected} />
@@ -200,7 +201,7 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
         </section>
         <WritingSummaryPanel summary={phase.summary} saved={phase.saved} saveFailed={phase.saveFailed} />
         <div className="flex flex-wrap gap-3">
-          <Button size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" onClick={() => setRound((r) => r + 1)}>
+          <Button variant="primary" size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" onClick={() => setRound((r) => r + 1)}>
             {t.writing.another}
           </Button>
           <Button
@@ -215,7 +216,7 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
           >
             {t.writing.editAgain}
           </Button>
-          <Button asChild size="lg" variant="ghost" className="h-12">
+          <Button asChild size="lg" variant="quiet" className="h-12">
             <Link href="/write">{t.common.back}</Link>
           </Button>
         </div>
@@ -243,22 +244,22 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
           maxLength={4000}
           disabled={phase.kind === "checking"}
         />
-        {phase.kind === "load-error" && <p className="rounded-lg bg-[var(--error-wash)] p-3 text-sm text-error">{t.writing.loadError}</p>}
-        <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-rule bg-paper/95 px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
-          <Button type="submit" size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" disabled={words === 0 || phase.kind === "checking"}>
+        {phase.kind === "load-error" && <p className="rounded-lg bg-error-tint p-3 text-sm text-error">{t.writing.loadError}</p>}
+        <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-canvas/95 px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+          <Button variant="primary" type="submit" size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" disabled={words === 0 || phase.kind === "checking"}>
             {phase.kind === "checking" ? t.writing.checking : t.writing.check}
           </Button>
-          <span className="text-sm text-ink-soft tabular">{t.writing.wordCount(words)}</span>
+          <span className="text-sm text-fg-2 tabular">{t.writing.wordCount(words)}</span>
           <button
             type="button"
             disabled={phase.kind === "checking"}
-            className="ms-auto min-h-11 text-sm text-ink-soft underline underline-offset-4 disabled:opacity-50"
+            className="ms-auto min-h-11 text-sm text-fg-2 underline underline-offset-4 disabled:opacity-50"
             onClick={() => setRound((r) => r + 1)}
           >
             {t.writing.another}
           </button>
         </div>
-        <p className="text-sm text-ink-soft">{t.writing.honest}</p>
+        <p className="text-sm text-fg-2">{t.writing.honest}</p>
       </form>
     </div>
   );

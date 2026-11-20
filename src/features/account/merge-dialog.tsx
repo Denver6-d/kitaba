@@ -39,16 +39,16 @@ export function MergeDialog({ open, onChoose }: { open: boolean; onChoose: (c: M
         {step === "choose" ? (
           <div className="mt-2 space-y-4">
             <div className="space-y-1">
-              <Button className="h-11 w-full" disabled={busy} onClick={() => void run("merge")}>
+              <Button variant="primary" className="h-11 w-full" disabled={busy} onClick={() => void run("merge")}>
                 {t.account.mergeYes}
               </Button>
-              <p className="text-xs text-ink-soft">{t.account.mergeYesHint}</p>
+              <p className="text-xs text-fg-2">{t.account.mergeYesHint}</p>
             </div>
             <div className="space-y-1">
               <Button variant="outline" className="h-11 w-full" disabled={busy} onClick={() => void run("backup")}>
                 {t.account.mergeNo}
               </Button>
-              <p className="text-xs text-ink-soft">{t.account.mergeNoHint}</p>
+              <p className="text-xs text-fg-2">{t.account.mergeNoHint}</p>
             </div>
           </div>
         ) : (
@@ -59,7 +59,7 @@ export function MergeDialog({ open, onChoose }: { open: boolean; onChoose: (c: M
             <Button variant="outline" className="h-11" disabled={busy} onClick={() => void run("backup")}>
               {t.account.backupAgain}
             </Button>
-            <Button variant="ghost" className="h-11" disabled={busy} onClick={() => setStep("choose")}>
+            <Button variant="quiet" className="h-11" disabled={busy} onClick={() => setStep("choose")}>
               {t.common.back}
             </Button>
           </div>

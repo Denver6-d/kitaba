@@ -19,11 +19,11 @@ export default function AccountPage() {
   return (
     <Page title={t.account.title} intro={t.account.intro} width="narrow">
       {!account.configured ? (
-        <div className="sheet space-y-4 p-6 sm:p-8">
-          <h2 className="text-xl font-semibold">{t.account.notConfiguredTitle}</h2>
-          <p className="text-ink-soft">{t.account.notConfigured}</p>
+        <div className="panel space-y-4 p-6 sm:p-8">
+          <h2 className="text-2xl font-light">{t.account.notConfiguredTitle}</h2>
+          <p className="text-fg-2">{t.account.notConfigured}</p>
           <div className="flex flex-wrap gap-3">
-            <Button asChild className="h-11">
+            <Button variant="primary" asChild className="h-11">
               <Link href="/play">{t.nav.play}</Link>
             </Button>
             <Button asChild variant="outline" className="h-11">
@@ -67,9 +67,9 @@ function SignedIn() {
             {t.account.syncNow}
           </Button>
         </div>
-        <div className="space-y-2 rounded-xl border border-rule p-4">
+        <div className="space-y-2 rounded-xl border border-line p-4">
           <label className="flex items-start gap-2 text-sm">
-            <input type="checkbox" checked={removeLocal} onChange={(e) => setRemoveLocal(e.target.checked)} className="mt-1 size-4 accent-[var(--brass-fill)]" />
+            <input type="checkbox" checked={removeLocal} onChange={(e) => setRemoveLocal(e.target.checked)} className="mt-1 size-4 accent-[var(--gold)]" />
             {t.account.signOutRemove}
           </label>
           <Button variant="outline" className="h-10 gap-2" onClick={() => void signOut({ removeLocalData: removeLocal })}>
@@ -80,7 +80,7 @@ function SignedIn() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">{t.account.dataTitle}</h2>
+        <h2 className="text-2xl font-light">{t.account.dataTitle}</h2>
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" className="h-10 gap-2" onClick={() => void exportCloud()}>
             <Download className="size-4" aria-hidden="true" />
@@ -94,7 +94,7 @@ function SignedIn() {
       </section>
 
       <section aria-labelledby="delete-h" className="space-y-3 rounded-xl border border-error/40 p-5">
-        <h2 id="delete-h" className="text-xl font-semibold text-error">
+        <h2 id="delete-h" className="text-2xl font-light text-error">
           {t.account.deleteTitle}
         </h2>
         <p className="text-sm">{t.account.deleteBody}</p>
@@ -107,7 +107,7 @@ function SignedIn() {
           onChange={(e) => setConfirm(e.target.value)}
           dir="ltr"
           autoComplete="off"
-          className="h-10 w-48 rounded-md border border-input bg-sheet px-3 font-mono"
+          className="h-10 w-48 rounded-md border border-input bg-surface px-3 font-word"
         />
         <div>
           <Button
@@ -130,7 +130,7 @@ function SignedIn() {
             {t.account.deleteButton}
           </Button>
         </div>
-        <p role="status" className={`min-h-5 text-sm ${message?.kind === "error" ? "text-error" : "text-correct"}`}>
+        <p role="status" className={`min-h-5 text-sm ${message?.kind === "error" ? "text-error" : "text-fg"}`}>
           {message?.text}
         </p>
       </section>

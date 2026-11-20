@@ -32,7 +32,7 @@ export function BottomNav() {
   const typing = useSyncExternalStore(subscribeViewport, keyboardOpen, () => false);
   if (pathname.startsWith("/play/game") || pathname.startsWith("/write/") || typing) return null;
   return (
-    <nav aria-label={t.nav.bottom} className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-rule bg-sheet pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav aria-label={t.nav.bottom} className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-line bg-canvas pb-[env(safe-area-inset-bottom)] md:hidden">
       <ul className="mx-auto grid max-w-md grid-cols-5">
         {PRIMARY_NAV.map((item) => {
           const Icon = ICONS[item.href] ?? House;
@@ -42,9 +42,9 @@ export function BottomNav() {
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs ${active ? "font-semibold text-ink" : "text-ink-soft"}`}
+                className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs ${active ? "font-medium text-fg" : "text-fg-2"}`}
               >
-                <Icon className={`size-5 ${active ? "text-brass" : ""}`} aria-hidden="true" />
+                <Icon className="size-5" strokeWidth={active ? 2 : 1.5} aria-hidden="true" />
                 {item.label(t)}
               </Link>
             </li>

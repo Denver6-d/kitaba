@@ -22,12 +22,12 @@ export function LevelsCard({
   const headingId = useId();
   const [saved, setSaved] = useState<LevelArea | null>(null);
   return (
-    <section aria-labelledby={headingId} className="sheet space-y-5 p-5 sm:p-6">
+    <section aria-labelledby={headingId} className="panel space-y-5 p-5 sm:p-6">
       <div className="space-y-1">
-        <h2 id={headingId} className="text-xl font-semibold">
+        <h2 id={headingId} className="text-2xl font-light">
           {t.levels.title}
         </h2>
-        <p className="text-sm text-ink-soft">{t.levels.intro}</p>
+        <p className="text-sm text-fg-2">{t.levels.intro}</p>
       </div>
       <div className={`grid gap-6 ${areas.length > 1 ? "lg:grid-cols-3" : ""}`}>
         {areas.map((area) => (
@@ -39,13 +39,14 @@ export function LevelsCard({
                 void onChange(area, l).then(() => setSaved(area));
               }}
               options={LEVELS.map((l) => ({ value: l, label: l }))}
+              activeTone="gold"
             />
-            <p className="text-sm text-ink-soft">{t.levels.areaHelp[area]}</p>
-            <p className="text-sm text-hint">{t.levels.desc[levels[area]]}</p>
+            <p className="text-sm text-fg-2">{t.levels.areaHelp[area]}</p>
+            <p className="text-sm text-fg-2">{t.levels.desc[levels[area]]}</p>
           </div>
         ))}
       </div>
-      <p className="min-h-5 text-sm text-correct" aria-live="polite">
+      <p className="min-h-5 text-sm text-fg" aria-live="polite">
         {saved ? `${t.levels.areas[saved]}: ${t.levels.saved}` : ""}
       </p>
     </section>

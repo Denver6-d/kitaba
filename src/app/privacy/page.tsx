@@ -30,7 +30,7 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
         title: "في السحابة (فقط إذا أنشأت حسابًا)",
         items: [
           "بريدك الإلكتروني وكلمة المرور (مشفّرة) لدى خدمة المصادقة Supabase Auth.",
-          "إذا دخلت عبر Google أو GitHub: تحفظ Supabase Auth بريدك واسمك وصورة حسابك كما يرسلها مزوّد الخدمة. لا نطلب صلاحيات أخرى، ولا نرى كلمة مرورك عند ذلك المزوّد.",
+          "إذا دخلت عبر Google: تحفظ Supabase Auth بريدك واسمك وصورة حسابك كما يرسلها مزوّد الخدمة. لا نطلب صلاحيات أخرى، ولا نرى كلمة مرورك عند ذلك المزوّد.",
           "نسخة من سجلات التقدّم المذكورة أعلاه لمزامنتها بين أجهزتك. كل صف مرتبط بحسابك، وقواعد قاعدة البيانات (Row Level Security) تمنع أي مستخدم آخر من قراءته.",
           "ملفات تعريف الارتباط الوحيدة هي ملفات جلسة تسجيل الدخول التي تحتاجها Supabase.",
         ],
@@ -80,7 +80,7 @@ const CONTENT: Record<"ar" | "en", { intro: string; sections: readonly Section[]
         title: "In the cloud (only if you create an account)",
         items: [
           "Your email address and password (hashed) with the Supabase Auth service.",
-          "If you sign in with Google or GitHub: Supabase Auth stores the email, name and avatar the provider sends. We ask for no other permissions and never see your password there.",
+          "If you sign in with Google: Supabase Auth stores the email, name and avatar the provider sends. We ask for no other permissions and never see your password there.",
           "A copy of the progress records above, to sync them across your devices. Every row is tied to your account, and database rules (Row Level Security) stop any other user from reading it.",
           "The only cookies are the sign-in session cookies Supabase needs.",
         ],
@@ -123,28 +123,28 @@ export default function PrivacyPage() {
       <div className="space-y-10">
         {c.sections.map((s) => (
           <section key={s.title} className="space-y-3">
-            <h2 className="text-xl font-semibold">{s.title}</h2>
-            <ul className="list-disc space-y-2 ps-5 text-ink-soft marker:text-brass-fill">
+            <h2 className="text-2xl font-light">{s.title}</h2>
+            <ul className="list-disc space-y-2 ps-5 text-fg-2 marker:text-fg-3">
               {s.items.map((i) => (
                 <li key={i}>{i}</li>
               ))}
             </ul>
           </section>
         ))}
-        <p className="text-sm text-ink-soft">{c.updated}</p>
+        <p className="text-sm text-fg-2">{c.updated}</p>
         <p className="text-sm">
           <Link href="/credits" className="underline underline-offset-4">
             {t.nav.credits}
           </Link>
         </p>
-        <details className="rounded-xl border border-rule p-4" lang={other} dir={other === "ar" ? "rtl" : "ltr"}>
+        <details className="rounded-xl border border-line p-4" lang={other} dir={other === "ar" ? "rtl" : "ltr"}>
           <summary className="cursor-pointer font-medium">{other === "ar" ? "النسخة العربية" : "English version"}</summary>
           <div className="mt-4 space-y-6">
             <p>{CONTENT[other].intro}</p>
             {CONTENT[other].sections.map((s) => (
               <section key={s.title} className="space-y-2">
                 <h3 className="font-semibold">{s.title}</h3>
-                <ul className="list-disc space-y-1 ps-5 text-sm text-ink-soft">
+                <ul className="list-disc space-y-1 ps-5 text-sm text-fg-2">
                   {s.items.map((i) => (
                     <li key={i}>{i}</li>
                   ))}
@@ -153,7 +153,7 @@ export default function PrivacyPage() {
             ))}
           </div>
         </details>
-        <Link href="/settings" className="inline-block text-brass underline underline-offset-4">
+        <Link href="/settings" className="inline-block text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg-2">
           {t.nav.settings}
         </Link>
       </div>

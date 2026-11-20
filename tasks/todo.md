@@ -69,3 +69,19 @@
 
 ## Google sign-in flag
 - [x] Google hidden unless NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true; GitHub and email always shown; .env.example, README (en/ar), tests (O5)
+
+## Redesign "calm luxury" (DESIGN.md V3)
+
+### Phase A: foundation
+- [x] Tokens (renamed by role), contrast tested, dark only, `color-scheme: dark`
+- [x] IBM Plex Sans Arabic + Inter (Lexend kept as the reading option); light headings
+- [x] Western digits through `lib/format.ts`, tested; `%` sign in both languages
+- [x] Opaque header, menu without theme switch, bottom bar, footer, logo, icons
+- [x] GitHub sign-in removed (code, tests, SPEC, README, privacy, checklist)
+- [x] Pill Button (primary is never the default), Chip, Card, Field, Segmented, Switch, Tabs, dialogs; one gold action per screen
+
+### Phase B: welcome, game, correction, result
+- [ ] Not started
+
+### Phase C: landing, motion, sound and haptics, mobile pass, Lighthouse
+- [ ] Not started

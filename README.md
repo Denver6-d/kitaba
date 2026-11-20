@@ -6,7 +6,7 @@ The product name lives in one place: `src/config/brand.ts`.
 
 - **Spelling only.** Every screen serves one question: can the learner spell the word? After each mistake, feedback shows a letter diff and the rule in one line.
 - **Guest-first.** Everything works with no account, and offline after the first visit. Progress is stored in IndexedDB on the device.
-- **Optional account:** GitHub or email, and Google once it is set up and switched on (`NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true`). It adds cloud sync across devices and an opt-in weekly leaderboard.
+- **Optional account:** email, and Google once it is set up and switched on (`NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true`). It adds cloud sync across devices and an opt-in weekly leaderboard.
 - **No analytics, no tracking, no AI APIs.** The only network calls go to Supabase, and only when it is configured.
 
 See [SPEC.md](SPEC.md), [DESIGN.md](DESIGN.md) and [DECISIONS.md](DECISIONS.md). The pivot from the earlier typing and writing product is in DECISIONS, section "Pivot".
@@ -20,9 +20,9 @@ See [SPEC.md](SPEC.md), [DESIGN.md](DESIGN.md) and [DECISIONS.md](DECISIONS.md).
 | Campaign | 8 worlds × 10 stages, 1–3 stars, unlocks, a boss per world (mixed modes and dictated sentences), a daily challenge, XP and levels, streaks, achievements. |
 | No repeats | A shuffle-bag per word pool, so a word only comes back once the pool is used up. |
 | Accents | American or British English (voice and expected spelling), using on-device voices only. |
-| Accounts | GitHub OAuth, Google OAuth behind a public flag (off by default), email and password, magic link. Offline-tolerant sync, merging on first sign-in, export, account deletion. |
+| Accounts | Google OAuth behind a public flag (off by default), email and password, magic link. Offline-tolerant sync, merging on first sign-in, export, account deletion. |
 | Leaderboard | Weekly points, opt-in nickname, server-side plausibility checks. |
-| Platform | Light and dark themes, text size, a reading-friendly font, reduced motion, an installable PWA, phone and desktop layouts. |
+| Platform | One dark design (calm, one gold accent), Western digits in both languages, text size, a reading-friendly font, reduced motion, an installable PWA, phone and desktop layouts. |
 
 ## Getting started
 
@@ -55,11 +55,11 @@ Without configuration the app runs in guest mode, and the account and leaderboar
 3. Run `supabase/tests/rls_tests.sql`. It rolls back and prints `ALL RLS TESTS PASSED`. Then go through `supabase/tests/rls_checklist.md`.
 4. Under **Authentication → URL Configuration**, set the Site URL and add `https://<your-site>/auth/callback**` (and `http://localhost:3000/auth/callback**` for development) to the Redirect URLs. The app adds `?next=…` to the callback, and Supabase matches the whole URL, so the trailing `**` is needed.
 5. Copy `.env.example` to `.env.local` and set only the two public values: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-6. **Google sign-in is hidden by default.** The "Continue with Google" button appears only when `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true` is set at build time (any other value, or none, keeps it hidden). Set it only after the Google provider is configured in Supabase (steps below). Otherwise the button would only lead to an error. GitHub and email sign-in are always shown when Supabase is configured. The flag is public (it only controls a button) and holds no secret. Rebuild after changing it, because Next.js inlines `NEXT_PUBLIC_*` values at build time.
+6. **Google sign-in is hidden by default.** The "Continue with Google" button appears only when `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true` is set at build time (any other value, or none, keeps it hidden). Set it only after the Google provider is configured in Supabase (steps below). Otherwise the button would only lead to an error. Email sign-in is always shown when Supabase is configured. The flag is public (it only controls a button) and holds no secret. Rebuild after changing it, because Next.js inlines `NEXT_PUBLIC_*` values at build time.
 
 **Never put a `service_role` key, or any OAuth client secret, in this repo, in `.env` files or in the client.** Account deletion uses a `SECURITY DEFINER` function that can only delete the caller.
 
-## تفعيل الدخول بحساب Google (وGitHub اختياريًا)
+## تفعيل الدخول بحساب Google
 
 هذه الخطوات تُنفَّذ مرة واحدة. **لا تضع معرّف العميل (Client ID) ولا السرّ (Client Secret) في الكود ولا في ملفات ‎.env**؛ مكانهما الوحيد هو لوحة تحكم Supabase.
 
@@ -86,16 +86,11 @@ Without configuration the app runs in guest mode, and the account and leaderboar
 3. الصق **Client ID** في حقل Client IDs، و**Client Secret** في حقل Client Secret، ثم اضغط **Save**.
 4. تأكّد أن **Authentication ← URL Configuration ← Redirect URLs** يحتوي على `https://your-site.com/auth/callback**` و`http://localhost:3000/auth/callback**` للتجربة (النجمتان في النهاية ضروريتان لأن التطبيق يضيف `?next=` إلى الرابط). التطبيق لا يعيد المستخدم إلا إلى هذا الرابط على موقعه نفسه.
 
-### GitHub (اختياري)
-1. في GitHub: **Settings ← Developer settings ← OAuth Apps ← New OAuth App**.
-2. **Homepage URL** هو عنوان موقعك، و**Authorization callback URL** هو رابط Supabase نفسه: `https://<معرّف-مشروعك>.supabase.co/auth/v1/callback`.
-3. انسخ **Client ID**، وأنشئ **Client secret**، ثم الصقهما في Supabase: **Authentication ← Sign In / Providers ← GitHub** وفعّله واحفظ.
-
-### ثالثًا: أظهر زر Google
-زر «المتابعة باستخدام Google» **مخفي افتراضيًا**. بعد إكمال الخطوات السابقة، أضف إلى ملف ‎`.env.local` (أو إلى إعدادات البيئة في الاستضافة) السطر `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true`، ثم أعد البناء (`npm run build`)، لأن قيم ‎`NEXT_PUBLIC_*` تُضمَّن وقت البناء. أي قيمة أخرى، أو ترك السطر فارغًا، تُبقي الزر مخفيًا. أزرار GitHub والبريد الإلكتروني تظهر دائمًا عند إعداد Supabase. هذا المتغير عام ولا يحمل أي سرّ.
+### رابعًا: أظهر زر Google
+زر «المتابعة باستخدام Google» **مخفي افتراضيًا**. بعد إكمال الخطوات السابقة، أضف إلى ملف ‎`.env.local` (أو إلى إعدادات البيئة في الاستضافة) السطر `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true`، ثم أعد البناء (`npm run build`)، لأن قيم ‎`NEXT_PUBLIC_*` تُضمَّن وقت البناء. أي قيمة أخرى، أو ترك السطر فارغًا، تُبقي الزر مخفيًا. الدخول بالبريد الإلكتروني يظهر دائمًا عند إعداد Supabase. هذا المتغير عام ولا يحمل أي سرّ.
 
 ### للتجربة
-افتح صفحة **الحساب** في الموقع واضغط «المتابعة باستخدام Google» (بعد تفعيل الزر كما في الخطوة الثالثة). بعد الموافقة تعود إلى `/auth/callback` ثم إلى صفحة الحساب. إن كان على الجهاز تقدّم سابق، يسألك التطبيق هل تدمجه مع حسابك أم لا. وإذا ضغطت «إلغاء» في شاشة Google، تظهر رسالة هادئة ويبقى تقدّمك محفوظًا.
+افتح صفحة **الحساب** في الموقع واضغط «المتابعة باستخدام Google» (بعد تفعيل الزر كما في الخطوة الرابعة). بعد الموافقة تعود إلى `/auth/callback` ثم إلى صفحة الحساب. إن كان على الجهاز تقدّم سابق، يسألك التطبيق هل تدمجه مع حسابك أم لا. وإذا ضغطت «إلغاء» في شاشة Google، تظهر رسالة هادئة ويبقى تقدّمك محفوظًا.
 
 ## Architecture
 

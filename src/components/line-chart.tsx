@@ -37,8 +37,8 @@ export function LineChart({ values, label, height = 160, reference, formatY = (n
         <title id={`${id}-t`}>{label}</title>
         {ticks.map((tk) => (
           <g key={tk}>
-            <line x1={pad.left} x2={width - pad.right} y1={y(tk)} y2={y(tk)} stroke="var(--rule)" strokeWidth={1} />
-            <text x={pad.left - 8} y={y(tk) + 4} textAnchor="end" fontSize={11} fill="var(--ink-soft)" fontFamily="var(--font-ui)">
+            <line x1={pad.left} x2={width - pad.right} y1={y(tk)} y2={y(tk)} stroke="var(--line)" strokeWidth={1} />
+            <text x={pad.left - 8} y={y(tk) + 4} textAnchor="end" fontSize={11} fill="var(--fg-2)" fontFamily="var(--font-ui)">
               {formatY(tk)}
             </text>
           </g>
@@ -49,15 +49,15 @@ export function LineChart({ values, label, height = 160, reference, formatY = (n
             x2={width - pad.right}
             y1={y(reference)}
             y2={y(reference)}
-            stroke="var(--brass-fill)"
+            stroke="var(--gold)"
             strokeWidth={1.5}
             strokeDasharray="4 4"
           />
         )}
-        {values.length > 1 && <polygon points={area} fill="var(--correct-wash)" />}
-        <polyline points={points} fill="none" stroke="var(--correct)" strokeWidth={2.25} strokeLinejoin="round" strokeLinecap="round" />
+        {values.length > 1 && <polygon points={area} fill="var(--raised)" />}
+        <polyline points={points} fill="none" stroke="var(--fg)" strokeWidth={2.25} strokeLinejoin="round" strokeLinecap="round" />
         {values.length <= 40 &&
-          values.map((v, i) => <circle key={i} cx={x(i)} cy={y(v)} r={2.75} fill="var(--sheet)" stroke="var(--correct)" strokeWidth={1.5} />)}
+          values.map((v, i) => <circle key={i} cx={x(i)} cy={y(v)} r={2.75} fill="var(--surface)" stroke="var(--fg)" strokeWidth={1.5} />)}
       </svg>
       <table className="sr-only">
         <caption>{label}</caption>

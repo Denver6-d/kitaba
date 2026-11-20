@@ -26,9 +26,9 @@ export function WritingSummaryPanel({ summary, saved, saveFailed }: { summary: W
   const types = Object.entries(summary.byType) as [MistakeType, number][];
 
   return (
-    <section aria-labelledby="w-sum" className="sheet space-y-6 p-5 sm:p-8">
+    <section aria-labelledby="w-sum" className="panel space-y-6 p-5 sm:p-8">
       <div className="space-y-3 text-center">
-        <h2 id="w-sum" className="text-2xl font-bold">
+        <h2 id="w-sum" className="text-2xl font-light">
           {headline}
         </h2>
         <div className="flex items-end justify-center gap-3" role="img" aria-label={t.play.stars(summary.stars)}>
@@ -38,24 +38,24 @@ export function WritingSummaryPanel({ summary, saved, saveFailed }: { summary: W
         </div>
       </div>
       <dl className="grid grid-cols-3 gap-3 text-center">
-        <div className="rounded-xl border border-rule p-3">
-          <dt className="text-sm text-ink-soft">{t.writing.accuracy}</dt>
-          <dd className="mt-1 font-latin-display text-2xl font-medium tabular sm:text-3xl">{pct(Math.round(summary.accuracy * 100))}</dd>
+        <div className="rounded-xl border border-line p-3">
+          <dt className="text-sm text-fg-2">{t.writing.accuracy}</dt>
+          <dd className="mt-1 font-latin text-2xl font-medium tabular sm:text-3xl">{pct(Math.round(summary.accuracy * 100))}</dd>
         </div>
-        <div className="rounded-xl border border-rule p-3">
-          <dt className="text-sm text-ink-soft">{t.writing.mistakesLabel}</dt>
-          <dd className="mt-1 font-latin-display text-2xl font-medium tabular sm:text-3xl">
+        <div className="rounded-xl border border-line p-3">
+          <dt className="text-sm text-fg-2">{t.writing.mistakesLabel}</dt>
+          <dd className="mt-1 font-latin text-2xl font-medium tabular sm:text-3xl">
             {num(summary.mistakes)} / {num(summary.words)}
           </dd>
         </div>
-        <div className="rounded-xl border border-rule p-3">
-          <dt className="text-sm text-ink-soft">XP</dt>
-          <dd className="mt-1 font-latin-display text-2xl font-medium text-brass tabular sm:text-3xl">
+        <div className="rounded-xl border border-line p-3">
+          <dt className="text-sm text-fg-2">XP</dt>
+          <dd className="mt-1 font-latin text-2xl font-medium text-fg tabular sm:text-3xl">
             <AnimatedNumber value={summary.xp} format={(n) => `+${num(Math.round(n))}`} />
           </dd>
         </div>
       </dl>
-      {saved?.levelUp != null && <p className="text-center font-semibold text-brass">{t.game.levelUp(saved.levelUp)}</p>}
+      {saved?.levelUp != null && <p className="text-center font-semibold text-fg">{t.game.levelUp(saved.levelUp)}</p>}
 
       {types.length > 0 && (
         <div className="space-y-2">
@@ -63,8 +63,8 @@ export function WritingSummaryPanel({ summary, saved, saveFailed }: { summary: W
           <ul className="space-y-2">
             {types.map(([type, n]) => (
               <li key={type} className="flex gap-3 text-sm">
-                <span className="shrink-0 rounded-full bg-[var(--error-wash)] px-2.5 py-0.5 font-semibold text-error tabular">{num(n)}</span>
-                <span className="text-hint">{t.writing.types[type]}</span>
+                <span className="shrink-0 rounded-full bg-error-tint px-2.5 py-0.5 font-semibold text-error tabular">{num(n)}</span>
+                <span className="text-fg-2">{t.writing.types[type]}</span>
               </li>
             ))}
           </ul>
@@ -76,15 +76,15 @@ export function WritingSummaryPanel({ summary, saved, saveFailed }: { summary: W
           <h3 className="font-semibold">{t.writing.practise}</h3>
           <ul className="flex flex-wrap gap-2" dir="ltr" lang="en">
             {summary.practice.map((p) => (
-              <li key={`${p.wrong}-${p.right ?? ""}`} className="rounded-full border border-rule px-3 py-1.5 font-mono">
+              <li key={`${p.wrong}-${p.right ?? ""}`} className="rounded-full border border-line px-3 py-1.5 font-word">
                 {p.right ?? p.wrong}
               </li>
             ))}
           </ul>
-          {saved && saved.reviewed > 0 && <p className="text-sm text-correct">{t.writing.toReview(saved.reviewed)}</p>}
+          {saved && saved.reviewed > 0 && <p className="text-sm text-fg">{t.writing.toReview(saved.reviewed)}</p>}
         </div>
       )}
-      {saveFailed && <p className="rounded-lg bg-[var(--error-wash)] p-3 text-sm text-error">{t.game.saveFailed}</p>}
+      {saveFailed && <p className="rounded-lg bg-error-tint p-3 text-sm text-error">{t.game.saveFailed}</p>}
     </section>
   );
 }

@@ -51,12 +51,6 @@ export default function SettingsPage() {
       <div className="space-y-10">
         <section className="space-y-6">
           <Segmented legend={t.settings.language} value={s.lang} onChange={(lang) => update({ lang })} options={[{ value: "ar", label: "العربية" }, { value: "en", label: "English" }]} />
-          <Segmented
-            legend={t.settings.theme}
-            value={s.theme}
-            onChange={(theme) => update({ theme })}
-            options={(["system", "light", "dark"] as const).map((v) => ({ value: v, label: t.settings.themes[v] }))}
-          />
           <div className="space-y-2">
             <Segmented
               legend={t.settings.accent}
@@ -64,7 +58,7 @@ export default function SettingsPage() {
               onChange={(accent) => update({ accent })}
               options={(["us", "uk"] as const).map((v) => ({ value: v, label: t.settings.accents[v] }))}
             />
-            <p className="text-sm text-ink-soft">{t.settings.accentHint}</p>
+            <p className="text-sm text-fg-2">{t.settings.accentHint}</p>
           </div>
           <Segmented
             legend={t.settings.textSize}
@@ -78,17 +72,17 @@ export default function SettingsPage() {
             onChange={(motion) => update({ motion })}
             options={(["system", "reduce", "full"] as const).map((v) => ({ value: v, label: t.settings.motions[v] }))}
           />
-          <div className="divide-y divide-rule border-y border-rule">
+          <div className="divide-y divide-line border-y border-line">
             <Toggle label={t.settings.readableFont} hint={t.settings.readableFontHint} checked={s.readableFont} onChange={(readableFont) => update({ readableFont })} />
             <Toggle label={t.settings.sounds} hint={t.settings.soundsHint} checked={s.sounds} onChange={(sounds) => update({ sounds })} />
           </div>
         </section>
 
         <section aria-labelledby="levels-h" className="space-y-3">
-          <h2 id="levels-h" className="text-xl font-semibold">
+          <h2 id="levels-h" className="text-2xl font-light">
             {t.levels.title}
           </h2>
-          <p className="text-ink-soft">{t.levels.retakeHint}</p>
+          <p className="text-fg-2">{t.levels.retakeHint}</p>
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="outline" className="h-11 gap-2">
               <Link href="/welcome?test=1">
@@ -96,7 +90,7 @@ export default function SettingsPage() {
                 {t.levels.retake}
               </Link>
             </Button>
-            <Button asChild variant="ghost" className="h-11">
+            <Button asChild variant="quiet" className="h-11">
               <Link href="/play">{t.levels.choose}</Link>
             </Button>
           </div>
@@ -105,17 +99,17 @@ export default function SettingsPage() {
         <OfflineLibrary />
 
         <section aria-labelledby="data-h" className="space-y-4">
-          <h2 id="data-h" className="text-xl font-semibold">
+          <h2 id="data-h" className="text-2xl font-light">
             {t.settings.data}
           </h2>
-          <p className="text-sm text-ink-soft">{t.settings.dataIntro}</p>
+          <p className="text-sm text-fg-2">{t.settings.dataIntro}</p>
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" className="h-10 gap-2" onClick={async () => downloadJson(await repos.data.exportAll(), exportFilename())}>
               <Download className="size-4" aria-hidden="true" />
               {t.settings.export}
             </Button>
           </div>
-          <div className="space-y-3 rounded-xl border border-rule p-4">
+          <div className="space-y-3 rounded-xl border border-line p-4">
             <Segmented
               legend={t.settings.import}
               value={mode}
@@ -142,7 +136,7 @@ export default function SettingsPage() {
               {t.settings.import}
             </Button>
           </div>
-          <p role="status" className={`min-h-5 text-sm ${message?.kind === "error" ? "text-error" : "text-correct"}`}>
+          <p role="status" className={`min-h-5 text-sm ${message?.kind === "error" ? "text-error" : "text-fg"}`}>
             {message?.text}
           </p>
           <AlertDialog>
@@ -158,6 +152,7 @@ export default function SettingsPage() {
               <AlertDialogFooter>
                 <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
                 <AlertDialogAction
+                  variant="destructive"
                   onClick={async () => {
                     await repos.data.clearAll();
                     setMessage({ kind: "ok", text: t.settings.cleared });
@@ -183,7 +178,7 @@ function Toggle({ label, hint, checked, onChange }: { label: string; hint?: stri
           {label}
         </label>
         {hint && (
-          <p id={`${id}-hint`} className="text-sm text-ink-soft">
+          <p id={`${id}-hint`} className="text-sm text-fg-2">
             {hint}
           </p>
         )}

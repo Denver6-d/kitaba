@@ -34,12 +34,12 @@ export function GameView() {
     body = (
       <EmptyBlock
         action={
-          <Button asChild className="h-11">
+          <Button variant="primary" asChild className="h-11">
             <Link href="/play">{t.game.backToMap}</Link>
           </Button>
         }
       >
-        <Lock className="mx-auto mb-2 size-6 text-ink-soft" aria-hidden="true" />
+        <Lock className="mx-auto mb-2 size-6 text-fg-2" aria-hidden="true" />
         {t.play.lockedHint}
       </EmptyBlock>
     );
@@ -47,7 +47,7 @@ export function GameView() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pt-6 pb-10 sm:px-6 sm:pt-10">
-      <Link href="/play" className="mb-4 inline-flex min-h-11 items-center gap-1 rounded-md text-ink-soft hover:text-ink">
+      <Link href="/play" className="mb-4 inline-flex min-h-11 items-center gap-1 rounded-md text-fg-2 hover:text-fg">
         <Back className="size-4" aria-hidden="true" />
         {t.game.backToMap}
       </Link>

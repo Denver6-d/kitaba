@@ -68,16 +68,16 @@ export function OfflineLibrary() {
 
   return (
     <section aria-labelledby="offline-h" className="space-y-3">
-      <h2 id="offline-h" className="text-xl font-semibold">
+      <h2 id="offline-h" className="text-2xl font-light">
         {t.settings.offlineTitle}
       </h2>
-      <p className="text-ink-soft">{t.settings.offlineBody}</p>
+      <p className="text-fg-2">{t.settings.offlineBody}</p>
       <div ref={statusRef} tabIndex={-1} aria-live="polite" className="space-y-3 outline-none">
-        {state.kind === "checking" && <p className="text-sm text-ink-soft">{t.common.loading}</p>}
-        {state.kind === "no-storage" && <p className="text-sm text-ink-soft">{t.settings.offlineUnavailable}</p>}
-        {state.kind === "unreachable" && <p className="text-sm text-ink-soft">{t.settings.offlineUnreachable}</p>}
-        {complete && <p className="text-sm text-correct">{t.settings.offlineDone}</p>}
-        {state.kind === "idle" && !complete && state.stored > 0 && <p className="text-sm text-ink-soft">{t.settings.offlinePartial(percent(state))}</p>}
+        {state.kind === "checking" && <p className="text-sm text-fg-2">{t.common.loading}</p>}
+        {state.kind === "no-storage" && <p className="text-sm text-fg-2">{t.settings.offlineUnavailable}</p>}
+        {state.kind === "unreachable" && <p className="text-sm text-fg-2">{t.settings.offlineUnreachable}</p>}
+        {complete && <p className="text-sm text-fg">{t.settings.offlineDone}</p>}
+        {state.kind === "idle" && !complete && state.stored > 0 && <p className="text-sm text-fg-2">{t.settings.offlinePartial(percent(state))}</p>}
         {state.kind === "failed" && <p className="text-sm text-error">{t.settings.offlineFailed}</p>}
         {state.kind === "downloading" && (
           <div className="space-y-2">
@@ -90,7 +90,7 @@ export function OfflineLibrary() {
               aria-valuenow={state.total ? Math.floor((state.stored / state.total) * 100) : 0}
               aria-label={t.settings.offlineTitle}
             >
-              <div className="h-full bg-brass-fill transition-[width]" style={{ width: `${state.total ? (state.stored / state.total) * 100 : 0}%` }} />
+              <div className="h-full bg-gold transition-[width]" style={{ width: `${state.total ? (state.stored / state.total) * 100 : 0}%` }} />
             </div>
           </div>
         )}
@@ -109,9 +109,9 @@ export function OfflineLibrary() {
               {t.settings.offlineDownload}
             </Button>
           )}
-          {state.kind !== "downloading" && <span className="text-sm text-ink-soft tabular">{t.settings.offlineSize(mb(state.total))}</span>}
+          {state.kind !== "downloading" && <span className="text-sm text-fg-2 tabular">{t.settings.offlineSize(mb(state.total))}</span>}
           {state.kind === "idle" && state.stored > 0 && (
-            <Button variant="ghost" className="h-11 gap-2" onClick={() => void remove()}>
+            <Button variant="quiet" className="h-11 gap-2" onClick={() => void remove()}>
               <Trash2 className="size-4" aria-hidden="true" />
               {t.settings.offlineRemove}
             </Button>

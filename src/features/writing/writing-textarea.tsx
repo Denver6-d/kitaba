@@ -32,7 +32,7 @@ export const WritingTextarea = forwardRef<HTMLTextAreaElement, React.TextareaHTM
           const el = e.currentTarget;
           window.setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
         }}
-        className={`block min-h-44 w-full resize-y rounded-xl border-2 border-rule-strong bg-paper p-4 font-mono text-lg leading-relaxed focus:border-brass-fill sm:min-h-56 sm:text-xl ${className}`}
+        className={`block min-h-44 w-full resize-y rounded-xl border-2 border-line-strong bg-canvas p-4 font-word text-lg leading-relaxed focus:border-gold sm:min-h-56 sm:text-xl ${className}`}
         {...props}
       />
     </div>

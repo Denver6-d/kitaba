@@ -8,7 +8,7 @@ import { tatoebaUrl, type TatoebaCredit } from "@/data/play-word";
  */
 export function TatoebaCreditLine({ credit, className = "" }: { credit: TatoebaCredit; className?: string }) {
   return (
-    <p dir="ltr" lang="en" className={`text-xs text-ink-soft ${className}`}>
+    <p dir="ltr" lang="en" className={`text-xs text-fg-2 ${className}`}>
       <a href={tatoebaUrl(credit.id)} target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">
         Tatoeba #{credit.id} · {credit.author}
       </a>{" "}

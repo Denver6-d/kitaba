@@ -8,7 +8,7 @@ export function SyncIndicatorText() {
   const { t } = useI18n();
   const { sync } = useAccount();
   const s = t.account.syncStatus;
-  if (!sync) return <span className="text-sm text-ink-soft">{s.guest}</span>;
+  if (!sync) return <span className="text-sm text-fg-2">{s.guest}</span>;
   const label =
     sync.status === "syncing"
       ? s.syncing
@@ -20,7 +20,7 @@ export function SyncIndicatorText() {
             ? s.pending(sync.pending)
             : s.synced;
   return (
-    <span role="status" className={`text-sm ${sync.status === "error" ? "text-error" : "text-ink-soft"}`}>
+    <span role="status" className={`text-sm ${sync.status === "error" ? "text-error" : "text-fg-2"}`}>
       {t.account.sync}: {label}
     </span>
   );

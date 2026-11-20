@@ -122,10 +122,10 @@ describe("welcome screen", () => {
     const order = [...html.matchAll(/data-welcome="(\w+)"/g)].map((m) => m[1]);
     expect(order).toEqual(["test", "choose", "skip"]);
     const tag = (name: string) => html.match(new RegExp(`<button[^>]*data-welcome="${name}"[^>]*>`))?.[0] ?? "";
-    expect(tag("test")).toMatch(/data-variant="default"/);
+    expect(tag("test")).toMatch(/data-variant="primary"/);
     expect(tag("test")).toMatch(/text-xl/);
     expect(tag("choose")).toMatch(/data-variant="outline"/);
-    expect(tag("skip")).toMatch(/data-variant="ghost"/);
+    expect(tag("skip")).toMatch(/data-variant="quiet"/);
     expect(html).toContain(ar.welcome.test);
   });
 });

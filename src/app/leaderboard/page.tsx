@@ -45,12 +45,12 @@ export default function LeaderboardPage() {
       ) : configured && unavailable ? (
         <ErrorBlock title={t.common.errorTitle} body={t.account.errors.generic} onRetry={retryLoad} retryLabel={t.common.retry} />
       ) : !configured || !board ? (
-        <div className="sheet flex flex-col items-start gap-4 p-6 sm:p-8">
-          <Trophy className="size-8 text-brass" aria-hidden="true" />
-          <h2 className="text-xl font-semibold">{t.leaderboard.notConfiguredTitle}</h2>
-          <p className="max-w-xl text-ink-soft">{t.leaderboard.notConfigured}</p>
+        <div className="panel flex flex-col items-start gap-4 p-6 sm:p-8">
+          <Trophy className="size-8 text-fg-2" aria-hidden="true" />
+          <h2 className="text-2xl font-light">{t.leaderboard.notConfiguredTitle}</h2>
+          <p className="max-w-xl text-fg-2">{t.leaderboard.notConfigured}</p>
           <div className="flex flex-wrap gap-3">
-            <Button asChild className="h-11">
+            <Button variant="primary" asChild className="h-11">
               <Link href="/play">{t.nav.play}</Link>
             </Button>
             <Button asChild variant="outline" className="h-11">
@@ -62,10 +62,10 @@ export default function LeaderboardPage() {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
           <section className="space-y-4">
             <BoardTable rows={rows} onRetry={refresh} />
-            <p className="text-sm text-ink-soft">
+            <p className="text-sm text-fg-2">
               {t.leaderboard.rules} {t.leaderboard.resets}
             </p>
-            <p className="rounded-xl bg-brass-wash p-4 text-sm">{t.leaderboard.honest}</p>
+            <p className="rounded-xl bg-raised p-4 text-sm">{t.leaderboard.honest}</p>
           </section>
           <aside>{user ? <Membership key={user.id} onChange={refresh} /> : <SignInPrompt />}</aside>
         </div>
@@ -82,7 +82,7 @@ function BoardTable({ rows, onRetry }: { rows: Load<PublicScore[]>; onRetry: () 
   return (
     <table className="w-full">
       <thead>
-        <tr className="border-b border-rule text-sm text-ink-soft">
+        <tr className="border-b border-line text-sm text-fg-2">
           <th scope="col" className="py-2 text-start font-normal">{t.leaderboard.rank}</th>
           <th scope="col" className="py-2 text-start font-normal">{t.leaderboard.nickname}</th>
           <th scope="col" className="py-2 text-start font-normal">{t.leaderboard.points}</th>
@@ -91,7 +91,7 @@ function BoardTable({ rows, onRetry }: { rows: Load<PublicScore[]>; onRetry: () 
       </thead>
       <tbody className="tabular">
         {rows.data.map((r) => (
-          <tr key={`${r.rank}-${r.nickname}`} className="border-b border-rule/60">
+          <tr key={`${r.rank}-${r.nickname}`} className="border-b border-line/60">
             <td className="py-3">{num(r.rank)}</td>
             {/* Nicknames are user content: rendered as text, isolated for bidi. */}
             <td className="py-3 font-medium">
@@ -109,9 +109,9 @@ function BoardTable({ rows, onRetry }: { rows: Load<PublicScore[]>; onRetry: () 
 function SignInPrompt() {
   const { t } = useI18n();
   return (
-    <div className="space-y-3 rounded-xl border border-rule p-5">
+    <div className="space-y-3 rounded-xl border border-line p-5">
       <p>{t.leaderboard.needAccount}</p>
-      <Button asChild className="h-10">
+      <Button variant="primary" asChild className="h-10">
         <Link href="/account">{t.account.signIn}</Link>
       </Button>
     </div>
@@ -166,7 +166,7 @@ function Membership({ onChange }: { onChange: () => void }) {
   };
 
   return (
-    <div className="space-y-5 rounded-xl border border-rule p-5">
+    <div className="space-y-5 rounded-xl border border-line p-5">
       {nick.data && (
         <p className="font-medium">
           {t.leaderboard.onBoardAs}
@@ -190,20 +190,20 @@ function Membership({ onChange }: { onChange: () => void }) {
           dir="auto"
           autoComplete="nickname"
           aria-describedby={`${id}-hint`}
-          className="h-11 w-full rounded-lg border border-input bg-sheet px-3"
+          className="h-11 w-full rounded-lg border border-input bg-surface px-3"
         />
-        <p id={`${id}-hint`} className="text-xs text-ink-soft">
+        <p id={`${id}-hint`} className="text-xs text-fg-2">
           {t.leaderboard.nicknameHint}
         </p>
-        <Button type="submit" className="h-10" disabled={busy}>
+        <Button variant="primary" type="submit" className="h-10" disabled={busy}>
           {nick.data ? t.leaderboard.save : t.leaderboard.join}
         </Button>
       </form>
-      <p role="status" className={`min-h-5 text-sm ${message?.kind === "error" ? "text-error" : "text-correct"}`}>
+      <p role="status" className={`min-h-5 text-sm ${message?.kind === "error" ? "text-error" : "text-fg"}`}>
         {message?.text}
       </p>
       {nick.data && (
-        <div className="space-y-2 border-t border-rule pt-4">
+        <div className="space-y-2 border-t border-line pt-4">
           {confirmLeave ? (
             <div className="flex flex-wrap gap-2">
               <Button
@@ -228,7 +228,7 @@ function Membership({ onChange }: { onChange: () => void }) {
               >
                 {t.leaderboard.leaveConfirm}
               </Button>
-              <Button variant="ghost" className="h-10" disabled={busy} onClick={() => setConfirmLeave(false)}>
+              <Button variant="quiet" className="h-10" disabled={busy} onClick={() => setConfirmLeave(false)}>
                 {t.common.cancel}
               </Button>
             </div>
@@ -237,7 +237,7 @@ function Membership({ onChange }: { onChange: () => void }) {
               {t.leaderboard.leave}
             </Button>
           )}
-          <p className="text-xs text-ink-soft">{t.leaderboard.leaveHint}</p>
+          <p className="text-xs text-fg-2">{t.leaderboard.leaveHint}</p>
         </div>
       )}
     </div>

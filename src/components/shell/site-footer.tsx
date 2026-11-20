@@ -7,10 +7,10 @@ import { Logo } from "./logo";
 export function SiteFooter() {
   const { t } = useI18n();
   return (
-    <footer className="no-print mt-24 border-t border-rule pb-16 md:pb-0">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-8 sm:px-6">
+    <footer className="no-print mt-24 border-t border-line pb-16 md:pb-0">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-10 sm:px-6">
         <Logo />
-        <p className="text-ink-soft">{t.footer.line}</p>
+        <p className="text-sm text-fg-3">{t.footer.line}</p>
       </div>
     </footer>
   );

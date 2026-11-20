@@ -13,14 +13,14 @@ export function SyncIndicator() {
   const s = t.account.syncStatus;
   const { icon: Icon, label, tone } =
     sync.status === "syncing"
-      ? { icon: RefreshCw, label: s.syncing, tone: "text-ink-soft" }
+      ? { icon: RefreshCw, label: s.syncing, tone: "text-fg-2" }
       : sync.status === "offline"
-        ? { icon: CloudOff, label: s.offline(sync.pending), tone: "text-brass" }
+        ? { icon: CloudOff, label: s.offline(sync.pending), tone: "text-fg-2" }
         : sync.status === "error"
           ? { icon: TriangleAlert, label: s.error, tone: "text-error" }
           : sync.pending > 0
-            ? { icon: Cloud, label: s.pending(sync.pending), tone: "text-ink-soft" }
-            : { icon: Cloud, label: s.synced, tone: "text-correct" };
+            ? { icon: Cloud, label: s.pending(sync.pending), tone: "text-fg-2" }
+            : { icon: Cloud, label: s.synced, tone: "text-fg" };
   return (
     <Link href="/account" className={`hidden items-center gap-1.5 rounded-md px-2 py-1.5 text-xs sm:inline-flex ${tone}`} title={label}>
       <Icon className={`size-4 ${sync.status === "syncing" ? "motion-safe:animate-spin" : ""}`} aria-hidden="true" />

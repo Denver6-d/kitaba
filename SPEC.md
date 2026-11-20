@@ -23,13 +23,13 @@ The app answers one question for Arabic speakers: **"can I spell English words c
 - As a learner, I hear a sentence or a longer message read one sentence at a time, type it, and see a word-by-word comparison.
 - As a returning learner, I keep my daily streak, play the daily challenge and review my own mistakes when they are due.
 - As a learner who wants to compete, I opt in to a weekly leaderboard under a nickname and can leave any time.
-- As a returning user, I sign in with GitHub or email (or Google, once it is switched on), my guest progress is merged, and I sync across devices.
+- As a returning user, I sign in with email (or Google, once it is switched on), my guest progress is merged, and I sync across devices.
 
 ## 2. Capability map
 
 | Module | Responsibility |
 |---|---|
-| `platform` | Next.js shell, i18n (ar/en, RTL), themes, fonts, hamburger menu, PWA, design tokens, brand constant |
+| `platform` | Next.js shell, i18n (ar/en, RTL), dark-only design tokens, fonts, hamburger menu, PWA, design tokens, brand constant |
 | `persistence` | Repository interfaces, Dexie (local, schema v3 with migrations), export/import (v1 and v2 files are migrated on import) |
 | `content` | Validated spelling data: the bundled hand-written bank (1,591 words, see DECISIONS C1; each with an Arabic hint and an example sentence; ≥ 800 dictation sentences; rule explanations) plus the open-data library in `public/content/v1` (≥ 8,000 more graded and categorised words, DECISIONS OD5–OD7), loaded on demand. Counts are never shown on the site |
 | `spelling` | Answer checking (US/UK variants), letter diff, misspelling generator, rule explanations, SM-2 SRS |
@@ -37,7 +37,7 @@ The app answers one question for Arabic speakers: **"can I spell English words c
 | `campaign` | 8 worlds × 10 stages, stars, unlocks, bosses, daily challenge |
 | `levels` | Three stored learner levels (words, sentences/messages, tests), first-visit welcome, adaptive placement test (§6.6) |
 | `progress` | XP, levels, streaks, daily goal, achievements, stats |
-| `accounts` | Supabase auth (GitHub OAuth, Google OAuth behind `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN`, email), offline-tolerant sync, first-login merge, sign-out, account deletion |
+| `accounts` | Supabase auth (Google OAuth behind `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN`, email), offline-tolerant sync, first-login merge, sign-out, account deletion |
 | `leaderboard` | Opt-in nickname, weekly spelling score, RPC submission with plausibility checks |
 | `writing` | Sentences and messages (§6.7): free writing with an on-device spell checker, sentence and message dictation, mistakes to SM-2, history |
 
@@ -74,7 +74,7 @@ npm run check:bundle         # after build: first-load JS per page, budget and p
 | `/settings`, `/privacy`, `/offline` | Settings (including "the full library offline"), privacy, offline fallback |
 | `/credits` | Open-data sources, licences, reproduced notices, Tatoeba author list |
 
-Main navigation: Home, Play, Sentences, Review, My progress. Everything else (Leaderboard, Account, Settings, Privacy, Open data credits, language and theme) sits in a hamburger menu on every screen size. The footer shows only the name and one short line.
+Main navigation: Home, Play, Sentences, Review, My progress. Everything else (Leaderboard, Account, Settings, Privacy, Open data credits and language) sits in a hamburger menu on every screen size. The footer shows only the name and one short line.
 
 ## 6. Architecture
 
@@ -139,7 +139,7 @@ Dexie v3 and export v3 reshape the profile. v2 rows (with one `level`) are migra
 - **History:** "My progress" lists the last 20 texts with accuracy and mistakes.
 
 ### 6.5 Supabase
-Unchanged in principle (DECISIONS A1–A8, L1–L6): RLS on every table, writes only through `SECURITY DEFINER` RPCs, and no service_role key anywhere. OAuth (Google, GitHub) uses `signInWithOAuth` with PKCE. The `redirectTo` is built from the current origin plus `/auth/callback`, and the `next` path is validated by `safeNext`. Provider client IDs and secrets live only in the Supabase dashboard.
+Unchanged in principle (DECISIONS A1–A8, L1–L6): RLS on every table, writes only through `SECURITY DEFINER` RPCs, and no service_role key anywhere. Google OAuth uses `signInWithOAuth` with PKCE. The `redirectTo` is built from the current origin plus `/auth/callback`, and the `next` path is validated by `safeNext`. Provider client IDs and secrets live only in the Supabase dashboard.
 
 Leaderboard: `submit_score(p_points, p_correct, p_total, p_duration_s)` checks opt-in, 5 ≤ total ≤ 60, correct ≤ total, accuracy ≥ 50%, points ≤ correct × 40, duration ≥ 2 s per item, ≤ 1 per 20 s and ≤ 60 per day. The public view `leaderboard_weekly` exposes `rank, nickname, points, words, last_at` (weekly sum, Monday 00:00 UTC).
 
@@ -151,7 +151,7 @@ Leaderboard: `submit_score(p_points, p_correct, p_total, p_duration_s)` checks o
 4. Seven modes, 80 campaign stages with stars and unlocks, 8 bosses, a daily challenge, XP and levels, a streak.
 5. Spelling inputs: `autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false"`, the right `inputmode`, and they stay visible above the virtual keyboard.
 6. Hamburger menu: keyboard accessible, focus trapped, closes on Esc and on an outside click, RTL and LTR.
-7. Usable at 360, 390, 768, 1280 and 1920 px, in both themes and both directions, with no horizontal scroll and touch targets ≥ 44 px.
+7. Usable at 360, 390, 768, 1280 and 1440 px (dark only, DECISIONS R1), in both directions, with no horizontal scroll and touch targets ≥ 44 px.
 7a. Sentences and messages: ≥ 150 scenarios, ≥ 300 dictation sentences and ≥ 60 messages, original and unique, every text spell-checks clean with the real dictionary (content test). The checker is covered by tests for known misspellings, confusables, false positives (names, numbers, acronyms, apostrophes, hyphens) and British spellings, and the dictation diff by its own tests. nspell and the dictionary are not in the main bundle.
 8. Guest mode works with no Supabase env vars, offline after the first visit, with no console errors.
 9. lint, typecheck, test and build are green at every phase commit.

@@ -1,5 +1,6 @@
 "use client";
 
+import { chipVariants } from "@/components/ui/chip";
 import {
   useCallback,
   useEffect,
@@ -10,7 +11,7 @@ import {
   type MouseEvent,
 } from "react";
 import { flushSync } from "react-dom";
-import { Eye, Turtle, Volume2 } from "lucide-react";
+import { Check, Eye, Turtle, Volume2 } from "lucide-react";
 import type { PlayWord } from "@/data/play-word";
 import { TatoebaCreditLine } from "@/features/library/credit-line";
 import { CATEGORY_INFO } from "@/data/rules";
@@ -329,7 +330,7 @@ export function GameSession({
   return (
     <section
       aria-label={t.game.areaLabel}
-      className="sheet relative space-y-6 p-5 sm:p-8"
+      className="panel relative space-y-6 p-5 sm:p-8"
     >
       {/* Always mounted, so screen readers announce each verdict when its text changes. */}
       <p id={liveId} className="sr-only" aria-live="polite">
@@ -344,13 +345,13 @@ export function GameSession({
         <div className="flex items-center gap-3">
           <span className="font-semibold">{title}</span>
           {level && (
-            <span className="rounded-full border border-brass-fill/60 px-2.5 py-0.5 text-brass tabular" title={t.levels.inGame}>
+            <span className={`${chipVariants({ tone: "level-active", size: "sm" })} font-latin tabular`} title={t.levels.inGame}>
               <span className="sr-only">{t.levels.inGame}: </span>
               {level}
             </span>
           )}
           {!timed && (
-            <span className="text-ink-soft tabular">
+            <span className="text-fg-2 tabular">
               {t.game.itemOf(game.index + 1, game.items.length)}
             </span>
           )}
@@ -358,21 +359,21 @@ export function GameSession({
         <div className="flex items-center gap-2">
           {game.combo >= 3 && (
             <span
-              className="rounded-full bg-brass-wash px-2.5 py-1 font-semibold text-brass tabular"
+              className="rounded-full bg-raised px-2.5 py-1 font-semibold text-fg tabular"
               aria-label={t.game.comboLabel(mult)}
             >
               {t.game.combo(mult)}
             </span>
           )}
           <span
-            className="rounded-full border border-rule px-2.5 py-1 tabular"
+            className="rounded-full border border-line px-2.5 py-1 tabular"
             aria-label={t.game.score}
           >
             {num(game.points)}
           </span>
           {timed && left !== null && (
             <span
-              className={`rounded-full px-2.5 py-1 font-semibold tabular ${left < 10_000 ? "bg-[var(--error-wash)] text-error" : "bg-muted"}`}
+              className={`rounded-full px-2.5 py-1 font-semibold tabular ${left < 10_000 ? "bg-error-tint text-error" : "bg-muted"}`}
               aria-label={t.game.timeLeft}
               role="timer"
             >
@@ -385,11 +386,11 @@ export function GameSession({
 
       {!timed && (
         <div
-          className="h-1 overflow-hidden rounded-full bg-rule"
+          className="h-1 overflow-hidden rounded-full bg-line"
           aria-hidden="true"
         >
           <div
-            className="h-full rounded-full bg-brass-fill transition-[width] duration-300"
+            className="h-full rounded-full bg-gold transition-[width] duration-300"
             style={{
               width: `${(game.results.length / game.items.length) * 100}%`,
             }}
@@ -399,8 +400,8 @@ export function GameSession({
 
       {notStarted ? (
         <div className="space-y-4 py-6 text-center">
-          <p className="text-ink-soft">{t.modes[item.mode]?.desc}</p>
-          <Button
+          <p className="text-fg-2">{t.modes[item.mode]?.desc}</p>
+          <Button variant="primary"
             size="lg"
             className="h-12 px-8 text-base"
             onClick={() => {
@@ -448,7 +449,7 @@ export function GameSession({
                   <>
                     <Button
                       size="lg"
-                      variant="secondary"
+                      variant="outline"
                       onMouseDown={keepInputFocus}
                       onClick={() => item.speak && speak(item.speak)}
                       className="h-11 gap-2 px-5"
@@ -468,7 +469,7 @@ export function GameSession({
                     </Button>
                     {item.kind !== "sentence" && word.example && (
                       <Button
-                        variant="ghost"
+                        variant="quiet"
                         size="lg"
                         onMouseDown={keepInputFocus}
                         onClick={() => speak(word.example ?? "")}
@@ -479,12 +480,12 @@ export function GameSession({
                     )}
                   </>
                 ) : voice === "checking" ? (
-                  <p className="text-sm text-ink-soft">{t.common.loading}</p>
+                  <p className="text-sm text-fg-2">{t.common.loading}</p>
                 ) : (
                   <div className="w-full space-y-3">
                     <p
                       role="note"
-                      className="rounded-lg bg-brass-wash p-3 text-sm"
+                      className="rounded-lg bg-raised p-3 text-sm"
                     >
                       {t.game.noVoice}
                     </p>
@@ -503,7 +504,7 @@ export function GameSession({
                   </div>
                 )}
                 {canSpeak && usingOtherAccent && (
-                  <p className="w-full text-sm text-ink-soft">
+                  <p className="w-full text-sm text-fg-2">
                     {t.game.otherAccent}
                   </p>
                 )}
@@ -564,9 +565,9 @@ export function GameSession({
           )}
 
           {(answered || showInput) && (
-            <div className="flex flex-wrap items-center gap-3 max-sm:sticky max-sm:bottom-0 max-sm:-mx-5 max-sm:border-t max-sm:border-rule max-sm:bg-sheet max-sm:px-5 max-sm:py-3">
+            <div className="flex flex-wrap items-center gap-3 max-sm:sticky max-sm:bottom-0 max-sm:-mx-5 max-sm:border-t max-sm:border-line max-sm:bg-surface max-sm:px-5 max-sm:py-3">
               {answered ? (
-                <Button
+                <Button variant="primary"
                   ref={nextRef}
                   size="lg"
                   onMouseDown={showInput ? keepInputFocus : undefined}
@@ -580,7 +581,7 @@ export function GameSession({
               ) : (
                 showInput && (
                   <>
-                    <Button
+                    <Button variant="primary"
                       size="lg"
                       onMouseDown={keepInputFocus}
                       onClick={onEnter}
@@ -590,7 +591,7 @@ export function GameSession({
                       {t.game.check}
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="quiet"
                       size="lg"
                       onMouseDown={keepInputFocus}
                       onClick={() => submit("", { forcedWrong: true })}
@@ -602,7 +603,7 @@ export function GameSession({
                 )
               )}
               {answered && showInput && (
-                <p className="text-sm text-ink-soft max-sm:hidden">
+                <p className="text-sm text-fg-2 max-sm:hidden">
                   {t.game.pressEnter}
                 </p>
               )}
@@ -646,7 +647,7 @@ function Prompt({
 }) {
   // Library words below the most frequent 3,000 have no Arabic hint (DECISIONS OD4): the line is simply left out.
   const meaning = word.ar ? (
-    <p className="text-hint">
+    <p className="text-fg-2">
       {labels.meaning}: <span lang="ar">{word.ar}</span>
     </p>
   ) : null;
@@ -656,7 +657,7 @@ function Prompt({
         dir="ltr"
         lang="en"
         aria-live="polite"
-        className="ruled py-2 font-mono text-4xl"
+        className="py-2 font-word text-4xl"
       >
         {item.kind === "sentence" ? item.answer : item.answer}
       </p>
@@ -685,7 +686,7 @@ function Prompt({
                   aria-pressed={picked}
                   className={`min-h-11 rounded-md px-1.5 transition-colors ${
                     reveal
-                      ? "bg-[var(--error-wash)] text-error underline decoration-wavy decoration-error underline-offset-4"
+                      ? "bg-error-tint text-error underline decoration-wavy decoration-error underline-offset-4"
                       : picked
                         ? "bg-muted"
                         : "hover:bg-muted"
@@ -723,7 +724,7 @@ function Prompt({
             <p
               dir="ltr"
               lang="en"
-              className="ruled py-1 font-mono text-4xl tracking-[0.25em] sm:text-5xl"
+              className="py-1 font-word text-4xl tracking-[0.25em] sm:text-5xl"
               aria-label={item.masked.replace(/_/g, " blank ")}
             >
               {item.masked}
@@ -745,7 +746,7 @@ function Prompt({
               {item.letters.map((l, i) => (
                 <li
                   key={i}
-                  className="grid size-12 place-items-center rounded-[10px] border border-rule-strong bg-paper font-mono text-2xl uppercase shadow-sm"
+                  className="grid size-12 place-items-center rounded-[10px] border border-line-strong bg-canvas font-word text-2xl uppercase"
                 >
                   {l}
                 </li>
@@ -790,27 +791,28 @@ function ChoiceOptions({
                 type="button"
                 onClick={() => onPick(o)}
                 disabled={answered}
-                className={`flex min-h-14 w-full items-center gap-3 rounded-[10px] border-2 px-4 text-start font-mono text-xl transition-colors ${
+                className={`flex min-h-14 w-full items-center gap-3 rounded-[10px] border-2 px-4 text-start font-word text-xl transition-colors ${
                   state === "right"
-                    ? "border-correct bg-[var(--correct-wash)] text-correct"
+                    ? "border-fg bg-raised text-fg"
                     : state === "wrong"
-                      ? "border-error bg-[var(--error-wash)] text-error line-through"
+                      ? "border-error bg-error-tint text-error line-through"
                       : state === "dim"
-                        ? "border-rule opacity-60"
-                        : "border-rule-strong bg-paper hover:border-brass-fill"
+                        ? "border-line opacity-60"
+                        : "border-line-strong bg-canvas hover:border-fg-2"
                 }`}
               >
-                <span className="grid size-7 shrink-0 place-items-center rounded-md bg-muted font-sans text-sm text-ink-soft">
+                <span className="grid size-7 shrink-0 place-items-center rounded-md border border-line font-sans text-sm text-fg-2">
                   {i + 1}
                 </span>
                 {o}
+                {state === "right" && <Check className="ms-auto size-5 shrink-0" aria-hidden="true" />}
               </button>
             </li>
           );
         })}
       </ul>
       {!answered && (
-        <p className="text-sm text-ink-soft max-sm:hidden">{hint}</p>
+        <p className="text-sm text-fg-2 max-sm:hidden">{hint}</p>
       )}
     </div>
   );
@@ -833,10 +835,10 @@ function Feedback({
   const v = verdict.check?.verdict;
   return (
     <div
-      className={`space-y-3 rounded-xl border-s-4 p-4 ${verdict.correct ? "border-correct bg-[var(--correct-wash)]" : "border-error bg-[var(--error-wash)]"}`}
+      className={`space-y-3 rounded-xl border-s-4 p-4 ${verdict.correct ? "border-line-strong bg-raised" : "border-error bg-error-tint"}`}
     >
       {verdict.correct ? (
-        <p className="answer-sweep inline-block pb-2 text-lg font-semibold text-correct">
+        <p className="answer-sweep inline-block pb-2 text-lg font-semibold text-fg">
           {v === "other-variant"
             ? t.game.otherVariant(item.answer)
             : t.game.correct}
@@ -844,8 +846,8 @@ function Feedback({
       ) : (
         <div className="space-y-2">
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-ink-soft">{t.game.wrong}</span>
-            <strong dir="ltr" lang="en" className="font-mono text-2xl">
+            <span className="text-fg-2">{t.game.wrong}</span>
+            <strong dir="ltr" lang="en" className="font-word text-2xl">
               {item.answer}
             </strong>
           </p>
@@ -854,7 +856,7 @@ function Feedback({
             verdict.check &&
             verdict.check.diff.length > 0 && (
               <p className="flex flex-wrap items-baseline gap-x-3">
-                <span className="text-sm text-ink-soft">
+                <span className="text-sm text-fg-2">
                   {t.game.yourAnswer}
                 </span>
                 <LetterDiff
@@ -867,14 +869,14 @@ function Feedback({
       )}
       {item.kind !== "sentence" && (
         <>
-          <p className="text-hint">
+          <p className="text-fg-2">
             <span className="font-semibold">
               {t.game.rule} · {category}:
             </span>{" "}
             {rule}
           </p>
           {(word.ar || word.example) && (
-            <p className="text-sm text-ink-soft">
+            <p className="text-sm text-fg-2">
               {word.ar && <span lang="ar">{word.ar}</span>}
               {word.ar && word.example && " · "}
               {word.example && (
@@ -889,7 +891,7 @@ function Feedback({
       )}
       {item.kind === "sentence" && word.exampleCredit && <TatoebaCreditLine credit={word.exampleCredit} />}
       {verdict.nextReviewDays !== null && (
-        <p className="text-sm text-hint">
+        <p className="text-sm text-fg-2">
           {t.review.nextReview(verdict.nextReviewDays)}
         </p>
       )}

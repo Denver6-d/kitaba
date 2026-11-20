@@ -56,10 +56,10 @@ export const SpellingInput = forwardRef<HTMLInputElement, Props>(function Spelli
 
   const toneClass =
     tone === "correct"
-      ? "border-correct text-correct"
+      ? "border-fg text-fg"
       : tone === "wrong"
         ? "border-error text-error answer-shake"
-        : "border-input focus:border-brass-fill";
+        : "border-input focus:border-gold";
 
   return (
     <input
@@ -92,7 +92,7 @@ export const SpellingInput = forwardRef<HTMLInputElement, Props>(function Spelli
       inputMode="text"
       enterKeyHint="go"
       data-gramm="false"
-      className={`w-full min-w-0 rounded-[10px] border-2 bg-paper px-4 font-mono tracking-wide outline-none transition-colors ${
+      className={`w-full min-w-0 rounded-[10px] border-2 bg-canvas px-4 font-word tracking-wide outline-none transition-colors ${
         size === "lg" ? "h-14 text-2xl sm:h-16 sm:text-[1.75rem]" : "h-12 text-xl"
       } ${toneClass}`}
     />

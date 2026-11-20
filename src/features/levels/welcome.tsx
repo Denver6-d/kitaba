@@ -43,14 +43,14 @@ export function Welcome({ startWithTest = false, onSkip, next = "/play" }: { sta
   if (step.kind === "done") {
     const r = step.result;
     return (
-      <section className="sheet space-y-5 p-6 sm:p-8">
-        <h2 ref={headingRef} tabIndex={-1} className="text-2xl font-bold outline-none sm:text-3xl">
+      <section className="panel space-y-5 p-6 sm:p-8">
+        <h2 ref={headingRef} tabIndex={-1} className="text-2xl font-light outline-none sm:text-3xl">
           {t.placement.resultTitle(step.level)}
         </h2>
         {r && <p className="text-lg">{t.placement.explain(r.at, r.above, step.level)}</p>}
-        <p className="text-hint">{t.levels.desc[step.level]}</p>
-        <p className="text-ink-soft">{t.welcome.setAll(step.level)}</p>
-        <Button asChild size="lg" className="h-12 px-8 text-base">
+        <p className="text-fg-2">{t.levels.desc[step.level]}</p>
+        <p className="text-fg-2">{t.welcome.setAll(step.level)}</p>
+        <Button variant="primary" asChild size="lg" className="h-12 px-8 text-base">
           <Link href={next}>{t.placement.startPlaying}</Link>
         </Button>
       </section>
@@ -60,7 +60,7 @@ export function Welcome({ startWithTest = false, onSkip, next = "/play" }: { sta
   if (step.kind === "pick") {
     return (
       <section className="space-y-5">
-        <h2 ref={headingRef} tabIndex={-1} className="text-2xl font-bold outline-none">
+        <h2 ref={headingRef} tabIndex={-1} className="text-2xl font-light outline-none">
           {t.welcome.pickTitle}
         </h2>
         <ul className="grid gap-3">
@@ -69,20 +69,20 @@ export function Welcome({ startWithTest = false, onSkip, next = "/play" }: { sta
               <button
                 type="button"
                 onClick={() => void setAll(l, "choice").then(() => setStep({ kind: "done", level: l, result: null }))}
-                className="sheet flex min-h-16 w-full items-center gap-4 p-4 text-start transition-colors hover:bg-brass-wash"
+                className="panel flex min-h-16 w-full items-center gap-4 p-4 text-start transition-colors hover:bg-raised"
               >
-                <span className="w-12 shrink-0 font-mono text-xl font-semibold text-brass" dir="ltr">
+                <span className="w-12 shrink-0 font-word text-xl font-semibold text-fg" lang="en" dir="ltr">
                   {l}
                 </span>
                 <span className="space-y-0.5">
                   <span className="block font-semibold">{t.common.levels[l]}</span>
-                  <span className="block text-sm text-ink-soft">{t.levels.desc[l]}</span>
+                  <span className="block text-sm text-fg-2">{t.levels.desc[l]}</span>
                 </span>
               </button>
             </li>
           ))}
         </ul>
-        <button type="button" onClick={() => setStep({ kind: "menu" })} className="min-h-11 text-ink-soft underline underline-offset-4">
+        <button type="button" onClick={() => setStep({ kind: "menu" })} className="min-h-11 text-fg-2 underline underline-offset-4">
           {t.common.back}
         </button>
       </section>
@@ -92,25 +92,25 @@ export function Welcome({ startWithTest = false, onSkip, next = "/play" }: { sta
   return (
     <section className="space-y-6">
       <div className="space-y-2">
-        <h2 ref={headingRef} tabIndex={-1} className="text-3xl font-bold outline-none sm:text-4xl">
+        <h2 ref={headingRef} tabIndex={-1} className="text-3xl font-light outline-none sm:text-4xl">
           {t.welcome.title}
         </h2>
-        <p className="max-w-2xl text-ink-soft">{t.welcome.intro}</p>
+        <p className="max-w-2xl text-fg-2">{t.welcome.intro}</p>
       </div>
       {/* The placement test is the recommended path: first, filled and largest. The other two are secondary. */}
       <div className="space-y-3">
-        <Button type="button" size="lg" data-welcome="test" onClick={() => setStep({ kind: "test", seed: Date.now() })} className="h-auto min-h-16 w-full gap-3 px-6 py-4 text-xl font-semibold sm:w-auto sm:min-w-80">
+        <Button variant="primary" type="button" size="lg" data-welcome="test" onClick={() => setStep({ kind: "test", seed: Date.now() })} className="h-auto min-h-16 w-full gap-3 px-6 py-4 text-xl font-semibold sm:w-auto sm:min-w-80">
           <ClipboardCheck className="size-6" aria-hidden="true" />
           {t.welcome.test}
         </Button>
-        <p className="max-w-xl text-ink-soft">{t.welcome.testDesc}</p>
+        <p className="max-w-xl text-fg-2">{t.welcome.testDesc}</p>
       </div>
-      <div className="flex flex-wrap items-center gap-3 border-t border-rule pt-5">
+      <div className="flex flex-wrap items-center gap-3 border-t border-line pt-5">
         <Button type="button" variant="outline" data-welcome="choose" onClick={() => setStep({ kind: "pick" })} className="h-11 gap-2">
           <ListChecks className="size-4" aria-hidden="true" />
           {t.welcome.choose}
         </Button>
-        <Button type="button" variant="ghost" data-welcome="skip" onClick={() => void setAll(DEFAULT_LEVEL, "skip").then(onSkip)} className="h-11 text-ink-soft underline underline-offset-4 hover:text-ink">
+        <Button type="button" variant="quiet" data-welcome="skip" onClick={() => void setAll(DEFAULT_LEVEL, "skip").then(onSkip)} className="h-11 text-fg-2 underline underline-offset-4 hover:text-fg">
           {t.welcome.skip}
         </Button>
       </div>

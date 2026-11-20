@@ -39,32 +39,32 @@ export function MistakeDetail({ m, onAdded, accent }: { m: MistakeView; onAdded?
   const noteText = m.kind === "note" && right ? (accent === "us" ? t.writing.noteBritish(right) : t.writing.noteAmerican(right)) : null;
 
   return (
-    <div className="space-y-3 rounded-xl border border-rule bg-paper p-4" aria-live="polite">
-      <p className="text-sm text-ink-soft">{t.writing.mark[m.kind]}</p>
+    <div className="space-y-3 rounded-xl border border-line bg-canvas p-4" aria-live="polite">
+      <p className="text-sm text-fg-2">{t.writing.mark[m.kind]}</p>
       {right ? (
         <div className="space-y-2">
           <p className="flex flex-wrap items-baseline gap-3" dir="ltr" lang="en">
-            <span className="font-mono text-xl text-error line-through decoration-2">{m.word}</span>
+            <span className="font-word text-xl text-error line-through decoration-2">{m.word}</span>
             <span aria-hidden="true">→</span>
-            <span className="font-mono text-2xl font-semibold text-correct">{right}</span>
+            <span className="font-word text-2xl font-semibold text-fg">{right}</span>
           </p>
           {m.kind === "spelling" && m.type !== "capital" && (
-            <div className="font-mono text-lg">
+            <div className="font-word text-lg">
               <span className="sr-only">{t.writing.correct}: </span>
               <LetterDiff segments={letterDiff(m.word.toLowerCase(), right.toLowerCase())} labels={{ missing: "+", extra: "−", wrong: "≠" }} />
             </div>
           )}
         </div>
       ) : (
-        <p className="font-mono text-xl text-error" dir="ltr" lang="en">
+        <p className="font-word text-xl text-error" dir="ltr" lang="en">
           {m.word}
         </p>
       )}
-      {noteText && <p className="text-hint">{noteText}</p>}
-      {explanation && <p className="text-hint">{right ? explanation : t.writing.noSuggestion}</p>}
-      {!right && !explanation && <p className="text-hint">{t.writing.noSuggestion}</p>}
+      {noteText && <p className="text-fg-2">{noteText}</p>}
+      {explanation && <p className="text-fg-2">{right ? explanation : t.writing.noSuggestion}</p>}
+      {!right && !explanation && <p className="text-fg-2">{t.writing.noSuggestion}</p>}
       {example && (
-        <p className="text-ink-soft">
+        <p className="text-fg-2">
           <span className="font-medium">{t.writing.example}: </span>
           <span dir="ltr" lang="en">
             {example}
@@ -81,7 +81,7 @@ export function MistakeDetail({ m, onAdded, accent }: { m: MistakeView; onAdded?
         {m.kind === "spelling" && m.type !== "capital" && onAdded && !added && (
           <Button
             type="button"
-            variant="ghost"
+            variant="quiet"
             className="h-11 gap-2"
             onClick={() => {
               void repos.dictionary.add(m.word).then(() => {
@@ -95,7 +95,7 @@ export function MistakeDetail({ m, onAdded, accent }: { m: MistakeView; onAdded?
           </Button>
         )}
       </div>
-      {added && <p className="text-sm text-correct">{t.writing.added}</p>}
+      {added && <p className="text-sm text-fg">{t.writing.added}</p>}
     </div>
   );
 }

@@ -20,7 +20,7 @@ export function MarkedText({ text, issues, selected, onSelect }: { text: string;
         ? "text-error underline decoration-wavy decoration-2"
         : issue.kind === "confusable"
           ? "text-error underline decoration-dashed decoration-2"
-          : "text-hint underline decoration-dotted decoration-2";
+          : "text-fg-2 underline decoration-dotted decoration-2";
     parts.push(
       <button
         key={`${issue.start}-${i}`}
@@ -28,7 +28,7 @@ export function MarkedText({ text, issues, selected, onSelect }: { text: string;
         onClick={() => onSelect(i)}
         aria-pressed={selected === i}
         aria-label={`${text.slice(issue.start, issue.end)}: ${t.writing.mark[issue.kind]}`}
-        className={`inline rounded-sm px-0.5 underline-offset-4 ${style} ${selected === i ? "bg-brass-wash outline-2 outline-brass-fill" : "hover:bg-brass-wash"}`}
+        className={`inline rounded-sm px-0.5 underline-offset-4 ${style} ${selected === i ? "bg-raised outline-2 outline-gold" : "hover:bg-raised"}`}
       >
         {text.slice(issue.start, issue.end)}
       </button>,
@@ -37,7 +37,7 @@ export function MarkedText({ text, issues, selected, onSelect }: { text: string;
   });
   if (at < text.length) parts.push(text.slice(at));
   return (
-    <div dir="ltr" lang="en" className="ruled rounded-xl border border-rule bg-paper p-4 font-mono text-lg leading-loose break-words whitespace-pre-wrap sm:text-xl">
+    <div dir="ltr" lang="en" className="rounded-xl border border-line bg-canvas p-4 font-word text-lg leading-loose break-words whitespace-pre-wrap sm:text-xl">
       {parts}
     </div>
   );

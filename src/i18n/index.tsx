@@ -5,6 +5,7 @@ import { useSettings } from "@/lib/settings-store";
 import type { Lang } from "@/lib/settings";
 import { ar, type Dictionary } from "./ar";
 import { en } from "./en";
+import { createFormatters } from "@/lib/format";
 
 export const dictionaries: Record<Lang, Dictionary> = { ar, en };
 
@@ -16,7 +17,7 @@ interface I18nValue {
   /** Locale-aware number formatting with Western digits (consistent with typed English numbers). */
   readonly num: (n: number, digits?: number) => string;
   readonly date: (ms: number) => string;
-  /** Percentage with the right sign for the language (٪ or %). */
+  /** Percentage with Western digits and the Latin sign. */
   readonly pct: (n: number, digits?: number) => string;
 }
 
@@ -33,27 +34,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [lang]);
 
   const value = useMemo<I18nValue>(() => {
-    const locale = lang === "ar" ? "ar-u-nu-latn" : "en-GB";
-    const numberFormats = new Map<number, Intl.NumberFormat>();
-    const dateFormat = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" });
     return {
       lang,
       dir: lang === "ar" ? "rtl" : "ltr",
       t: dictionaries[lang],
       setLang: (l) => update({ lang: l }),
-      num: (n, digits = 0) => {
-        let f = numberFormats.get(digits);
-        if (!f) {
-          f = new Intl.NumberFormat(locale, { maximumFractionDigits: digits, minimumFractionDigits: 0 });
-          numberFormats.set(digits, f);
-        }
-        return f.format(n);
-      },
-      date: (ms) => dateFormat.format(new Date(ms)),
-      pct: (n, digits = 0) => {
-        const v = new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(n);
-        return lang === "ar" ? `${v}٪` : `${v}%`;
-      },
+      ...createFormatters(lang),
     };
   }, [lang, update]);
 

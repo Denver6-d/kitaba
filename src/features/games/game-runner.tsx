@@ -70,7 +70,7 @@ export function GameRunner({ request, title, emptyText, emptyAction }: { request
         <EmptyBlock
           action={
             emptyAction ?? (
-              <Button asChild className="h-11">
+              <Button variant="primary" asChild className="h-11">
                 <Link href="/play">{t.nav.play}</Link>
               </Button>
             )

@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
   return (
     <Page title={t.account.newPassword} width="narrow">
       {!user ? (
-        <p className="text-ink-soft">
+        <p className="text-fg-2">
           <Link href="/account" className="underline underline-offset-4">
             {t.account.signIn}
           </Link>
@@ -47,13 +47,13 @@ export default function ResetPasswordPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             dir="ltr"
-            className="h-11 w-full rounded-lg border border-input bg-sheet px-3"
+            className="h-11 w-full rounded-lg border border-input bg-surface px-3"
           />
-          <p className="text-xs text-ink-soft">{t.account.passwordHint}</p>
-          <Button type="submit" size="lg" className="h-11">
+          <p className="text-xs text-fg-2">{t.account.passwordHint}</p>
+          <Button variant="primary" type="submit" size="lg" className="h-11">
             {t.account.setPassword}
           </Button>
-          <p role="status" className={`min-h-5 text-sm ${message?.kind === "error" ? "text-error" : "text-correct"}`}>
+          <p role="status" className={`min-h-5 text-sm ${message?.kind === "error" ? "text-error" : "text-fg"}`}>
             {message?.text}
           </p>
         </form>

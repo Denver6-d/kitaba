@@ -1,5 +1,6 @@
 "use client";
 
+import { chipVariants } from "@/components/ui/chip";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Play, RotateCcw, Volume2 } from "lucide-react";
@@ -120,7 +121,7 @@ export function Dictation({ level }: { level: CefrLevel }) {
         options={(["sentence", "message"] as const).map((k) => ({ value: k, label: t.writing.dictKinds[k] ?? k }))}
       />
       <Segmented legend={t.writing.speed} value={speed} onChange={setSpeed} options={(["normal", "slow"] as const).map((s) => ({ value: s, label: t.writing.speeds[s] ?? s }))} />
-      <span className="rounded-full border border-brass-fill/60 px-2.5 py-0.5 text-sm text-brass tabular" title={t.levels.inGame}>
+      <span className={`${chipVariants({ tone: "level-active", size: "sm" })} font-latin tabular`} title={t.levels.inGame}>
         <span className="sr-only">{t.levels.inGame}: </span>
         {level}
       </span>
@@ -132,8 +133,8 @@ export function Dictation({ level }: { level: CefrLevel }) {
     const current = selected === null ? undefined : segs[selected];
     return (
       <div className="space-y-6">
-        <section className="sheet space-y-4 p-5 sm:p-6" aria-labelledby="d-res">
-          <h2 id="d-res" ref={resultRef} tabIndex={-1} className="text-lg font-semibold outline-none">
+        <section className="panel space-y-4 p-5 sm:p-6" aria-labelledby="d-res">
+          <h2 id="d-res" ref={resultRef} tabIndex={-1} className="text-xl font-light outline-none">
             {result.diff.mistakes === 0 ? t.writing.noMistakes : `${t.writing.mistakesFound(result.diff.mistakes)} · ${t.writing.tapHint}`}
           </h2>
           <DiffView segments={segs} selected={selected} onSelect={setSelected} labels={{ missing: t.writing.missingWord, extra: t.writing.extraWord }} />
@@ -144,16 +145,16 @@ export function Dictation({ level }: { level: CefrLevel }) {
               m={{ word: current.typed, suggestion: current.word, type: current.type, kind: "spelling", context: sentences.find((s) => s.includes(current.word)) }}
             />
           )}
-          <details className="text-ink-soft">
+          <details className="text-fg-2">
             <summary className="min-h-11 cursor-pointer py-2">{t.writing.original}</summary>
-            <p dir="ltr" lang="en" className="font-mono">
+            <p dir="ltr" lang="en" className="font-word">
               {full}
             </p>
             {item.credit && <TatoebaCreditLine credit={item.credit} className="mt-1" />}
           </details>
           {item.ar && (
             <div className="space-y-1">
-              <p className="text-hint">
+              <p className="text-fg-2">
                 <span className="font-semibold">{t.writing.translation}:</span> <span lang="ar" dir="rtl">{item.ar.text}</span>
               </p>
               <TatoebaCreditLine credit={item.ar.credit} />
@@ -162,10 +163,10 @@ export function Dictation({ level }: { level: CefrLevel }) {
         </section>
         <WritingSummaryPanel summary={result.summary} saved={result.saved} saveFailed={result.saveFailed} />
         <div className="flex flex-wrap gap-3">
-          <Button size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" onClick={() => setRound((r) => r + 1)}>
+          <Button variant="primary" size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" onClick={() => setRound((r) => r + 1)}>
             {t.common.next}
           </Button>
-          <Button asChild size="lg" variant="ghost" className="h-12">
+          <Button asChild size="lg" variant="quiet" className="h-12">
             <Link href="/write">{t.common.back}</Link>
           </Button>
         </div>
@@ -178,14 +179,14 @@ export function Dictation({ level }: { level: CefrLevel }) {
   return (
     <div className="space-y-6">
       {header}
-      <section className="sheet space-y-4 p-5 sm:p-6" aria-labelledby="d-task">
-        <h2 id="d-task" className="text-lg font-semibold">
+      <section className="panel space-y-4 p-5 sm:p-6" aria-labelledby="d-task">
+        <h2 id="d-task" className="text-xl font-light">
           {item.title ? `${t.writing.dictKinds.message}: ${item.title[lang]}` : t.writing.typeWhat}
         </h2>
         {!canSpeak && status !== "checking" ? (
           <div className="space-y-3">
-            <p className="rounded-lg bg-[var(--error-wash)] p-3 text-sm">{t.writing.noVoice}</p>
-            {sentences.length > 1 && <p className="text-sm text-ink-soft tabular">{t.writing.sentenceOf(index + 1, sentences.length)}</p>}
+            <p className="rounded-lg bg-error-tint p-3 text-sm">{t.writing.noVoice}</p>
+            {sentences.length > 1 && <p className="text-sm text-fg-2 tabular">{t.writing.sentenceOf(index + 1, sentences.length)}</p>}
             <div className="flex flex-wrap items-center gap-2">
               <Button type="button" variant="outline" className="h-11" aria-expanded={peek} onClick={() => setPeek((p) => !p)}>
                 {peek ? t.writing.hideText : t.writing.showText}
@@ -193,7 +194,7 @@ export function Dictation({ level }: { level: CefrLevel }) {
               {sentences.length > 1 && (
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="quiet"
                   className="h-11"
                   disabled={index >= sentences.length - 1}
                   onClick={() => {
@@ -207,7 +208,7 @@ export function Dictation({ level }: { level: CefrLevel }) {
             </div>
             {peek && (
               <>
-                <p dir="ltr" lang="en" className="font-mono text-lg">
+                <p dir="ltr" lang="en" className="font-word text-lg">
                   {sentences[index]}
                 </p>
                 {item.credit && <TatoebaCreditLine credit={item.credit} />}
@@ -216,7 +217,7 @@ export function Dictation({ level }: { level: CefrLevel }) {
           </div>
         ) : (
           <div className="space-y-3">
-            {sentences.length > 1 && <p className="text-sm text-ink-soft tabular">{t.writing.sentenceOf(index + 1, sentences.length)}</p>}
+            {sentences.length > 1 && <p className="text-sm text-fg-2 tabular">{t.writing.sentenceOf(index + 1, sentences.length)}</p>}
             <div className="flex flex-wrap items-center gap-2">
               <Button type="button" size="lg" className="h-12 gap-2 px-6" disabled={!canSpeak} onClick={sayCurrent}>
                 <Volume2 className="size-5" aria-hidden="true" />
@@ -241,20 +242,20 @@ export function Dictation({ level }: { level: CefrLevel }) {
                     {t.writing.nextSentence}
                     <Next className="size-4" aria-hidden="true" />
                   </Button>
-                  <Button type="button" variant="ghost" className="h-11 gap-2" disabled={!canSpeak} onClick={() => speak(full, RATE[speed])}>
+                  <Button type="button" variant="quiet" className="h-11 gap-2" disabled={!canSpeak} onClick={() => speak(full, RATE[speed])}>
                     <Play className="size-4" aria-hidden="true" />
                     {t.writing.playAll}
                   </Button>
                 </>
               )}
               {sentences.length === 1 && (
-                <Button type="button" variant="ghost" className="h-11 gap-2" disabled={!canSpeak} onClick={sayCurrent}>
+                <Button type="button" variant="quiet" className="h-11 gap-2" disabled={!canSpeak} onClick={sayCurrent}>
                   <RotateCcw className="size-4" aria-hidden="true" />
                   {t.writing.replay}
                 </Button>
               )}
             </div>
-            {usingOtherAccent && <p className="text-sm text-ink-soft">{t.game.otherAccent}</p>}
+            {usingOtherAccent && <p className="text-sm text-fg-2">{t.game.otherAccent}</p>}
           </div>
         )}
       </section>
@@ -266,8 +267,8 @@ export function Dictation({ level }: { level: CefrLevel }) {
         }}
       >
         <WritingTextarea id={areaId} label={t.writing.typeWhat} value={typed} onChange={(e) => setTyped(e.target.value)} rows={sentences.length > 1 ? 7 : 3} maxLength={4000} />
-        <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-rule bg-paper/95 px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
-          <Button type="submit" size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" disabled={typed.trim() === ""}>
+        <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-canvas/95 px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+          <Button variant="primary" type="submit" size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" disabled={typed.trim() === ""}>
             {t.common.check}
           </Button>
           {canSpeak && (
@@ -275,7 +276,7 @@ export function Dictation({ level }: { level: CefrLevel }) {
               <Volume2 className="size-5" aria-hidden="true" />
             </Button>
           )}
-          <button type="button" className="ms-auto min-h-11 text-sm text-ink-soft underline underline-offset-4" onClick={() => setRound((r) => r + 1)}>
+          <button type="button" className="ms-auto min-h-11 text-sm text-fg-2 underline underline-offset-4" onClick={() => setRound((r) => r + 1)}>
             {t.common.next}
           </button>
         </div>
@@ -297,7 +298,7 @@ function DiffView({
   labels: { missing: string; extra: string };
 }) {
   return (
-    <p dir="ltr" lang="en" className="ruled rounded-xl border border-rule bg-paper p-4 font-mono text-lg leading-loose sm:text-xl">
+    <p dir="ltr" lang="en" className="rounded-xl border border-line bg-canvas p-4 font-word text-lg leading-loose sm:text-xl">
       {segments.map((s, i) => {
         const sep = i > 0 ? " " : "";
         switch (s.kind) {
@@ -316,7 +317,7 @@ function DiffView({
                   type="button"
                   aria-pressed={selected === i}
                   onClick={() => onSelect(i)}
-                  className={`rounded-sm px-0.5 text-error underline decoration-wavy decoration-2 underline-offset-4 ${selected === i ? "bg-brass-wash outline-2 outline-brass-fill" : "hover:bg-brass-wash"}`}
+                  className={`rounded-sm px-0.5 text-error underline decoration-wavy decoration-2 underline-offset-4 ${selected === i ? "bg-raised outline-2 outline-gold" : "hover:bg-raised"}`}
                 >
                   {s.typed}
                 </button>
@@ -326,7 +327,7 @@ function DiffView({
             return (
               <span key={i}>
                 {sep}
-                <ins className="rounded bg-[var(--correct-wash)] px-1 text-correct underline decoration-2 underline-offset-4">
+                <ins className="rounded bg-raised px-1 text-fg underline decoration-2 underline-offset-4">
                   <span className="sr-only">({labels.missing}) </span>
                   {s.word}
                 </ins>

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 
 /**
  * Email links (sign-up confirmation, magic link, password reset) and the
- * Google / GitHub OAuth return land here.
+ * Google OAuth returns land here.
  * The browser client finishes the PKCE exchange from the ?code= parameter on
  * its own (detectSessionInUrl); we wait for the session, then move on.
  */
@@ -41,7 +41,7 @@ export function CallbackView() {
       {problem === "cancelled" ? (
         <div className="space-y-4">
           <p>{t.account.oauthCancelled}</p>
-          <Button asChild className="h-11">
+          <Button variant="primary" asChild className="h-11">
             <Link href="/account">{t.account.signIn}</Link>
           </Button>
         </div>

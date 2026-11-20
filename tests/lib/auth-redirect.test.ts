@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import { callbackProblem, callbackUrl, ENABLED_OAUTH_PROVIDERS, enabledOAuthProviders, isOAuthProvider, OAUTH_PROVIDERS } from "@/lib/auth-redirect";
 
 describe("OAuth providers", () => {
-  it("offers Google and GitHub only (no Apple)", () => {
-    expect([...OAUTH_PROVIDERS]).toEqual(["google", "github"]);
+  it("offers Google only (no GitHub, no Apple)", () => {
+    expect([...OAUTH_PROVIDERS]).toEqual(["google"]);
+    expect(isOAuthProvider("github")).toBe(false);
     expect(isOAuthProvider("google")).toBe(true);
     expect(isOAuthProvider("apple")).toBe(false);
     expect(isOAuthProvider(undefined)).toBe(false);
@@ -76,21 +77,28 @@ describe("callbackProblem edges", () => {
 });
 
 describe("Google sign-in flag (NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN)", () => {
-  it("hides Google by default and keeps GitHub", () => {
-    expect([...enabledOAuthProviders(undefined)]).toEqual(["github"]);
-    expect([...enabledOAuthProviders("")]).toEqual(["github"]);
+  it("hides Google by default, leaving no OAuth button (email only)", () => {
+    expect([...enabledOAuthProviders(undefined)]).toEqual([]);
+    expect([...enabledOAuthProviders("")]).toEqual([]);
   });
   it("shows Google only for exactly true", () => {
-    expect([...enabledOAuthProviders("true")]).toEqual(["google", "github"]);
-    expect([...enabledOAuthProviders(" true ")]).toEqual(["google", "github"]);
-    for (const v of ["false", "1", "yes", "TRUE", "True", "on"]) expect([...enabledOAuthProviders(v)], v).toEqual(["github"]);
+    expect([...enabledOAuthProviders("true")]).toEqual(["google"]);
+    expect([...enabledOAuthProviders(" true ")]).toEqual(["google"]);
+    for (const v of ["false", "1", "yes", "TRUE", "True", "on"]) expect([...enabledOAuthProviders(v)], v).toEqual([]);
   });
   it("is off in this build when the flag is not set", () => {
     if (process.env.NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN === undefined) expect(ENABLED_OAUTH_PROVIDERS).not.toContain("google");
-    expect(ENABLED_OAUTH_PROVIDERS).toContain("github");
   });
   it("reads the flag by its literal name, so Next.js inlines it at build time", () => {
     const src = readFileSync(new URL("../../src/lib/auth-redirect.ts", import.meta.url), "utf8");
     expect(src).toContain("process.env.NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN");
+  });
+});
+
+describe("GitHub sign-in is gone (DECISIONS R7)", () => {
+  it("has no GitHub button, mark or provider left in the sign-in code", () => {
+    for (const file of ["../../src/features/account/auth-forms.tsx", "../../src/lib/auth-redirect.ts", "../../src/app/auth/callback/callback-view.tsx", "../../src/app/privacy/page.tsx"]) {
+      expect(readFileSync(new URL(file, import.meta.url), "utf8"), file).not.toMatch(/github/i);
+    }
   });
 });

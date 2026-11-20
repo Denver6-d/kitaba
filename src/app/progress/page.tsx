@@ -87,7 +87,7 @@ export default function ProgressPage() {
         {sessions.length === 0 && (
           <EmptyBlock
             action={
-              <Button asChild size="lg" className="h-12 px-6">
+              <Button variant="primary" asChild size="lg" className="h-12 px-6">
                 <Link href="/play/game?stage=w1-s1">{t.progress.playFirst}</Link>
               </Button>
             }
@@ -97,20 +97,20 @@ export default function ProgressPage() {
         )}
 
         <section className="grid gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-          <div className="sheet flex flex-wrap items-center gap-6 p-6">
+          <div className="panel flex flex-wrap items-center gap-6 p-6">
             <GoalRing ratio={goal.ratio} />
             <div className="min-w-0 flex-1 space-y-2">
-              <h2 className="font-semibold">{t.progress.goal}</h2>
+              <h2 className="font-light">{t.progress.goal}</h2>
               <p className="text-2xl font-semibold tabular">{goal.done ? t.progress.goalDone : t.progress.goalOf(goal.minutes, profile.dailyGoalMinutes)}</p>
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <label htmlFor={goalId} className="text-ink-soft">
+                <label htmlFor={goalId} className="text-fg-2">
                   {t.progress.goalSetting}
                 </label>
                 <select
                   id={goalId}
                   value={profile.dailyGoalMinutes}
                   onChange={(e) => void repos.profile.save({ dailyGoalMinutes: Number(e.target.value) })}
-                  className="h-11 rounded-md border border-input bg-sheet px-2"
+                  className="h-11 rounded-md border border-input bg-surface px-2"
                 >
                   {GOAL_OPTIONS.map((g) => (
                     <option key={g} value={g}>
@@ -130,17 +130,17 @@ export default function ProgressPage() {
         </section>
 
         <section aria-labelledby="hist-h" className="space-y-4">
-          <h2 id="hist-h" className="text-xl font-semibold">
+          <h2 id="hist-h" className="text-2xl font-light">
             {t.progress.history}
           </h2>
           {recent.length < 2 ? (
-            <p className="rounded-xl border border-dashed border-rule-strong p-6 text-ink-soft">{t.progress.emptyChart}</p>
+            <p className="rounded-xl border border-dashed border-line-strong p-6 text-fg-2">{t.progress.emptyChart}</p>
           ) : (
             <LineChart
               values={recent.map((s) => (s.items === 0 ? 0 : Math.round((s.correct / s.items) * 100)))}
               label={t.progress.historyLabel(recent.length)}
               formatY={(n) => pct(Math.round(n))}
-              className="sheet p-4"
+              className="panel p-4"
               height={200}
             />
           )}
@@ -153,13 +153,13 @@ export default function ProgressPage() {
         </section>
 
         <section aria-labelledby="writ-h" className="space-y-4">
-          <h2 id="writ-h" className="text-xl font-semibold">
+          <h2 id="writ-h" className="text-2xl font-light">
             {t.writing.history}
           </h2>
           {writings.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-rule-strong p-6 text-ink-soft">
+            <p className="rounded-xl border border-dashed border-line-strong p-6 text-fg-2">
               {t.writing.historyEmpty}{" "}
-              <Link href="/write" className="font-medium text-brass underline underline-offset-4">
+              <Link href="/write" className="font-medium text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg-2">
                 {t.writing.title}
               </Link>
             </p>
@@ -167,21 +167,21 @@ export default function ProgressPage() {
             <ul className="space-y-3">
               {writings.slice(0, RECENT_WRITINGS).map((w) => (
                 <li key={w.id}>
-                  <details className="sheet group p-4">
+                  <details className="panel group p-4">
                     <summary className="flex min-h-11 cursor-pointer flex-wrap items-center gap-x-3 gap-y-1">
                       <span className="font-semibold">{t.writing.modeNames[w.mode]}</span>
-                      <span className="rounded-full border border-rule px-2 py-0.5 text-sm tabular">{w.level}</span>
-                      <span className="text-sm text-ink-soft">{t.writing.historyItem(w.words, pct(Math.round(w.accuracy * 100)))}</span>
-                      <span className="ms-auto text-sm text-ink-soft">{date(w.at)}</span>
+                      <span className="rounded-full border border-line px-2 py-0.5 text-sm tabular">{w.level}</span>
+                      <span className="text-sm text-fg-2">{t.writing.historyItem(w.words, pct(Math.round(w.accuracy * 100)))}</span>
+                      <span className="ms-auto text-sm text-fg-2">{date(w.at)}</span>
                     </summary>
-                    <p dir="ltr" lang="en" className="mt-3 font-mono whitespace-pre-wrap break-words">
+                    <p dir="ltr" lang="en" className="mt-3 font-word whitespace-pre-wrap break-words">
                       {w.text}
                     </p>
                     {w.missed.length > 0 && (
                       <ul className="mt-3 flex flex-wrap gap-2" dir="ltr" lang="en">
                         {w.missed.map((m) => (
-                          <li key={`${m.wrong}-${m.right ?? ""}`} className="rounded-full border border-rule px-3 py-1 text-sm">
-                            <span className="text-error line-through">{m.wrong}</span> <span className="font-mono text-correct">{m.right ?? "?"}</span>
+                          <li key={`${m.wrong}-${m.right ?? ""}`} className="rounded-full border border-line px-3 py-1 text-sm">
+                            <span className="text-error line-through">{m.wrong}</span> <span className="font-word text-fg">{m.right ?? "?"}</span>
                           </li>
                         ))}
                       </ul>
@@ -194,17 +194,17 @@ export default function ProgressPage() {
         </section>
 
         <section aria-labelledby="weak-h" className="space-y-4">
-          <h2 id="weak-h" className="text-xl font-semibold">
+          <h2 id="weak-h" className="text-2xl font-light">
             {t.progress.weakest}
           </h2>
           {weakest.length === 0 ? (
-            <p className="text-ink-soft">{t.progress.weakestEmpty}</p>
+            <p className="text-fg-2">{t.progress.weakestEmpty}</p>
           ) : (
             <ul className="grid gap-3 sm:grid-cols-3">
               {weakest.map(([cat, n]) => (
-                <li key={cat} className="sheet flex flex-col gap-3 p-4">
+                <li key={cat} className="panel flex flex-col gap-3 p-4">
                   <p className="font-semibold">{CATEGORY_INFO[cat].label[lang]}</p>
-                  <p className="text-sm text-ink-soft">{t.common.wordsN(n)}</p>
+                  <p className="text-sm text-fg-2">{t.common.wordsN(n)}</p>
                   <Button asChild variant="outline" className="mt-auto h-11">
                     <Link href={freePlayHref("listen", null, cat)}>{t.progress.practise}</Link>
                   </Button>
@@ -215,7 +215,7 @@ export default function ProgressPage() {
         </section>
 
         <section id="achievements" aria-labelledby="ach-h" className="scroll-mt-24 space-y-4">
-          <h2 id="ach-h" className="text-xl font-semibold">
+          <h2 id="ach-h" className="text-2xl font-light">
             {t.progress.achievements}
           </h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -223,12 +223,12 @@ export default function ProgressPage() {
               const at = unlocked.get(a.id);
               const text = ACHIEVEMENT_TEXT[a.id]?.[lang];
               return (
-                <li key={a.id} className={`flex items-start gap-3 rounded-xl border p-4 ${at ? "border-brass-fill/60 bg-brass-wash" : "border-rule"}`}>
-                  {at ? <Award className="mt-0.5 size-5 shrink-0 text-brass" aria-hidden="true" /> : <Lock className="mt-0.5 size-5 shrink-0 text-ink-soft" aria-hidden="true" />}
+                <li key={a.id} className={`flex items-start gap-3 rounded-xl border p-4 ${at ? "border-line-strong bg-raised" : "border-line"}`}>
+                  {at ? <Award className="mt-0.5 size-5 shrink-0 text-fg-2" aria-hidden="true" /> : <Lock className="mt-0.5 size-5 shrink-0 text-fg-2" aria-hidden="true" />}
                   <div>
                     <p className="font-semibold">{text?.title ?? a.id}</p>
-                    <p className="text-sm text-ink-soft">{text?.body}</p>
-                    <p className="mt-1 text-xs text-ink-soft">{at ? t.progress.unlocked(date(at)) : t.progress.locked}</p>
+                    <p className="text-sm text-fg-2">{text?.body}</p>
+                    <p className="mt-1 text-xs text-fg-2">{at ? t.progress.unlocked(date(at)) : t.progress.locked}</p>
                   </div>
                 </li>
               );
@@ -243,7 +243,7 @@ export default function ProgressPage() {
 function Tile({ label, value, small, progress, href }: { label: string; value: string; small?: boolean; progress?: number; href?: string }) {
   const body = (
     <>
-      <dt className="text-sm text-ink-soft">{label}</dt>
+      <dt className="text-sm text-fg-2">{label}</dt>
       <dd className={`mt-1 font-semibold tabular ${small ? "text-base" : "text-2xl"}`}>
         {href ? (
           // A stretched link: the whole tile is clickable, and the <dl> keeps only <div>, <dt> and <dd>.
@@ -255,16 +255,16 @@ function Tile({ label, value, small, progress, href }: { label: string; value: s
         )}
       </dd>
       {progress !== undefined && (
-        <div className="mt-2 h-1 rounded-full bg-rule" aria-hidden="true">
-          <div className="h-full rounded-full bg-brass-fill" style={{ width: `${Math.round(progress * 100)}%` }} />
+        <div className="mt-2 h-1 rounded-full bg-line" aria-hidden="true">
+          <div className="h-full rounded-full bg-gold" style={{ width: `${Math.round(progress * 100)}%` }} />
         </div>
       )}
     </>
   );
   return href ? (
-    <div className="relative rounded-xl border border-rule p-4 transition-colors has-[a:hover]:border-rule-strong">{body}</div>
+    <div className="relative rounded-xl border border-line p-4 transition-colors has-[a:hover]:border-line-strong">{body}</div>
   ) : (
-    <div className="rounded-xl border border-rule p-4">{body}</div>
+    <div className="rounded-xl border border-line p-4">{body}</div>
   );
 }
 
@@ -273,8 +273,8 @@ function GoalRing({ ratio }: { ratio: number }) {
   const c = 2 * Math.PI * r;
   return (
     <svg viewBox="0 0 72 72" className="size-20 shrink-0 -rotate-90" aria-hidden="true">
-      <circle cx="36" cy="36" r={r} fill="none" stroke="var(--rule)" strokeWidth="6" />
-      <circle cx="36" cy="36" r={r} fill="none" stroke="var(--brass-fill)" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${c * ratio} ${c}`} />
+      <circle cx="36" cy="36" r={r} fill="none" stroke="var(--line)" strokeWidth="6" />
+      <circle cx="36" cy="36" r={r} fill="none" stroke="var(--gold)" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${c * ratio} ${c}`} />
     </svg>
   );
 }

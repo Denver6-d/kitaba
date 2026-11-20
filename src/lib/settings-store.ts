@@ -51,20 +51,3 @@ export function useSettings(): [Settings, (patch: Partial<Settings>) => void] {
   return [settings, update];
 }
 
-function subscribeDarkQuery(cb: () => void): () => void {
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-}
-
-/** The theme actually shown: the saved choice, or the OS preference for "system". */
-export function useResolvedTheme(): "light" | "dark" {
-  const [settings] = useSettings();
-  const osDark = useSyncExternalStore(
-    subscribeDarkQuery,
-    () => window.matchMedia("(prefers-color-scheme: dark)").matches,
-    () => false,
-  );
-  if (settings.theme === "system") return osDark ? "dark" : "light";
-  return settings.theme;
-}

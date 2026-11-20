@@ -16,22 +16,22 @@ export default function WritePage() {
       <div className="space-y-8">
         <ul className="grid gap-4 md:grid-cols-2">
           <li>
-            <Link href="/write/free" className="sheet flex h-full min-h-40 flex-col gap-3 p-6 transition-colors hover:bg-brass-wash">
-              <PenLine className="size-7 text-brass" aria-hidden="true" />
+            <Link href="/write/free" className="panel flex h-full min-h-40 flex-col gap-3 p-6 transition-colors hover:bg-raised">
+              <PenLine className="size-7 text-fg-2" aria-hidden="true" />
               <span className="text-xl font-semibold">{t.writing.freeTitle}</span>
-              <span className="text-ink-soft">{t.writing.freeDesc}</span>
+              <span className="text-fg-2">{t.writing.freeDesc}</span>
             </Link>
           </li>
           <li>
-            <Link href="/write/dictation" className="sheet flex h-full min-h-40 flex-col gap-3 p-6 transition-colors hover:bg-brass-wash">
-              <Headphones className="size-7 text-brass" aria-hidden="true" />
+            <Link href="/write/dictation" className="panel flex h-full min-h-40 flex-col gap-3 p-6 transition-colors hover:bg-raised">
+              <Headphones className="size-7 text-fg-2" aria-hidden="true" />
               <span className="text-xl font-semibold">{t.writing.dictTitle}</span>
-              <span className="text-ink-soft">{t.writing.dictDesc}</span>
+              <span className="text-fg-2">{t.writing.dictDesc}</span>
             </Link>
           </li>
         </ul>
         {profile.status === "ready" ? <LevelsCard levels={profile.data.levels} onChange={setArea} areas={["sentences"]} /> : <LoadingBlock label={t.common.loading} />}
-        <p className="max-w-2xl text-sm text-ink-soft">{t.writing.honest}</p>
+        <p className="max-w-2xl text-sm text-fg-2">{t.writing.honest}</p>
       </div>
     </Page>
   );

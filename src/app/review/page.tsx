@@ -25,7 +25,7 @@ export default function ReviewPage() {
       ) : due.data.length === 0 ? (
         <EmptyBlock
           action={
-            <Button asChild className="h-11">
+            <Button variant="primary" asChild className="h-11">
               <Link href="/play">{t.nav.play}</Link>
             </Button>
           }
@@ -33,12 +33,12 @@ export default function ReviewPage() {
           {t.review.nothingDue}
         </EmptyBlock>
       ) : (
-        <div className="sheet flex flex-wrap items-center justify-between gap-4 p-6">
+        <div className="panel flex flex-wrap items-center justify-between gap-4 p-6">
           <div>
             <p className="text-xl font-semibold">{t.review.dueCount(due.data.length)}</p>
-            {all.status === "ready" && <p className="text-ink-soft">{t.review.tracked(all.data.length)}</p>}
+            {all.status === "ready" && <p className="text-fg-2">{t.review.tracked(all.data.length)}</p>}
           </div>
-          <Button size="lg" className="h-12 px-8 text-base" onClick={() => setStarted(true)}>
+          <Button variant="primary" size="lg" className="h-12 px-8 text-base" onClick={() => setStarted(true)}>
             {t.review.start} ({num(Math.min(15, due.data.length))})
           </Button>
         </div>

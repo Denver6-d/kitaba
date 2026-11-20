@@ -56,21 +56,21 @@ function Today({ stages, days, due }: { stages: Readonly<Record<string, StageRec
   const dailyDone = (stages[dailyId(today)]?.stars ?? 0) > 0;
   return (
     <section className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-      <div className="sheet flex flex-col justify-between gap-6 p-6 sm:p-8">
+      <div className="panel flex flex-col justify-between gap-6 p-6 sm:p-8">
         <div className="space-y-2">
-          <p className="flex items-center gap-2 text-brass">
+          <p className="flex items-center gap-2 text-fg">
             <Flame className="size-5" aria-hidden="true" />
             <span className="font-semibold">{t.play.streak(streak)}</span>
           </p>
-          <h2 className="text-2xl font-bold sm:text-3xl">{t.play.continueAt}</h2>
+          <h2 className="text-2xl font-light sm:text-3xl">{t.play.continueAt}</h2>
           {def && p && (
-            <p className="text-ink-soft">
+            <p className="text-fg-2">
               {def.world.name[lang]} · {def.boss ? t.play.boss : t.play.stage(p.stage)} · {typeof def.modes === "string" ? t.modes[def.modes]?.name : t.play.boss}
             </p>
           )}
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button asChild size="lg" className="h-12 flex-1 gap-2 px-6 text-base sm:flex-none">
+          <Button variant="primary" asChild size="lg" className="h-12 flex-1 gap-2 px-6 text-base sm:flex-none">
             <Link href={`/play/game?stage=${next}`}>
               <Play className="size-5" aria-hidden="true" />
               {t.play.startMode}
@@ -83,15 +83,15 @@ function Today({ stages, days, due }: { stages: Readonly<Record<string, StageRec
           )}
         </div>
       </div>
-      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-brass-fill/50 bg-brass-wash p-6 sm:p-8">
+      <div className="flex flex-col justify-between gap-4 rounded-card border border-line bg-raised p-6 sm:p-8">
         <div className="space-y-2">
-          <h2 className="flex items-center gap-2 text-xl font-semibold">
-            <CalendarCheck className="size-5 text-brass" aria-hidden="true" />
+          <h2 className="flex items-center gap-2 text-2xl font-light">
+            <CalendarCheck className="size-5 text-fg-2" aria-hidden="true" />
             {t.play.daily}
           </h2>
           <p>{dailyDone ? t.play.dailyDone : t.play.dailyIntro}</p>
         </div>
-        <Button asChild size="lg" variant={dailyDone ? "outline" : "default"} className="h-12 px-6 text-base">
+        <Button asChild size="lg" variant="outline" className="h-12 px-6 text-base">
           <Link href="/play/game?daily=1">{dailyDone ? t.game.playAgain : t.play.dailyStart}</Link>
         </Button>
       </div>
@@ -103,7 +103,7 @@ function Campaign({ stages }: { stages: Readonly<Record<string, StageRecord>> })
   const { t, lang, num } = useI18n();
   return (
     <section aria-labelledby="campaign-h" className="space-y-6">
-      <h2 id="campaign-h" className="text-2xl font-bold">
+      <h2 id="campaign-h" className="text-2xl font-light">
         {t.play.campaign}
       </h2>
       <ol className="space-y-5">
@@ -112,17 +112,17 @@ function Campaign({ stages }: { stages: Readonly<Record<string, StageRecord>> })
           const ids = Array.from({ length: STAGES_PER_WORLD }, (_, i) => stageId(w.n, i + 1));
           const stars = ids.reduce((n, id) => n + (stages[id]?.stars ?? 0), 0);
           return (
-            <li key={w.n} className="sheet space-y-4 p-5 sm:p-6">
+            <li key={w.n} className="panel space-y-4 p-5 sm:p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="text-lg font-semibold">
-                  <span className="text-ink-soft">{t.play.world(w.n)} · </span>
+                  <span className="text-fg-2">{t.play.world(w.n)} · </span>
                   {w.name[lang]}
                 </h3>
-                <p className="text-sm text-ink-soft">{t.play.starsOf(stars, STAGES_PER_WORLD * 3)}</p>
+                <p className="text-sm text-fg-2">{t.play.starsOf(stars, STAGES_PER_WORLD * 3)}</p>
               </div>
-              <p className="text-sm text-hint">{w.categories.map((c) => CATEGORY_INFO[c].label[lang]).join(" · ")}</p>
+              <p className="text-sm text-fg-2">{w.categories.map((c) => CATEGORY_INFO[c].label[lang]).join(" · ")}</p>
               {!open && (
-                <p className="flex items-center gap-2 text-sm text-ink-soft">
+                <p className="flex items-center gap-2 text-sm text-fg-2">
                   <Lock className="size-4" aria-hidden="true" />
                   {t.play.worldLocked}
                 </p>
@@ -136,7 +136,7 @@ function Campaign({ stages }: { stages: Readonly<Record<string, StageRecord>> })
                   const inner = (
                     <>
                       <span className="flex items-center gap-1 font-semibold tabular">
-                        {boss && <Crown className="size-4 text-brass" aria-hidden="true" />}
+                        {boss && <Crown className="size-4 text-fg-2" aria-hidden="true" />}
                         {unlocked ? num(i + 1) : <Lock className="size-4" aria-hidden="true" />}
                       </span>
                       <span className="flex" aria-hidden="true">
@@ -147,8 +147,8 @@ function Campaign({ stages }: { stages: Readonly<Record<string, StageRecord>> })
                     </>
                   );
                   const cls = `flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border text-sm transition-colors ${
-                    boss ? "border-2 border-brass-fill" : "border-rule"
-                  } ${unlocked ? "bg-paper hover:border-brass-fill hover:bg-brass-wash" : "bg-muted text-ink-soft"}`;
+                    boss ? "border-2 border-gold" : "border-line"
+                  } ${unlocked ? "bg-canvas hover:border-fg-2 hover:bg-raised" : "bg-muted text-fg-2"}`;
                   return (
                     <li key={id}>
                       {unlocked ? (
@@ -181,10 +181,10 @@ function FreePlay({ level, onLevel }: { level: CefrLevel; onLevel: (l: CefrLevel
   return (
     <section aria-labelledby="free-h" className="space-y-6">
       <div className="space-y-2">
-        <h2 id="free-h" className="text-2xl font-bold">
+        <h2 id="free-h" className="text-2xl font-light">
           {t.play.freePlay}
         </h2>
-        <p className="text-ink-soft">{t.play.freePlayIntro}</p>
+        <p className="text-fg-2">{t.play.freePlayIntro}</p>
       </div>
       <div className="flex flex-wrap items-end gap-6">
         <Segmented
@@ -194,14 +194,14 @@ function FreePlay({ level, onLevel }: { level: CefrLevel; onLevel: (l: CefrLevel
           options={LEVELS.map((l) => ({ value: l, label: l }))}
         />
         <div className="space-y-1.5">
-          <label htmlFor={categoryId} className="block text-sm text-ink-soft">
+          <label htmlFor={categoryId} className="block text-sm text-fg-2">
             {t.play.category}
           </label>
           <select
             id={categoryId}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="h-11 w-full max-w-xs rounded-md border border-input bg-sheet px-3"
+            className="h-11 w-full max-w-xs rounded-md border border-input bg-surface px-3"
           >
             <option value="all">{t.common.all}</option>
             {SPELLING_CATEGORIES.map((c) => (
@@ -215,10 +215,10 @@ function FreePlay({ level, onLevel }: { level: CefrLevel; onLevel: (l: CefrLevel
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FREE_MODES.map((m: FreeMode) => (
           <li key={m}>
-            <Link href={freePlayHref(m, lvl, cat)} className="sheet flex h-full flex-col gap-2 p-5 transition-colors hover:bg-brass-wash">
+            <Link href={freePlayHref(m, lvl, cat)} className="panel flex h-full flex-col gap-2 p-5 transition-colors hover:bg-raised">
               <span className="text-lg font-semibold">{t.modes[m]?.name}</span>
-              <span className="text-ink-soft">{t.modes[m]?.desc}</span>
-              {m === "bee" && <span className="mt-auto text-sm text-brass">{num(60)} {t.common.seconds}</span>}
+              <span className="text-fg-2">{t.modes[m]?.desc}</span>
+              {m === "bee" && <span className="mt-auto text-sm text-fg-2">{num(60)} {t.common.seconds}</span>}
             </Link>
           </li>
         ))}

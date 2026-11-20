@@ -127,66 +127,66 @@ export default function CreditsPage() {
     <Page title={t.nav.credits} intro={c.intro} width="narrow">
       <div className="space-y-12">
         <section className="space-y-4" aria-labelledby="src-h">
-          <h2 id="src-h" className="text-xl font-semibold">
+          <h2 id="src-h" className="text-2xl font-light">
             {c.sources}
           </h2>
           <ul className="space-y-4">
             {SOURCES.map((s) => (
-              <li key={s.name} className="sheet space-y-2 p-5">
+              <li key={s.name} className="panel space-y-2 p-5">
                 <p className="font-semibold" dir="ltr" lang="en">
                   <a href={s.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
                     {s.name}
                   </a>
                 </p>
                 <p className="text-sm">
-                  <span className="text-ink-soft">{c.licence}: </span>
+                  <span className="text-fg-2">{c.licence}: </span>
                   <a href={s.licenceHref} {...(s.licenceHref.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="underline underline-offset-4" dir="ltr" lang="en">
                     {s.licence}
                   </a>
                 </p>
-                <p className="text-ink-soft">{s.use[lang]}</p>
+                <p className="text-fg-2">{s.use[lang]}</p>
               </li>
             ))}
           </ul>
         </section>
 
         <section className="space-y-3" aria-labelledby="tl-h">
-          <h2 id="tl-h" className="text-xl font-semibold">
+          <h2 id="tl-h" className="text-2xl font-light">
             {c.tatoebaList}
           </h2>
-          <p className="text-ink-soft">{c.tatoebaListBody}</p>
+          <p className="text-fg-2">{c.tatoebaListBody}</p>
           {listHref && (
-            <a href={listHref} download="tatoeba-credits.tsv" className="inline-flex min-h-11 items-center rounded-md border border-rule px-4 font-medium hover:bg-muted">
+            <a href={listHref} download="tatoeba-credits.tsv" className="inline-flex min-h-11 items-center rounded-md border border-line px-4 font-medium hover:bg-muted">
               {c.download}
             </a>
           )}
         </section>
 
         <section className="space-y-3" aria-labelledby="own-h">
-          <h2 id="own-h" className="text-xl font-semibold">
+          <h2 id="own-h" className="text-2xl font-light">
             {c.ours}
           </h2>
-          <p className="text-ink-soft">{c.oursBody}</p>
+          <p className="text-fg-2">{c.oursBody}</p>
         </section>
 
         <section className="space-y-4" aria-labelledby="not-h">
-          <h2 id="not-h" className="text-xl font-semibold">
+          <h2 id="not-h" className="text-2xl font-light">
             {c.notices}
           </h2>
-          <p className="text-ink-soft">{c.noticesBody}</p>
+          <p className="text-fg-2">{c.noticesBody}</p>
           {NOTICES.map((n) => (
-            <details key={n.id} id={n.id} className="rounded-xl border border-rule p-4">
+            <details key={n.id} id={n.id} className="rounded-xl border border-line p-4">
               <summary className="min-h-11 cursor-pointer py-2 font-medium" dir="ltr" lang="en">
                 {n.title}
               </summary>
-              <pre dir="ltr" lang="en" className="mt-3 max-h-96 overflow-auto font-mono text-xs leading-relaxed whitespace-pre-wrap text-ink-soft">
+              <pre dir="ltr" lang="en" className="mt-3 max-h-96 overflow-auto font-word text-xs leading-relaxed whitespace-pre-wrap text-fg-2">
                 {n.text}
               </pre>
             </details>
           ))}
         </section>
 
-        <p className="text-sm text-ink-soft">
+        <p className="text-sm text-fg-2">
           <Link href="/privacy" className="underline underline-offset-4">
             {t.nav.privacy}
           </Link>
