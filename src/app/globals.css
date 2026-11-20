@@ -262,19 +262,6 @@ html[data-motion="reduce"] *::after {
 
 /* Game feedback: a short shake for a wrong answer and a gold underline sweep for a right one.
    Both collapse to nothing under reduced motion. Phase B replaces these with the new game feel. */
-.hero-reveal {
-  animation: hero-reveal 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-@keyframes hero-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 .answer-shake {
   animation: answer-shake 320ms ease-out;
 }
@@ -413,6 +400,87 @@ html[data-motion="reduce"][data-gate="pending"] main::before {
   100% {
     border-color: var(--line-strong);
     color: var(--fg);
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Motion (DESIGN.md V3, phase C).
+   ------------------------------------------------------------------------- */
+
+/* Soft fade-up on entry. The pre-paint script sets html[data-reveal] only when
+   motion is allowed, so with reduced motion (or no script) nothing is hidden.
+   - Below the fold ([data-reveal-item]): hidden until the IntersectionObserver
+     marks it [data-shown] as it scrolls into view.
+   - Above the fold ([data-reveal-now]): a CSS fade that starts at first paint,
+     so it never waits for hydration (LCP).
+   A safety animation shows observed items after 3 s only until the first
+   Reveal has mounted (html[data-reveal-ready]): if the script never runs,
+   nothing stays hidden; once it runs, the observer owns the timing. */
+html[data-reveal] [data-reveal-item] {
+  transition:
+    opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--reveal-delay, 0ms),
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--reveal-delay, 0ms);
+}
+html[data-reveal] [data-reveal-item]:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(14px);
+}
+html[data-reveal]:not([data-reveal-ready]) [data-reveal-item]:not([data-shown]) {
+  animation: reveal-safety 0s 3s forwards;
+}
+@keyframes reveal-safety {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+html[data-reveal] [data-reveal-now] {
+  animation: reveal-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--reveal-delay, 0ms) both;
+}
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The welcome screen's primary button breathes gently. It animates the separate
+   `scale` property, so the button's own press feedback (transform) still works,
+   and it pauses in place (no snap) while hovered or focused. */
+.breathe {
+  animation: breathe 3.6s ease-in-out infinite;
+}
+.breathe:hover,
+.breathe:focus-visible,
+.breathe:active {
+  animation-play-state: paused;
+}
+@keyframes breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.025;
+  }
+}
+
+/* The mint rule card slides up after Check. */
+.slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 0.12s both;
+}
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
     transform: none;
   }
 }

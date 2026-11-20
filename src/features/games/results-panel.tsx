@@ -8,7 +8,7 @@ import { expectedSpelling } from "@/domain/spelling/check";
 import { useI18n } from "@/i18n";
 import { useReducedMotion } from "@/lib/use-hydrated";
 import { useSettings } from "@/lib/settings-store";
-import { playTone } from "@/lib/sound";
+import { giveFeedback } from "@/lib/feedback";
 import type { SubmitStatus } from "@/repositories/types";
 import { AnimatedNumber } from "@/components/animated-number";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,15 @@ import type { FinishOutcome } from "./use-finish-game";
 
 const STAR_PATH = "M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z";
 
+/** When the first star pops in, and the gap between stars (seconds). Sounds and haptics follow the same beat. */
+export const STAR_DELAY_S = 0.35;
+export const STAR_STAGGER_S = 0.28;
+
 /**
- * One star; filled stars draw their outline then fill (staggered). On the mint
- * result card (`onMint`) the outline is the dark gold label colour, so a gold
- * star keeps a visible edge on the light background.
+ * One star. Filled stars pop in one after another with a spring (DESIGN.md V3,
+ * motion); under reduced motion they are simply there. On the mint result card
+ * (`onMint`) the edge is the dark gold label colour, so a gold star keeps a
+ * visible outline on the light background.
  */
 export function Star({ filled, index, size = 40, animate = true, onMint = false }: { filled: boolean; index: number; size?: number; animate?: boolean; onMint?: boolean }) {
   const reduced = useReducedMotion();
@@ -37,13 +42,14 @@ export function Star({ filled, index, size = 40, animate = true, onMint = false 
         ) : (
           <motion.path
             d={STAR_PATH}
-            stroke={edge}
             fill="var(--gold)"
+            stroke={edge}
             strokeWidth="1.2"
             strokeLinejoin="round"
-            initial={{ pathLength: 0, fillOpacity: 0 }}
-            animate={{ pathLength: 1, fillOpacity: 1 }}
-            transition={{ delay: 0.25 + index * 0.3, duration: 0.3, ease: "easeOut" }}
+            style={{ transformBox: "fill-box", transformOrigin: "center" }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 420, damping: 14, mass: 0.8, delay: STAR_DELAY_S + index * STAR_STAGGER_S }}
           />
         ))}
     </svg>
@@ -83,9 +89,13 @@ export function ResultsPanel({ outcome, saveFailed, boss, timed, onAgain, nextHr
     void outcome.leaderboard.then((s) => {
       if (alive) setBoard(s);
     });
-    if (settings.sounds && (outcome.stars ?? 1) > 0) playTone("cleared");
+    // One sound and buzz per star, in time with each star popping in (STAR_DELAY_S).
+    // Free play and review have no stars: one "cleared" sound and no buzz instead.
+    if (outcome.stars === null) giveFeedback("cleared", settings);
+    const timers = Array.from({ length: outcome.stars ?? 0 }, (_, i) => window.setTimeout(() => giveFeedback("star", settings, i), (STAR_DELAY_S + i * STAR_STAGGER_S) * 1000));
     return () => {
       alive = false;
+      timers.forEach((id) => window.clearTimeout(id));
     };
     // Once per outcome.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,7 +138,9 @@ export function ResultsPanel({ outcome, saveFailed, boss, timed, onAgain, nextHr
           {improved && <p className="font-medium text-on-mint">{t.game.newBest}</p>}
         </div>
         <dl className="grid grid-cols-3 gap-2 sm:gap-3">
-          <Tile label={t.game.accuracy}>{pct(Math.round(summary.accuracy * 100))}</Tile>
+          <Tile label={t.game.accuracy}>
+            <AnimatedNumber value={Math.round(summary.accuracy * 100)} format={(n) => pct(Math.round(n))} />
+          </Tile>
           <Tile label={t.game.xp}>
             <AnimatedNumber value={outcome.xp} format={(n) => `+${num(Math.round(n))}`} />
           </Tile>

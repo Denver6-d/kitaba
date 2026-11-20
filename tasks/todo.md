@@ -88,4 +88,8 @@
 - [x] Placement test on the shared game top row; review session closes in place
 
 ### Phase C: landing, motion, sound and haptics, mobile pass, Lighthouse
-- [ ] Not started
+- [x] Landing: hero with live mini game, three steps, 8 worlds path, mint honest banner; header "Start free" after the hero button scrolls away
+- [x] Motion: entry fade-ups (reduced-motion safe), breathing welcome button, rule card slide-up, spring stars, count-ups
+- [x] Sounds (correct, wrong, star) and vibration, both off by default, Settings toggles
+- [x] Mobile: 360–1440 px audited, touch targets, keyboard inset for sticky Check bars
+- [x] Lighthouse 100 / 100 / 100 (accessibility, best practices, SEO), mobile and desktop

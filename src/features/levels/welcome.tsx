@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { MomentLabel } from "@/components/ui/card";
 import { chipVariants, LevelChip } from "@/components/ui/chip";
 import { PlacementTest } from "./placement-test";
+import { Reveal } from "@/components/reveal";
 import { useLevels } from "./use-levels";
 
 type Step =
@@ -94,25 +95,25 @@ export function Welcome({ startWithTest = false, onSkip, next = "/play" }: { sta
 
   return (
     <section className="space-y-10 pt-4 sm:space-y-12 sm:pt-12">
-      <div className="space-y-5">
+      <Reveal immediate className="space-y-5">
         <p className="text-sm text-fg-2">{t.welcome.label}</p>
         <h2 ref={headingRef} tabIndex={-1} className="max-w-2xl text-[clamp(2.25rem,8vw,3.75rem)] leading-[1.08] font-light outline-none">
           {t.welcome.title}
         </h2>
         <p className="max-w-xl text-lg text-fg-2">{t.welcome.intro}</p>
-      </div>
+      </Reveal>
 
       {/* A preview of the scale the test places you on; not a control. */}
-      <ul aria-label={t.welcome.levelsPreview} className="flex flex-wrap gap-2">
+      <Reveal immediate as="ul" delay={140} aria-label={t.welcome.levelsPreview} className="flex flex-wrap gap-2">
         {LEVELS.map((l) => (
           <li key={l}>
             <LevelChip level={l} size="lg" className="min-w-14" />
           </li>
         ))}
-      </ul>
+      </Reveal>
 
       {/* The placement test is the recommended path: first, gold and largest. The other two are secondary. */}
-      <div className="space-y-5">
+      <Reveal immediate delay={280} className="space-y-5">
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
           <Button
             variant="primary"
@@ -121,7 +122,7 @@ export function Welcome({ startWithTest = false, onSkip, next = "/play" }: { sta
             data-welcome="test"
             aria-describedby={tagId}
             onClick={() => setStep({ kind: "test", seed: Date.now() })}
-            className="min-h-16 w-full px-10 text-xl sm:w-auto"
+            className="breathe min-h-16 w-full px-10 text-xl sm:w-auto"
           >
             {t.welcome.test}
           </Button>
@@ -137,7 +138,7 @@ export function Welcome({ startWithTest = false, onSkip, next = "/play" }: { sta
             {t.welcome.skip}
           </Button>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }

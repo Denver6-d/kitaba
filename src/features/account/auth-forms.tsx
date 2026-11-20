@@ -294,7 +294,7 @@ function SignInForm() {
       <div className="flex flex-wrap justify-between gap-2 text-sm">
         <button
           type="button"
-          className="text-fg-2 underline underline-offset-4"
+          className="inline-flex min-h-11 items-center text-fg-2 underline decoration-line-strong underline-offset-4 hover:text-fg"
           onClick={() => setMode(mode === "magic" ? "password" : "magic")}
         >
           {mode === "magic" ? t.account.usePassword : t.account.useMagic}
@@ -302,7 +302,7 @@ function SignInForm() {
         {mode !== "reset" && (
           <button
             type="button"
-            className="text-fg-2 underline underline-offset-4"
+            className="inline-flex min-h-11 items-center text-fg-2 underline decoration-line-strong underline-offset-4 hover:text-fg"
             onClick={() => setMode("reset")}
           >
             {t.account.forgot}

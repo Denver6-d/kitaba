@@ -12,6 +12,8 @@ export const settingsSchema = z.object({
   motion: z.enum(["system", "reduce", "full"]).catch("system"),
   /** Optional feedback tones; off by default. */
   sounds: z.boolean().catch(false),
+  /** Optional vibration on supported phones; off by default. */
+  haptics: z.boolean().catch(false),
   /** American or British English: sets the voice and the expected spelling (DECISIONS V6). */
   accent: z.enum(["us", "uk"]).catch("us"),
 });
@@ -39,6 +41,8 @@ export function applySettingsToDocument(s: Settings, doc: Document = document): 
   el.dir = s.lang === "ar" ? "rtl" : "ltr";
   el.dataset.font = s.readableFont ? "readable" : "default";
   el.dataset.motion = s.motion;
+  if (motionAllowed(s.motion, window.matchMedia("(prefers-reduced-motion: reduce)").matches)) el.dataset.reveal = "on";
+  else delete el.dataset.reveal;
   el.style.setProperty("--text-scale", String(s.textScale));
 }
 
@@ -49,7 +53,12 @@ export function applySettingsToDocument(s: Settings, doc: Document = document): 
  */
 export const PRE_PAINT_SCRIPT = `(function(){try{var s=JSON.parse(localStorage.getItem(${JSON.stringify(
   SETTINGS_KEY,
-)})||"{}");var e=document.documentElement;var l=s.lang==="en"?"en":"ar";e.lang=l;e.dir=l==="ar"?"rtl":"ltr";e.dataset.font=s.readableFont===true?"readable":"default";e.dataset.motion=s.motion==="reduce"||s.motion==="full"?s.motion:"system";var x=Number(s.textScale);if(x>=0.9&&x<=1.4)e.style.setProperty("--text-scale",String(x));}catch(_){}${GATE_PRE_PAINT}})();`;
+)})||"{}");var e=document.documentElement;var l=s.lang==="en"?"en":"ar";e.lang=l;e.dir=l==="ar"?"rtl":"ltr";e.dataset.font=s.readableFont===true?"readable":"default";e.dataset.motion=s.motion==="reduce"||s.motion==="full"?s.motion:"system";var x=Number(s.textScale);if(x>=0.9&&x<=1.4)e.style.setProperty("--text-scale",String(x));if(s.motion==="full"||(s.motion!=="reduce"&&!matchMedia("(prefers-reduced-motion: reduce)").matches))e.dataset.reveal="on";}catch(_){}${GATE_PRE_PAINT}})();`;
+
+/** Entry fade-ups run only when motion is allowed: "full", or "system" without the OS reduced-motion setting. */
+export function motionAllowed(motion: Settings["motion"], osReduce: boolean): boolean {
+  return motion === "full" || (motion === "system" && !osReduce);
+}
 
 /** True when motion should be reduced (OS setting or manual override). */
 export function prefersReducedMotion(): boolean {

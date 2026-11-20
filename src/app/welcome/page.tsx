@@ -1,9 +1,10 @@
 import { Suspense } from "react";
+import { ScreenPlaceholder } from "@/components/page";
 import { WelcomeView } from "./welcome-view";
 
 export default function WelcomePage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<ScreenPlaceholder />}>
       <WelcomeView />
     </Suspense>
   );

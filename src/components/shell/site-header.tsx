@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Languages, Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "./logo";
@@ -11,6 +12,27 @@ import { MENU_NAV, PRIMARY_NAV } from "./nav-items";
 import { SyncIndicator } from "@/features/account/sync-indicator";
 
 export const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
+
+/**
+ * True while the landing hero's gold button (#hero-cta) is off screen. The header's own
+ * gold "Start free" shows only then, so a screen never holds two gold buttons (DECISIONS R8).
+ */
+function useHeroCtaGone(active: boolean): boolean {
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    const el = active ? document.getElementById("hero-cta") : null;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    // The sticky header (72 px) covers the top of the page: a button under it counts as gone.
+    const io = new IntersectionObserver(([entry]) => setGone(entry ? !entry.isIntersecting : false), { rootMargin: "-72px 0px 0px 0px" });
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      // The header stays mounted across pages: forget the old answer, so coming back to "/" never shows two gold pills.
+      setGone(false);
+    };
+  }, [active]);
+  return active && gone;
+}
 
 /**
  * Opaque header (DESIGN.md V3): the name, the core learning areas from 768 px
@@ -22,6 +44,7 @@ export function SiteHeader() {
   const { t, lang, setLang, dir } = useI18n();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const showStart = useHeroCtaGone(pathname === "/");
 
   return (
     <header className="no-print sticky top-0 z-40 border-b border-line bg-canvas">
@@ -52,8 +75,13 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="ms-auto flex items-center gap-1">
+        <div className="ms-auto flex items-center gap-2">
           <SyncIndicator />
+          {showStart && (
+            <Button asChild variant="primary" size="sm" className="max-md:hidden">
+              <Link href="/play">{t.home.startFree}</Link>
+            </Button>
+          )}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <button

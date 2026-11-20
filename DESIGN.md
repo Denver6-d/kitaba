@@ -2,7 +2,7 @@
 
 > **V3, "calm luxury" (owner-approved, 2026-11-20).** This replaces the V1/V2 direction ("ink on a ruled line", light and dark themes, malachite and brass). It takes the restraint of linear.app as a reference for discipline, not for looks: our identity is a deep green-black canvas, one warm gold, light mint "moment" cards and big, light type. The V2 text is in git history. Decisions: DECISIONS.md, section "Redesign".
 >
-> Rollout: phase A (tokens, fonts, dark only, digits, header and menu, shared components) and phase B (welcome, game, correction and result screens; DECISIONS R12–R17) are done. Phase C (landing, motion, sound and haptics, mobile pass) follows; the landing and motion specs below are its brief.
+> Rollout: all three phases are done: A (tokens, fonts, dark only, digits, header and menu, shared components), B (welcome, game, correction and result screens; DECISIONS R12–R18) and C (landing, motion, sound and haptics, mobile pass, Lighthouse; R19–R24).
 
 `src/app/globals.css` implements the tokens. Components use the Tailwind names (`bg-canvas`, `text-fg-2`, `bg-gold`…) and never a raw hex value. The few colours that must exist outside CSS (browser chrome, manifest, icon) live in `src/config/theme.ts`, and a test keeps them equal to the CSS.
 
@@ -81,7 +81,7 @@ No gradients, no glow washes, no glassmorphism, no emoji. The header, the bottom
 2. **Game screens:** top row with a close button, a thin gold progress bar and the level chip; title and "world / stage / word N of 10"; a big round gold audio button with slow expanding rings; "slower" and "in a sentence" pills; letter boxes that light up one by one as the learner types; the hint line; a labelled input; a gold "Check". Letter boxes appear for typed letters only, so they never reveal the word's length (DECISIONS R12).
 3. **Correction:** the learner's answer with the wrong letters struck through or underlined in the error colour; the correct spelling with the key letters in gold and an audio button; a mint rule card (rule title, a short Arabic explanation with a memory trick, an example sentence); "added to your review"; a gold "Next".
 4. **Stage result:** a mint card with 1–3 stars, the stage name, a heading, how to earn the next star, three stat tiles (accuracy, XP, streak); the words going to review as pills; gold "Next stage" and outline "Replay".
-5. **Landing:** header; hero with a large light heading about mastering English spelling word by word, a short line, gold "Test my level" and outline "Try a round", beside a real live mini game card on wide screens (a word typed letter by letter, the audio button, a mint rule card); "three steps in every round"; the path of 8 worlds; the mint honest banner (we teach spelling, we do not promise fluency or check grammar); a minimal footer. Word and sentence counts are never shown.
+5. **Landing:** header; hero with a large light heading about mastering English spelling word by word, a short line, gold "Test my level" and outline "Try a round", beside a real live mini game card on wide screens (a word typed letter by letter, the audio button, a mint rule card); "three steps in every round"; the path of 8 worlds; the mint honest banner (we teach spelling, we do not promise fluency or check grammar); a minimal footer. Word and sentence counts are never shown. The live card opens with a demo mistake typing itself and its correction, then becomes a real round ("Try it yourself"). The header's gold "Start free" appears only once the hero's gold button has scrolled away (DECISIONS R19–R20).
 
 ## Motion
 - Headings and sections fade up softly on entry (0.6–0.8 s, staggered).
@@ -91,7 +91,7 @@ No gradients, no glow washes, no glassmorphism, no emoji. The header, the bottom
 - No animation blocks input; everything stays at 60 fps. Under `prefers-reduced-motion` or the manual setting every motion is an instant state change.
 
 ## Sound and haptics
-Short synthesised Web Audio sounds (correct, wrong, star) and `navigator.vibrate` where supported. Both are off by default, with toggles in Settings. No audio files.
+Short synthesised Web Audio sounds (correct, wrong, star) and `navigator.vibrate` where supported. Both are off by default, with toggles in Settings. No audio files. `lib/feedback.ts` decides, `lib/sound.ts` and `lib/haptics.ts` play; the vibration toggle is disabled where the browser cannot vibrate (DECISIONS R22).
 
 ## Accessibility floor
 - Visible focus: a 2 px gold outline, 3 px offset.

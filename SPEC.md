@@ -58,7 +58,7 @@ npm run check:bundle         # after build: first-load JS per page, budget and p
 
 | Route | Purpose |
 |---|---|
-| `/` | Landing: "master English spelling", a large live game visual, start playing |
+| `/` | Landing: "master English spelling", a live mini game, three steps, the 8 worlds, the honest banner (DESIGN.md V3) |
 | `/play` | Campaign map (worlds and stages), daily challenge, free-play modes |
 | `/play/game?stage=w1-s1` | One campaign stage |
 | `/play/game?daily=1` | Daily challenge |

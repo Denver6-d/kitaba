@@ -1,5 +1,6 @@
 "use client";
 
+import { useKeyboardInset } from "@/lib/keyboard";
 import { chipVariants } from "@/components/ui/chip";
 import {
   useCallback,
@@ -31,7 +32,7 @@ import { checkAnswer, type CheckResult } from "@/domain/spelling/check";
 import { useI18n } from "@/i18n";
 import { useSpeech } from "@/lib/speech";
 import { useSettings } from "@/lib/settings-store";
-import { playTone } from "@/lib/sound";
+import { giveFeedback } from "@/lib/feedback";
 import { SpellingInput, useAnswerInput } from "@/components/spelling-input";
 import {
   reduceAnswerInput,
@@ -102,6 +103,7 @@ export function GameSession({
   onExit,
 }: Props) {
   const { t, lang, num } = useI18n();
+  useKeyboardInset();
   const [settings] = useSettings();
   const { status: voice, speak, usingOtherAccent } = useSpeech();
   const record = useRecordAnswer();
@@ -245,7 +247,7 @@ export function GameSession({
         t,
       });
       input.markChecked();
-      if (settings.sounds) playTone(correct ? "correct" : "wrong");
+      giveFeedback(correct ? "correct" : "wrong", settings);
       const v: Verdict = {
         itemKey: item.key,
         correct,
@@ -279,8 +281,7 @@ export function GameSession({
       item,
       answered,
       word,
-      settings.accent,
-      settings.sounds,
+      settings,
       fixPick,
       input,
       record,
@@ -543,7 +544,7 @@ export function GameSession({
           )}
 
           {(answered || showInput) && (
-            <div className="flex flex-wrap items-center gap-3 max-sm:sticky max-sm:bottom-0 max-sm:-mx-4 max-sm:border-t max-sm:border-line max-sm:bg-canvas max-sm:px-4 max-sm:py-3">
+            <div className="flex flex-wrap items-center gap-3 max-sm:sticky max-sm:bottom-[var(--keyboard-inset,0px)] max-sm:z-10 max-sm:-mx-4 max-sm:border-t max-sm:border-line max-sm:bg-canvas max-sm:px-4 max-sm:py-3">
               {answered ? (
                 <Button
                   variant="primary"

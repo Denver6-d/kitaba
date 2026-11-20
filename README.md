@@ -22,7 +22,7 @@ See [SPEC.md](SPEC.md), [DESIGN.md](DESIGN.md) and [DECISIONS.md](DECISIONS.md).
 | Accents | American or British English (voice and expected spelling), using on-device voices only. |
 | Accounts | Google OAuth behind a public flag (off by default), email and password, magic link. Offline-tolerant sync, merging on first sign-in, export, account deletion. |
 | Leaderboard | Weekly points, opt-in nickname, server-side plausibility checks. |
-| Platform | One dark design (calm, one gold accent), Western digits in both languages, text size, a reading-friendly font, reduced motion, an installable PWA, phone and desktop layouts. |
+| Platform | One dark design (calm, one gold accent), Western digits in both languages, text size, a reading-friendly font, reduced motion, optional sounds and vibration (off by default), an installable PWA, phone and desktop layouts. |
 
 ## Getting started
 

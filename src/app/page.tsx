@@ -1,113 +1,118 @@
 "use client";
 
 import Link from "next/link";
-import { letterDiff } from "@/domain/spelling/diff";
+import { Ear, Keyboard, Lightbulb } from "lucide-react";
+import { WORLDS } from "@/domain/games/campaign";
+import { CATEGORY_INFO } from "@/data/rules";
 import { useI18n } from "@/i18n";
 import { Button } from "@/components/ui/button";
-import { HeroRound } from "@/features/landing/hero-round";
-import { LetterDiff } from "@/features/games/letter-diff";
+import { MomentLabel } from "@/components/ui/card";
+import { Reveal } from "@/components/reveal";
+import { MiniGame } from "@/features/landing/mini-game";
 
-/** Each mode shown with a miniature of its mechanic, so the cards differ by what they show. */
-const MODE_MINIS: ReadonlyArray<{ mode: string; href: string; mini: React.ReactNode }> = [
-  { mode: "listen", href: "/play/game?mode=listen", mini: <span className="font-word">♪ → kn_w</span> },
-  { mode: "bee", href: "/play/game?mode=bee", mini: <span className="font-word">60s · ×4</span> },
-  { mode: "fix", href: "/play/game?mode=fix", mini: <span className="font-word">I <s className="decoration-error">recieved</s> it.</span> },
-  { mode: "missing", href: "/play/game?mode=missing", mini: <span className="font-word tracking-widest">ne_e_sary</span> },
-  { mode: "scramble", href: "/play/game?mode=scramble", mini: <span className="font-word tracking-widest">P L E O E P</span> },
-  { mode: "choice", href: "/play/game?mode=choice", mini: <span className="font-word">accept · acept</span> },
-  { mode: "review", href: "/review", mini: <span className="font-word">1d · 6d · 15d</span> },
-];
+/** One section per screen height (DESIGN.md V3, landing), content centred vertically. */
+const SCREEN = "flex min-h-[calc(100svh-4rem)] flex-col justify-center py-16 md:min-h-[calc(100svh-4.5rem)] md:py-24";
+const STEP_ICONS = [Ear, Keyboard, Lightbulb] as const;
 
 export default function HomePage() {
-  const { t } = useI18n();
-  const display = "font-light";
+  const { t, lang } = useI18n();
   return (
     <>
-      <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 pt-10 pb-16 sm:px-6 md:pt-16 lg:grid-cols-12 lg:gap-14 lg:pt-20">
-        <div className="space-y-6 lg:col-span-5">
-          <h1 className={`text-[clamp(2.25rem,7vw,4rem)] leading-[1.08] ${display}`}>{t.home.headline}</h1>
-          <p className="max-w-xl text-lg text-fg-2">{t.home.sub}</p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Button variant="primary" asChild size="lg" className="h-12 px-7 text-base">
-              <Link href="/play/game?stage=w1-s1">{t.home.ctaPlay}</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="h-12 px-6 text-base">
-              <Link href="/play">{t.nav.play}</Link>
-            </Button>
+      <section aria-labelledby="hero-h" className={`mx-auto max-w-6xl px-4 sm:px-6 ${SCREEN}`}>
+        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="space-y-7 lg:col-span-6">
+            <Reveal immediate as="h1" id="hero-h" className="text-[clamp(2.5rem,8vw,4.5rem)] leading-[1.05] font-light">
+              {t.home.headline}
+            </Reveal>
+            <Reveal immediate as="p" delay={120} className="max-w-xl text-lg text-fg-2 sm:text-xl">
+              {t.home.sub}
+            </Reveal>
+            <Reveal immediate delay={240} className="space-y-4 pt-2">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                {/* The header's "Start free" appears only once this button has scrolled away (DECISIONS R8). */}
+                <Button id="hero-cta" variant="primary" asChild size="lg">
+                  <Link href="/welcome?test=1">{t.home.ctaTest}</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/play/game?stage=w1-s1">{t.home.ctaTry}</Link>
+                </Button>
+              </div>
+              <p className="text-sm text-fg-3">{t.home.noAccount}</p>
+            </Reveal>
           </div>
-          <p className="text-sm text-fg-2">{t.home.noAccount}</p>
-          <ul className="flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-5 text-fg-2">
-            <li>{t.home.factModes}</li>
-            <li>{t.home.factWorlds}</li>
-          </ul>
-        </div>
-        <div className="lg:col-span-7">
-          <HeroRound />
+          <Reveal immediate delay={360} className="lg:col-span-6">
+            <MiniGame />
+          </Reveal>
         </div>
       </section>
 
-      <section aria-labelledby="modes-h" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-        <h2 id="modes-h" className={`mb-8 max-w-2xl text-3xl tracking-tight sm:text-4xl ${display}`}>
-          {t.home.modesTitle}
-        </h2>
-        <ul className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-          {MODE_MINIS.map(({ mode, href, mini }) => (
-            <li key={mode} className="bg-surface">
-              <Link href={href} className="group flex h-full min-h-40 flex-col gap-3 p-6 transition-colors hover:bg-raised">
-                <span dir="ltr" lang="en" className="text-lg text-fg-2">
-                  {mini}
-                </span>
-                <span className="text-lg font-semibold group-hover:underline group-hover:decoration-fg-2 group-hover:underline-offset-4">{t.modes[mode]?.name}</span>
-                <span className="text-fg-2">{t.modes[mode]?.desc}</span>
-              </Link>
-            </li>
-          ))}
-          <li className="moment flex items-center p-6 sm:col-span-2 lg:col-span-1">
-            <p className="text-lg">{t.home.finalBody}</p>
-          </li>
-        </ul>
+      <section aria-labelledby="steps-h" className={`mx-auto max-w-6xl px-4 sm:px-6 ${SCREEN}`}>
+        <Reveal as="h2" id="steps-h" className="mb-10 max-w-2xl text-[clamp(2rem,6vw,3.25rem)] leading-tight font-light sm:mb-14">
+          {t.home.stepsTitle}
+        </Reveal>
+        <ol className="grid gap-4 md:grid-cols-3">
+          {t.home.steps.map((step, i) => {
+            const Icon = STEP_ICONS[i] ?? Ear;
+            return (
+              <Reveal as="li" key={step.title} delay={i * 120} className="panel flex flex-col gap-5 p-6 sm:p-8">
+                <div className="flex items-center justify-between">
+                  <span className="grid size-11 place-items-center rounded-full border border-line-strong font-latin text-fg-2 tabular" aria-hidden="true">
+                    {i + 1}
+                  </span>
+                  <Icon className="size-6 text-fg-3" strokeWidth={1.5} aria-hidden="true" />
+                </div>
+                <h3 className="text-2xl font-light">{step.title}</h3>
+                <p className="text-fg-2">{step.body}</p>
+              </Reveal>
+            );
+          })}
+        </ol>
       </section>
 
-      <section aria-labelledby="rule-h" className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2">
-        <div className="space-y-4">
-          <h2 id="rule-h" className={`text-3xl tracking-tight sm:text-4xl ${display}`}>
-            {t.home.ruleTitle}
-          </h2>
-          <p className="max-w-xl text-lg text-fg-2">{t.home.ruleBody}</p>
-        </div>
-        <figure className="panel space-y-4 p-6 sm:p-8">
-          <p className="flex flex-wrap items-baseline gap-3">
-            <span className="text-fg-2">{t.game.yourAnswer}</span>
-            <LetterDiff segments={letterDiff("recieve", "receive")} labels={{ missing: "+", extra: "−", wrong: "≠" }} />
-          </p>
-          <p className="flex flex-wrap items-baseline gap-3">
-            <span className="text-fg-2">{t.game.wrong}</span>
-            <strong dir="ltr" lang="en" className="font-word text-2xl">
-              receive
-            </strong>
-          </p>
-          <figcaption className="border-s-4 border-fg-2 ps-3 text-fg-2">{t.home.ruleExampleRule}</figcaption>
-        </figure>
-      </section>
-
-      <section aria-labelledby="honest-h" className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-        <h2 id="honest-h" className="mb-4 font-light">
-          {t.home.honestTitle}
-        </h2>
-        <p className="text-xl leading-relaxed sm:text-2xl">{t.home.honestBody}</p>
-        <p className="mt-6 text-fg-2">{t.home.privacyLine}</p>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-6 moment p-8 sm:p-12">
-          <div className="max-w-lg space-y-2">
-            <h2 className="text-2xl font-light sm:text-3xl">{t.home.finalTitle}</h2>
-            <p className="text-on-mint-2">{t.home.finalBody}</p>
+      <section aria-labelledby="worlds-h" className={`mx-auto max-w-6xl px-4 sm:px-6 ${SCREEN}`}>
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-6 sm:mb-14">
+          <div className="max-w-2xl space-y-4">
+            <Reveal as="h2" id="worlds-h" className="text-[clamp(2rem,6vw,3.25rem)] leading-tight font-light">
+              {t.home.worldsTitle}
+            </Reveal>
+            <Reveal as="p" delay={120} className="text-lg text-fg-2">
+              {t.home.worldsIntro}
+            </Reveal>
           </div>
-          <Button variant="primary" asChild size="lg">
-            <Link href="/play/game?stage=w1-s1">{t.home.ctaPlay}</Link>
+          <Button asChild variant="outline">
+            <Link href="/play">{t.home.worldsCta}</Link>
           </Button>
         </div>
+        {/* The path: a hairline joins the worlds, down the side on phones, across the rows on wide screens. */}
+        <ol className="relative grid gap-x-6 gap-y-8 border-s border-line ps-6 sm:grid-cols-2 sm:border-0 sm:ps-0 lg:grid-cols-4">
+          {WORLDS.map((w, i) => (
+            <Reveal as="li" key={w.n} delay={(i % 4) * 90} className="relative space-y-2 sm:border-t sm:border-line sm:pt-6">
+              <span
+                className="absolute -start-[calc(1.5rem+0.4rem)] top-1.5 size-3 rounded-full border border-line-strong bg-canvas sm:start-0 sm:-top-1.5"
+                aria-hidden="true"
+              />
+              <p className="text-sm text-fg-3 tabular">{t.play.world(w.n)}</p>
+              <h3 className="text-xl leading-snug font-normal">{w.name[lang]}</h3>
+              <p className="text-sm text-fg-2">{w.categories.map((c) => CATEGORY_INFO[c].label[lang]).join(lang === "ar" ? "، " : ", ")}</p>
+              <p className="text-sm text-fg-3">
+                <span className="font-latin tabular" dir="ltr" lang="en">
+                  {w.levels[0]}–{w.levels[w.levels.length - 1]}
+                </span>
+              </p>
+            </Reveal>
+          ))}
+        </ol>
+      </section>
+
+      <section aria-labelledby="honest-h" className={`mx-auto max-w-6xl px-4 sm:px-6 ${SCREEN}`}>
+        <Reveal className="moment space-y-5 p-8 sm:p-14">
+          <MomentLabel>{t.home.honestLabel}</MomentLabel>
+          <h2 id="honest-h" className="max-w-3xl text-[clamp(2rem,6vw,3.25rem)] leading-tight font-light text-on-mint">
+            {t.home.honestTitle}
+          </h2>
+          <p className="max-w-2xl text-lg text-on-mint-2 sm:text-xl">{t.home.honestBody}</p>
+          <p className="max-w-2xl border-t border-on-mint/15 pt-5 text-on-mint-2">{t.home.privacyLine}</p>
+        </Reveal>
       </section>
     </>
   );

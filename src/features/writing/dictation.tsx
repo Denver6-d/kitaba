@@ -1,5 +1,6 @@
 "use client";
 
+import { useKeyboardInset } from "@/lib/keyboard";
 import { chipVariants } from "@/components/ui/chip";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
@@ -42,6 +43,7 @@ interface Result {
  * with replay, a slower speed and "listen to the whole message".
  */
 export function Dictation({ level }: { level: CefrLevel }) {
+  useKeyboardInset();
   const { t, lang } = useI18n();
   const [settings] = useSettings();
   const { status, speak, usingOtherAccent } = useSpeech();
@@ -267,7 +269,7 @@ export function Dictation({ level }: { level: CefrLevel }) {
         }}
       >
         <WritingTextarea id={areaId} label={t.writing.typeWhat} value={typed} onChange={(e) => setTyped(e.target.value)} rows={sentences.length > 1 ? 7 : 3} maxLength={4000} />
-        <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-canvas/95 px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+        <div className="sticky bottom-[var(--keyboard-inset,0px)] z-10 -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-canvas px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
           <Button variant="primary" type="submit" size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" disabled={typed.trim() === ""}>
             {t.common.check}
           </Button>

@@ -6,6 +6,8 @@ import { ClipboardCheck, Download, Upload, Trash2 } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { useSettings } from "@/lib/settings-store";
 import { TEXT_SCALES } from "@/lib/settings";
+import { canVibrate } from "@/lib/haptics";
+import { useHydrated } from "@/lib/use-hydrated";
 import { downloadJson, exportFilename } from "@/lib/download";
 import { parseExportFile } from "@/repositories/export";
 import { useRepos } from "@/repositories/provider";
@@ -28,6 +30,7 @@ import {
 export default function SettingsPage() {
   const { t, pct } = useI18n();
   const [s, update] = useSettings();
+  const hydrated = useHydrated();
   const repos = useRepos();
   const fileRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<"merge" | "replace">("merge");
@@ -75,6 +78,13 @@ export default function SettingsPage() {
           <div className="divide-y divide-line border-y border-line">
             <Toggle label={t.settings.readableFont} hint={t.settings.readableFontHint} checked={s.readableFont} onChange={(readableFont) => update({ readableFont })} />
             <Toggle label={t.settings.sounds} hint={t.settings.soundsHint} checked={s.sounds} onChange={(sounds) => update({ sounds })} />
+            <Toggle
+              label={t.settings.haptics}
+              hint={hydrated && !canVibrate() ? `${t.settings.hapticsHint} ${t.settings.hapticsUnsupported}` : t.settings.hapticsHint}
+              checked={s.haptics && (!hydrated || canVibrate())}
+              disabled={hydrated && !canVibrate()}
+              onChange={(haptics) => update({ haptics })}
+            />
           </div>
         </section>
 
@@ -169,7 +179,7 @@ export default function SettingsPage() {
   );
 }
 
-function Toggle({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ label, hint, checked, onChange, disabled = false }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   const id = useId();
   return (
     <div className="flex items-start justify-between gap-6 py-4">
@@ -183,7 +193,7 @@ function Toggle({ label, hint, checked, onChange }: { label: string; hint?: stri
           </p>
         )}
       </div>
-      <Switch id={id} checked={checked} onCheckedChange={onChange} aria-describedby={hint ? `${id}-hint` : undefined} />
+      <Switch id={id} checked={checked} disabled={disabled} onCheckedChange={onChange} aria-describedby={hint ? `${id}-hint` : undefined} />
     </div>
   );
 }

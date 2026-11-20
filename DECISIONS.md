@@ -706,3 +706,52 @@ The owner approved a full visual redesign (DESIGN.md V3 replaces the V1/V2 direc
     - The "Word N of M" line also counts sentence items in boss rounds.
     - The game's sr-only h1 repeats the visible title, so every state of the page has an h1.
     - Loading and empty states have no close button; the empty state links back to Play.
+
+### Phase C: landing, motion, sound and haptics, mobile, Lighthouse
+
+- **R19. Landing page.** Four sections, each at least one screen tall, content centred.
+  - **Hero:** "Master English spelling, one word at a time.", one line, gold "Test my level" (`/welcome?test=1`), outline "Try a round" (stage 1), and "free, no account".
+  - **Live mini game** (`features/landing/mini-game.tsx`) beside the hero on wide screens and under it on phones. It is built from the game's own components. It opens with a demo: the common mistake "recieve" types itself letter by letter, then the correction appears (marked answer, gold key letters, mint rule card with the ie/ei trick). "Try it yourself" turns it into a real round on five other words: hint, audio (when the device has an English voice), letter boxes, labelled input, Check. The hero already holds the screen's gold pill, so the demo's Check is an outline pill. Under reduced motion the demo is shown complete. The old "pick the right spelling" hero, the seven-mode grid and the worked-example section were removed; the mini game shows all three better.
+  - **Three steps** (Listen, Spell, Learn the rule) as numbered cards; the content really is a sequence.
+  - **The 8 worlds path:** each world's number, name, rule families and level range, joined by a hairline (down the side on phones, across the rows on wide screens), with an outline "Open the map".
+  - **The mint honest banner:** "We teach spelling, and nothing else". No fluency promise, no grammar or style checking, no AI, plus the privacy line.
+  - The page shows no word or sentence counts (the old "7 modes" and "8 worlds × 10 stages" facts went too).
+- **R20. "Start free" in the header** (R8) appears only on `/`, only from 768 px up (phones keep just the name and the menu), and only while the hero's gold button is out of view (IntersectionObserver on `#hero-cta`). It starts hidden, so it never flashes beside the hero's button. It goes to `/play`.
+- **R21. Motion, with no new dependency.**
+  - **Entry fade-ups** (`components/reveal.tsx`, 0.7 s, staggered by `delay`) on the landing sections, page titles and the welcome screen. Content is hidden only while `html[data-reveal]` is set. The pre-paint script sets it only when motion is allowed (`motionAllowed`: "full", or "system" without the OS reduced-motion setting), so reduced motion and no-script never hide anything. A 3 s CSS safety animation shows any item that was never observed. Both paths are tested, including the pre-paint script in a VM.
+  - **The welcome screen's gold button breathes** (scale 1 to 1.025, 3.6 s). It rests while hovered or focused.
+  - **After Check:** the existing short shake on a wrong answer, and the mint rule card slides up (0.5 s).
+  - **Results:** stars pop in one after another with a spring (`motion`, already a dependency), and accuracy, XP and streak count up.
+  - **While typing:** only the letter that was just typed lights up, and the audio rings stop.
+  - Everything is CSS transform/opacity or `motion`, so nothing blocks input. The global reduced-motion rule (and the manual setting) turns every CSS animation into an instant end state; `motion` reads the same setting through `useReducedMotion`.
+- **R22. Sound and haptics** (both off by default; Settings has a toggle for each).
+  - **Sounds** (`lib/sound.ts`): short synthesised Web Audio tones for a right answer, a wrong answer and each star (a step higher per star). No audio files.
+  - **Vibration** (`lib/haptics.ts`): short `navigator.vibrate` patterns, at most 120 ms in total, for the same events. Where the browser has no `vibrate` (iOS Safari, most desktops) the toggle is disabled and says so.
+  - `lib/feedback.ts` decides what an event triggers from the settings (pure, tested: nothing plays or vibrates by default, and old stored settings without `haptics` read as off).
+  - Star sounds and buzzes follow the star animation's timing (`STAR_DELAY_S`, `STAR_STAGGER_S`). The writing summary keeps its "cleared" chord.
+- **R23. Mobile.**
+  - **Keyboard** (`lib/keyboard.ts`): Android Chrome shrinks the layout when the keyboard opens (`interactive-widget=resizes-content`). iOS Safari only shrinks the visual viewport, so a sticky Check bar would sit behind the keyboard. `useKeyboardInset` sets `--keyboard-inset` from `visualViewport`: the covered height, 0 when zoomed, and 0 for small differences (the URL bar). The sticky action bars of the game, dictation and free writing use it as their `bottom`. The field still scrolls itself into view (B1). The pure part is tested.
+  - **Checked in headless Chrome at 360, 390, 768, 1280 and 1440 px** on `/`, `/welcome`, `/play`, `/settings`, `/account`, `/progress`, `/review`, `/write` and `/leaderboard`, plus a played game (item, correction, result): no horizontal scroll and no overflowing text anywhere. Headings and English words scale with `clamp()` and wrap.
+  - **Touch targets.** Two text buttons on the sign-in form were 21 px tall; they are now 44 px. The settings switches draw at 48 × 28 but have a 64 × 44 hit area. The progress tiles' links stretch over the whole tile.
+  - The sticky bars are now fully opaque (no translucent canvas).
+- **R24. Lighthouse** (the pinned `chrome-devtools-mcp@1.13.0` CLI with the T2 privacy flags; Performance is not part of its audit, as in F1). Accessibility 100, Best Practices 100 and SEO 100, mobile and desktop, on all eleven targets:
+  - `/welcome` in navigation mode;
+  - `/`, `/play`, a game in its correction state, `/settings`, `/progress`, `/account`, `/review`, `/write` and `/write/free` in snapshot mode. Navigation mode clears storage, so it would only ever audit the first-visit redirect to `/welcome`.
+
+  The first run found two problems, both fixed:
+  - **Heading order on `/`:** the demo's rule card had an h3 straight under the h1. `RuleCard` takes a heading level.
+  - **Layout shift on `/welcome`, mobile (0.07, then 0.10):** pages that read search params render inside `<Suspense fallback={null}>`, so the footer first painted mid-screen and then jumped. These fallbacks now hold a screen of height (`ScreenPlaceholder`). Measured with a layout-shift observer: `/welcome` 0, and the game 0.03 in total, from the first-visit redirect.
+- **R25. Phase C review fixes.** A code reviewer ran as a separate, report-only agent. What changed:
+  - **Scroll fade-ups never played (fixed).** The 3 s safety animation started at page load, so every section below the fold was already visible before the learner scrolled to it. The safety net now applies only until the first `Reveal` mounts (`html[data-reveal-ready]`); from then on the observer owns the timing. Tested.
+  - **Two gold pills for a moment (fixed).** The header stays mounted across pages, so coming back to `/` reused the old "hero button is gone" answer. The observer's cleanup now resets it. The header's 72 px also counts as covering the hero button.
+  - **Mini game focus (fixed).** Check unmounted the focused field and focus fell to the page. Focus now moves to "Another word". "Try it yourself" renders the field and focuses it inside the same tap (`flushSync`), so iOS opens the keyboard. The demo starts typing only once the card is on screen. The live region marks the English word `lang="en"`.
+  - **Content visible on load fades in from first paint** (`Reveal immediate`, a CSS animation) instead of waiting for hydration and the observer. This applies to page titles, the welcome screen and the landing hero, and it helps LCP.
+  - **Breathing button.** It animates the separate `scale` property, so the press feedback still works, and it pauses in place on hover, focus and press instead of snapping.
+  - **Keyboard inset.** It is measured against `documentElement.clientHeight`, the stable layout viewport, and written only when it changes.
+  - **Smaller fixes.**
+    - Free play and review play the "cleared" sound again (they have no stars).
+    - The pre-paint script sets the reveal flag last, so a missing `matchMedia` cannot skip the text size.
+    - The vibration toggle shows "off" where the browser cannot vibrate, even if an imported setting says on.
+  - **Left as is.**
+    - `Reveal` and the header observer have no DOM test, because the suite runs in Node without a DOM library and adding one needs the owner's approval. Their CSS contract and the pre-paint rule are tested, and both were checked in headless Chrome.
+    - iOS keyboard behaviour still needs a check on a real iPhone.

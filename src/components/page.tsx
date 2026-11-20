@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Reveal } from "./reveal";
 
 /** Standard page frame: start-aligned title, optional intro, generous whitespace. */
 export function Page({ title, intro, children, width = "wide", actions }: { title: string; intro?: ReactNode; children: ReactNode; width?: "narrow" | "wide"; actions?: ReactNode }) {
@@ -6,8 +7,14 @@ export function Page({ title, intro, children, width = "wide", actions }: { titl
     <div className={`mx-auto px-4 pt-12 pb-10 sm:px-6 sm:pt-20 ${width === "narrow" ? "max-w-3xl" : "max-w-6xl"}`}>
       <header className="mb-10 flex flex-wrap items-end justify-between gap-4 sm:mb-14">
         <div className="max-w-2xl space-y-3">
-          <h1 className="text-[clamp(2rem,6vw,3rem)] leading-[1.1] font-light">{title}</h1>
-          {intro && <p className="text-fg-2">{intro}</p>}
+          <Reveal immediate as="h1" className="text-[clamp(2rem,6vw,3rem)] leading-[1.1] font-light">
+            {title}
+          </Reveal>
+          {intro && (
+            <Reveal immediate as="p" delay={120} className="text-fg-2">
+              {intro}
+            </Reveal>
+          )}
         </div>
         {actions}
       </header>
@@ -46,4 +53,13 @@ export function EmptyBlock({ children, action }: { children: ReactNode; action?:
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
+}
+
+/**
+ * Suspense fallback for pages that read search params (rendered on the client
+ * only). It holds a screen of height, so the footer never starts mid-screen
+ * and jumps when the page arrives (layout shift).
+ */
+export function ScreenPlaceholder() {
+  return <div aria-hidden="true" className="min-h-[calc(100svh-4rem)] md:min-h-[calc(100svh-4.5rem)]" />;
 }

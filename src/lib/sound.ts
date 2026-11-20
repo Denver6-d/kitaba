@@ -1,31 +1,50 @@
 /**
- * Optional feedback tones synthesised with Web Audio (no audio files). Off by
- * default; the AudioContext is only created after the learner enables sounds.
+ * Optional feedback tones synthesised with Web Audio (no audio files, no
+ * dependency). Off by default; the AudioContext is only created after the
+ * learner turned sounds on and a game plays its first tone.
  */
 let ctx: AudioContext | null = null;
 
-const NOTES = { correct: [660, 990], wrong: [220, 196], cleared: [523, 784] } as const;
+export type ToneKind = "correct" | "wrong" | "cleared" | "star";
 
-export function playTone(kind: keyof typeof NOTES): void {
+/** Each tone is a few short sine notes: [frequency in Hz, start offset in s]. */
+export const TONES: Readonly<Record<ToneKind, readonly (readonly [number, number])[]>> = {
+  correct: [
+    [660, 0],
+    [990, 0.08],
+  ],
+  wrong: [
+    [233, 0],
+    [196, 0.1],
+  ],
+  cleared: [
+    [523, 0],
+    [784, 0.09],
+  ],
+  // One bright note; each further star is a step higher (see `step`).
+  star: [[880, 0]],
+};
+
+/** Plays a tone. `step` raises a star by a fourth per star (0, 1, 2). */
+export function playTone(kind: ToneKind, step = 0): void {
   try {
     ctx ??= new AudioContext();
     if (ctx.state === "suspended") void ctx.resume();
-    const [a, b] = NOTES[kind];
     const t = ctx.currentTime;
-    [a, b].forEach((freq, i) => {
-      if (!ctx) return;
+    const lift = 2 ** ((5 * step) / 12);
+    for (const [freq, offset] of TONES[kind]) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      const start = t + i * 0.09;
+      const start = t + offset;
       osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, start);
+      osc.frequency.setValueAtTime(freq * lift, start);
       gain.gain.setValueAtTime(0.0001, start);
       gain.gain.exponentialRampToValueAtTime(0.045, start + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.18);
       osc.connect(gain).connect(ctx.destination);
       osc.start(start);
       osc.stop(start + 0.2);
-    });
+    }
   } catch {
     // Audio is optional.
   }

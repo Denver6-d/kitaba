@@ -5,7 +5,7 @@ import type { MistakeType } from "@/domain/writing/classify";
 import type { WritingSummary } from "@/domain/writing/summary";
 import { useI18n } from "@/i18n";
 import { useSettings } from "@/lib/settings-store";
-import { playTone } from "@/lib/sound";
+import { giveFeedback } from "@/lib/feedback";
 import { AnimatedNumber } from "@/components/animated-number";
 import { Star } from "@/features/games/results-panel";
 import type { SavedWriting } from "./use-save-writing";
@@ -18,7 +18,7 @@ export function WritingSummaryPanel({ summary, saved, saveFailed }: { summary: W
   const { t, num, pct } = useI18n();
   const [settings] = useSettings();
   useEffect(() => {
-    if (settings.sounds && summary.stars > 0) playTone("cleared");
+    if (summary.stars > 0) giveFeedback("cleared", settings);
     // Once per result.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [summary]);

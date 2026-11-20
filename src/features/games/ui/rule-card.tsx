@@ -14,6 +14,7 @@ export function RuleCard({
   exampleLabel,
   example,
   footer,
+  headingLevel = 3,
 }: {
   label: string;
   title: string;
@@ -23,12 +24,15 @@ export function RuleCard({
   exampleLabel: string;
   example?: string | undefined;
   footer?: React.ReactNode;
+  /** The card's heading level in its page outline (the landing demo sits right under the h1). */
+  headingLevel?: 2 | 3;
 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
-    <section className="moment space-y-4 p-6 sm:p-7">
+    <section className="moment slide-up space-y-4 p-6 sm:p-7">
       <div className="space-y-1">
         <MomentLabel>{label}</MomentLabel>
-        <h3 className="text-xl leading-snug font-medium text-on-mint">{title}</h3>
+        <Heading className="text-xl leading-snug font-medium text-on-mint">{title}</Heading>
       </div>
       <p className="text-on-mint-2">{rule}</p>
       <p className="text-on-mint">

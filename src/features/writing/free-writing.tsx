@@ -1,5 +1,6 @@
 "use client";
 
+import { useKeyboardInset } from "@/lib/keyboard";
 import { chipVariants } from "@/components/ui/chip";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
@@ -45,6 +46,7 @@ type Phase =
 
 /** Free writing (SPEC 6.7): an Arabic scenario at the learner's sentences level, written in English, spell-checked on the device. */
 export function FreeWriting({ level }: { level: CefrLevel }) {
+  useKeyboardInset();
   const { t, lang } = useI18n();
   const [settings] = useSettings();
   const { outbox, repos } = useRepoContext();
@@ -245,7 +247,7 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
           disabled={phase.kind === "checking"}
         />
         {phase.kind === "load-error" && <p className="rounded-lg bg-error-tint p-3 text-sm text-error">{t.writing.loadError}</p>}
-        <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-canvas/95 px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+        <div className="sticky bottom-[var(--keyboard-inset,0px)] z-10 -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-canvas px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
           <Button variant="primary" type="submit" size="lg" className="h-12 flex-1 px-6 text-base sm:flex-none" disabled={words === 0 || phase.kind === "checking"}>
             {phase.kind === "checking" ? t.writing.checking : t.writing.check}
           </Button>
