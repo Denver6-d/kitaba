@@ -6,6 +6,10 @@
  *   npm run audio:build -- --levels=A1,A2        limit render and publish to these levels
  *   npm run audio:build -- --max=200             render at most this many words in this run
  *   npm run audio:build -- --force               ignore checkpoints of the index steps
+ *   npm run audio:build -- --from=render --offline   the generated layer: no network, the voice for
+ *                                                every word without a human recording on disk
+ *   npm run audio:build -- --only=upgrade        the human layer: a long, low-priority background
+ *                                                run that replaces generated files (DECISIONS AU12)
  *
  * Per word, the source is: a human recording from Wikimedia Commons with an
  * allowed licence, else the offline neural voice, else nothing (the app then
@@ -22,16 +26,19 @@ const STEPS = [
   { name: "download", load: () => import("./06-download.mjs") },
   { name: "render", load: () => import("./07-render.mjs") },
   { name: "publish", load: () => import("./08-publish.mjs") },
+  // Long-running; only with --only=upgrade.
+  { name: "upgrade", load: () => import("./09-upgrade.mjs"), manual: true },
 ];
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
 
 function parseArgs(argv) {
-  const args = { from: null, only: null, force: false, levels: LEVELS, max: Infinity };
+  const args = { from: null, only: null, force: false, offline: false, levels: LEVELS, max: Infinity };
   for (const a of argv) {
     if (a.startsWith("--from=")) args.from = a.slice(7);
     else if (a.startsWith("--only=")) args.only = a.slice(7);
     else if (a === "--force") args.force = true;
+    else if (a === "--offline") args.offline = true;
     else if (a.startsWith("--levels=")) args.levels = a.slice(9).split(",");
     else if (a.startsWith("--max=")) args.max = Number(a.slice(6));
     else throw new Error(`unknown argument ${a}`);
@@ -47,7 +54,7 @@ async function main() {
   for (const n of [args.from, args.only]) if (n && !names.includes(n)) throw new Error(`unknown step ${n}; steps: ${names.join(", ")}`);
   const start = args.from ? names.indexOf(args.from) : 0;
   for (const step of STEPS.slice(start)) {
-    if (args.only && step.name !== args.only) continue;
+    if (args.only ? step.name !== args.only : step.manual) continue;
     const t = Date.now();
     console.log(`> ${step.name}`);
     const mod = await step.load();

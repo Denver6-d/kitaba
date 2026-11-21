@@ -47,7 +47,7 @@ function ff(ffmpeg, args) {
 
 /**
  * Decodes `input`, trims, normalises and writes `out` (MP3).
- * @returns {{ ok: true, seconds: number, gain: number } | { ok: false, reason: string }}
+ * @returns {{ ok: true, seconds: number, gain: number } | { ok: false, reason: string, seconds?: number }}
  */
 export function toMp3(ffmpeg, input, out, tmpWav) {
   const trim = `silenceremove=start_periods=1:start_silence=${MARGIN}:start_threshold=${THRESHOLD}:detection=rms`;
@@ -61,7 +61,7 @@ export function toMp3(ffmpeg, input, out, tmpWav) {
   const seconds = v.samples / SAMPLE_RATE;
   if (seconds < SECONDS.min || seconds > SECONDS.max) {
     rmSync(tmpWav, { force: true });
-    return { ok: false, reason: `trimmed length ${seconds.toFixed(2)} s` };
+    return { ok: false, reason: `trimmed length ${seconds.toFixed(2)} s`, seconds };
   }
   const gain = gainDb(v);
   const pass2 = ff(ffmpeg, ["-i", tmpWav, "-af", `volume=${gain}dB`, "-ac", "1", "-ar", String(SAMPLE_RATE), "-c:a", "libmp3lame", "-b:a", BITRATE, "-map_metadata", "-1", "-id3v2_version", "0", "-write_xing", "0", "-f", "mp3", out]);
@@ -74,10 +74,10 @@ export function toMp3(ffmpeg, input, out, tmpWav) {
  * Synthesises each { text, file } with piper in one process (the model loads
  * once). Returns the files that were written.
  */
-export function synthesize(piper, model, jobs) {
+export function synthesize(piper, model, jobs, { lengthScale = 1 } = {}) {
   if (!jobs.length) return [];
   const input = jobs.map((j) => JSON.stringify({ text: j.text, output_file: j.file })).join("\n") + "\n";
-  const r = spawnSync(piper, ["--model", model, "--json-input", "--sentence_silence", "0"], { input, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const r = spawnSync(piper, ["--model", model, "--json-input", "--sentence_silence", "0", "--length_scale", String(lengthScale)], { input, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (r.status !== 0) throw new Error(`piper failed: ${(r.stderr ?? "").slice(-500)}`);
   return jobs.map((j) => j.file);
 }

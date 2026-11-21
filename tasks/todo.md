@@ -105,4 +105,7 @@
 - [x] Pipeline `npm run audio:build`: portable tools in git-ignored tools/ (pinned hashes), targets, Commons index, Lingua Libre speaker accents, licence-checked selection, download, render, publish; resumable checkpoints
 - [x] App: per-word file with Web Speech fallback, slower playback, recording credit after the answer, /credits section and TSV, offline cache and Settings download
 - [x] Validation after the power cut: every file and download checked, none broken
-- [ ] A1 (21 / 673 so far), A2, B1, B2, C1: one commit per finished level
+- [x] User-Agent per the Wikimedia policy with the owner's contact URL; generated layer and upgrade step (AU12)
+- [x] Generated layer A1
+- [ ] Generated layer A2, B1, B2, C1
+- [ ] Human layer A1, A2, B1, B2, C1 (background upgrade run)

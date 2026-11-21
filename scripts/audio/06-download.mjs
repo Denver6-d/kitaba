@@ -2,15 +2,15 @@
  * Step 06 (download): fetches the chosen human recordings from
  * upload.wikimedia.org into content-raw/audio/recordings/, level by level.
  *
- * Wikimedia limits how fast a client may download original files, and asks
- * automated clients to identify themselves with contact details. This pipeline
- * sends no personal contact details (DECISIONS AU6), so it stays far under the
- * limit instead: one file at a time, GAP_MS apart, and when the server answers
- * 429 it waits the full `retry-after` before trying again. It never changes its
- * identity to get around a limit.
+ * Wikimedia limits how fast a client may download original files. The client
+ * identifies itself per the User-Agent policy, with the owner's public contact
+ * URL (lib/commons.mjs, DECISIONS AU12), and stays polite: one file at a time,
+ * GAP_MS apart, and when the server answers 429 it waits the full
+ * `retry-after` before trying again. It never changes its identity to get
+ * around a limit. The process runs at low CPU priority.
  *
- * Only the first usable candidate of each word is downloaded here; 07-render
- * fetches a second candidate only when the first fails its checks.
+ * Per word, the next candidate render has not refused yet is downloaded, and
+ * words that already have a human file are skipped (DECISIONS AU12).
  * Resumable: a file on disk is never fetched again, and a stopped run simply
  * continues with the next missing file.
  */
@@ -19,9 +19,11 @@ import { createWriteStream, existsSync, mkdirSync, renameSync, rmSync } from "no
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { constants, setPriority } from "node:os";
 import { readJson } from "../content/lib/checkpoint.mjs";
 import { USER_AGENT } from "./lib/commons.mjs";
-import { RECORDINGS } from "./lib/paths.mjs";
+import { RECORDINGS, WORK } from "./lib/paths.mjs";
+import { isHuman, remainingCandidates } from "./lib/plan.mjs";
 import { TARGETS } from "./02-targets.mjs";
 import { SELECTION } from "./05-select.mjs";
 
@@ -84,13 +86,33 @@ export async function downloadRecording(url, dest, log = console.log) {
   }
 }
 
+/** Lowers this process's CPU priority (best effort): downloads are background work. */
+export function lowPriority() {
+  try {
+    setPriority(constants.priority.PRIORITY_LOW);
+  } catch {
+    // not allowed on this system: run at normal priority
+  }
+}
+
+/** The recording to fetch next for each word of a level that has no human file yet. */
+export function wantedRecordings(level, targets, selection) {
+  const state = readJson(join(WORK, `render-${level}.json`), { words: {} });
+  return targets.flatMap((t) => {
+    if (t.level !== level || isHuman(state.words[t.id])) return [];
+    const next = remainingCandidates(selection[t.id]?.usable ?? [], state.words[t.id]?.tried ?? [])[0];
+    return next ? [next] : [];
+  });
+}
+
 export async function run({ levels, max = Infinity } = {}) {
+  lowPriority();
   const targets = readJson(TARGETS);
   const selection = readJson(SELECTION);
   const summary = {};
   let fetched = 0;
   for (const level of levels) {
-    const want = targets.filter((t) => t.level === level).flatMap((t) => (selection[t.id]?.usable[0] ? [selection[t.id].usable[0]] : []));
+    const want = wantedRecordings(level, targets, selection);
     let have = want.filter((c) => existsSync(recordingPath(c.title, c.url))).length;
     let missing = 0;
     for (const c of want) {

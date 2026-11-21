@@ -6,5 +6,5 @@ export declare const MARGIN: number;
 export declare const SECONDS: { min: number; max: number };
 export declare function parseVolume(stderr: string): { mean: number; max: number; samples: number } | null;
 export declare function gainDb(v: { mean: number; max: number }, target?: number, ceiling?: number): number;
-export declare function toMp3(ffmpeg: string, input: string, out: string, tmpWav: string): { ok: true; seconds: number; gain: number } | { ok: false; reason: string };
-export declare function synthesize(piper: string, model: string, jobs: readonly { text: string; file: string }[]): string[];
+export declare function toMp3(ffmpeg: string, input: string, out: string, tmpWav: string): { ok: true; seconds: number; gain: number } | { ok: false; reason: string; seconds?: number };
+export declare function synthesize(piper: string, model: string, jobs: readonly { text: string; file: string }[], opts?: { lengthScale?: number }): string[];

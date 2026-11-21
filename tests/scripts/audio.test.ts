@@ -4,6 +4,8 @@ import { gainDb, parseVolume } from "../../scripts/audio/lib/audio.mjs";
 import { authorOf, checkLicense, transcriptionOf } from "../../scripts/audio/lib/license.mjs";
 import { lingualibreByWord, prefixedByWord } from "../../scripts/audio/lib/names.mjs";
 import { candidatesFor, chooseSources, type FileInfo } from "../../scripts/audio/lib/select.mjs";
+import { candidatesToTry, isPendingHuman, remainingCandidates, wordAction } from "../../scripts/audio/lib/plan.mjs";
+import { USER_AGENT } from "../../scripts/audio/lib/commons.mjs";
 
 /** The audio pipeline's source choice: licences, credits, accents and names (DECISIONS AU4-AU6). */
 
@@ -159,5 +161,48 @@ describe("loudness", () => {
     expect(gainDb({ mean: -26.5, max: -9 })).toBe(6.5);
     expect(gainDb({ mean: -30, max: -3 })).toBe(2); // limited by the peak
     expect(gainDb({ mean: -12, max: 0 })).toBe(-8); // too loud: turned down
+  });
+});
+
+/** The generated layer and the human layer (DECISIONS AU12). */
+describe("render plan", () => {
+  const a = { title: "File:En-us-apple.ogg" };
+  const b = { title: "File:LL-Q1860 (eng)-X-apple.wav" };
+
+  it("drops candidates render already refused, keeping the order", () => {
+    expect(remainingCandidates([a, b], [])).toEqual([a, b]);
+    expect(remainingCandidates([a, b], [`${a.title}: trimmed length 3.10 s`])).toEqual([b]);
+    // A title that merely starts the same is not refused.
+    expect(remainingCandidates([a], ["File:En-us-apple.ogg.bak: silent"])).toEqual([a]);
+  });
+
+  it("offline, tries only recordings on disk, and waits for a better one still missing", () => {
+    const onDisk = (c: { title: string }) => c === b;
+    expect(candidatesToTry([a, b], { offline: true, onDisk })).toEqual([]);
+    expect(candidatesToTry([b], { offline: true, onDisk })).toEqual([b]);
+    expect(candidatesToTry([a, b], { offline: false, onDisk })).toEqual([a, b]);
+  });
+
+  it("skips human files, upgrades generated ones when a recording can be tried, voices the rest", () => {
+    expect(wordAction({ src: "en-us", file: "x" }, { fileExists: true, toTry: [a] })).toBe("skip");
+    expect(wordAction({ src: "tts", file: "x" }, { fileExists: true, toTry: [a] })).toBe("try");
+    expect(wordAction({ src: "tts", file: "x" }, { fileExists: true, toTry: [] })).toBe("skip");
+    expect(wordAction(undefined, { fileExists: false, toTry: [] })).toBe("voice");
+    expect(wordAction({ src: "en-us", file: "x" }, { fileExists: false, toTry: [] })).toBe("voice");
+    expect(wordAction({ src: "none" }, { fileExists: false, toTry: [] })).toBe("skip");
+  });
+
+  it("a generated word is pending while a candidate is left", () => {
+    expect(isPendingHuman({ src: "tts", file: "x" }, [a])).toBe(true);
+    expect(isPendingHuman({ src: "tts", file: "x", tried: [`${a.title}: silent`] }, [a])).toBe(false);
+    expect(isPendingHuman({ src: "lingualibre", file: "x" }, [a])).toBe(false);
+    expect(isPendingHuman({ src: "tts", file: "x" }, [])).toBe(false);
+  });
+});
+
+describe("User-Agent", () => {
+  it("follows the Wikimedia policy: name/version, a contact URL, the library; no e-mail", () => {
+    expect(USER_AGENT).toMatch(/^kitaba-audio-pipeline\/\d+\.\d+ \(https:\/\/github\.com\/Denver6-d; [^)]*\) node\/\d+\.\d+\.\d+$/);
+    expect(USER_AGENT).not.toMatch(/@/);
   });
 });

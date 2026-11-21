@@ -3,9 +3,13 @@
  * - One request at a time, at least GAP_MS apart, with `maxlag` so the API can
  *   ask us to wait when its servers are busy.
  * - Retries 429, 5xx and maxlag answers with growing waits.
- * - Identifies itself honestly, without personal contact details.
+ * - Identifies itself as the Wikimedia User-Agent policy asks
+ *   (meta.wikimedia.org/wiki/User-Agent_policy): client name and version, a
+ *   contact, and the library. The contact is the owner's public GitHub profile,
+ *   given by the owner for this purpose (DECISIONS AU12); no e-mail address.
  */
-export const USER_AGENT = "kitaba-audio-pipeline/1.0 (open-data build script; low volume, sequential)";
+export const CONTACT_URL = "https://github.com/Denver6-d";
+export const USER_AGENT = `kitaba-audio-pipeline/1.1 (${CONTACT_URL}; open-data build script, low volume, sequential) node/${process.versions.node}`;
 export const API = "https://commons.wikimedia.org/w/api.php";
 const GAP_MS = 350;
 const TIMEOUT_MS = 30_000;

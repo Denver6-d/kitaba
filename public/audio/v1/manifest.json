@@ -7,15 +7,15 @@
     "url": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/ljspeech/high"
   },
   "credits": {
-    "path": "audio-credits.bd13d7c63c.tsv",
-    "bytes": 5749
+    "path": "audio-credits.5798fc9596.tsv",
+    "bytes": 114809
   },
   "levels": {
     "A1": {
-      "index": "index-A1.ec46aceb6c.json",
-      "bytes": 1488,
-      "files": 21,
-      "audioBytes": 53813
+      "index": "index-A1.370cdfe7b4.json",
+      "bytes": 32347,
+      "files": 673,
+      "audioBytes": 1561569
     }
   }
 }
