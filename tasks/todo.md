@@ -111,5 +111,5 @@
 - [x] Human layer A2 (1,178 human, 150 generated: no usable recording)
 - [x] Human layer B1 (1,937 human, 604 generated: no usable recording)
 - [x] Human layer B2 (199 human, 99 generated: no usable recording)
-- [ ] Human layer C1 (background upgrade run)
+- [x] Human layer C1 (138 human, 96 generated: no usable recording)
 - [x] Credits: change notice and same licence for modified recordings (AU14); no audio for fallback-hint words (AU13)
