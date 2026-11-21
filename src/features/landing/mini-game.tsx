@@ -16,6 +16,7 @@ import { AudioButton } from "@/features/games/ui/audio-button";
 import { LetterBoxes } from "@/features/games/ui/letter-boxes";
 import { AnswerMarks, CorrectionHeader, CorrectLine } from "@/features/games/ui/correction";
 import { RuleCard } from "@/features/games/ui/rule-card";
+import { autoFocusText } from "@/lib/auto-focus";
 
 /**
  * The landing page's live mini game (DESIGN.md V3, landing). It opens with a
@@ -90,12 +91,12 @@ export function MiniGame() {
   const correct = check?.accepted ?? false;
 
   const start = (n: number) => {
-    // Render the field now and focus it inside the same tap: iOS opens the keyboard only then.
+    // Render the field now and focus it in the same click; not on touch devices (DECISIONS M7).
     flushSync(() => {
       setValue("");
       setPhase({ kind: "play", n, answer: null });
     });
-    inputRef.current?.focus({ preventScroll: true });
+    autoFocusText(inputRef.current, { preventScroll: true });
   };
 
   return (

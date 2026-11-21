@@ -805,6 +805,11 @@ Fixes from the owner's manual test, in one commit. A code reviewer ran as a sepa
   - **Tests.** Boundary tests for the press rule were added.
   - **Speed.** Hint checks are memoised per word.
   - **Left as is.** The Next wiring is still checked by a source test, because the suite has no DOM library (R25). It was checked in headless Chrome instead (M2).
+- **M7. No automatic focus on touch devices (owner's phone test, 2026-11-21).** On a phone, moving focus into the answer field opened the on-screen keyboard over the screen while the word was still being spoken. Now `lib/auto-focus.ts` decides: with a coarse primary pointer (`(pointer: coarse)`), the app never moves focus into a text field on its own, and the learner taps the field when ready. With a mouse or trackpad nothing changes.
+  - **Where.** `SpellingInput` no longer uses the native `autoFocus` attribute; it focuses on mount through the helper. `GameSession`, which runs every game mode and review, uses the helper after the hint reveal, on Next and on Start (timed modes). The landing mini game uses it on "Try it yourself". The placement test has only choice buttons, so it opens no keyboard.
+  - **Next on a phone.** Next keeps the field focused (`keepInputFocus`), so the keyboard would have stayed open over the new word. On a touch device Next now releases the field, which closes the keyboard. This happens on the click, after the finger has lifted, so nothing moves under a press (M2).
+  - **Unchanged.** Focus on buttons (choice items, Next after a choice) still moves for keyboard and screen-reader users. The first-character fix (B1) lives in the answer-input reducer and the always-mounted field, not in focus, and the keyboard inset (`useKeyboardInset`, the visualViewport handler) still applies once the learner taps the field. In a timed round (Spelling Bee) the clock starts on Start, so on a phone the time to tap the field counts.
+  - **Tests.** `tests/lib/auto-focus.test.ts` tests the helper with an injected `matchMedia`, and source checks confirm that every answer field goes through it, that Next releases the field on touch, and that the placement test has no text field.
 
 ## Pronunciation audio (2026-11-21)
 

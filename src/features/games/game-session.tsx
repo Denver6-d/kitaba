@@ -35,6 +35,7 @@ import { RecordingCreditLine } from "@/features/audio/recording-credit";
 import type { RecordingCredit } from "@/data/audio-schema";
 import { SLOW_SPEECH_RATE } from "@/lib/pronounce";
 import { useSettings } from "@/lib/settings-store";
+import { autoFocusText, mayAutoFocusText } from "@/lib/auto-focus";
 import { giveFeedback } from "@/lib/feedback";
 import { pressActivates, type Press } from "@/lib/press";
 import { SpellingInput, useAnswerInput } from "@/components/spelling-input";
@@ -198,7 +199,7 @@ export function GameSession({
     if (!revealing) return;
     const id = window.setTimeout(() => {
       setRevealing(false);
-      inputRef.current?.focus();
+      autoFocusText(inputRef.current);
     }, 2000);
     return () => window.clearTimeout(id);
   }, [revealing]);
@@ -220,9 +221,13 @@ export function GameSession({
     setFixPick(null);
     setRevealed(false);
     setRevealing(false);
-    // Still inside the user's gesture, so phones keep (or open) the keyboard.
-    if (takesTyping(following))
-      inputRef.current?.focus({ preventScroll: true });
+    // With a mouse, typing continues at once. On a touch device focus is not moved, so the keyboard
+    // does not cover the next word while it is spoken: the learner taps the field (DECISIONS M7).
+    // Next keeps the field focused (keepInputFocus), so a phone's keyboard would stay over the new word:
+    // release it there. This runs on the click, after the finger has lifted, so nothing moves under a press (M2).
+    if (!mayAutoFocusText()) inputRef.current?.blur();
+    else if (takesTyping(following))
+      autoFocusText(inputRef.current, { preventScroll: true });
   }, [item, answered, game.items, game.index, input]);
 
   useEffect(() => {
@@ -471,9 +476,9 @@ export function GameSession({
             variant="primary"
             size="lg"
             onClick={() => {
-              // Render the input now, then focus it inside the same tap (iOS opens the keyboard only then).
+              // Render the input now, then focus it in the same click (not on touch devices, DECISIONS M7).
               flushSync(() => dispatch({ type: "start", t: performance.now() }));
-              inputRef.current?.focus();
+              autoFocusText(inputRef.current);
             }}
           >
             {t.common.start}

@@ -9,6 +9,7 @@ import {
   type AnswerInputEvent,
   type AnswerInputState,
 } from "@/domain/spelling/answer-input";
+import { autoFocusText } from "@/lib/auto-focus";
 
 export type AnswerTone = "idle" | "correct" | "wrong";
 
@@ -23,13 +24,15 @@ interface Props {
   readonly placeholder?: string;
   readonly size?: "md" | "lg";
   readonly id?: string;
+  /** Focus on mount, except on touch devices (lib/auto-focus.ts, DECISIONS M7). */
   readonly autoFocus?: boolean;
 }
 
 /**
  * The one answer field of a game session (DECISIONS B1). It is never keyed by
- * item, so it stays mounted, focused and attached to the virtual keyboard from
- * the first word to the last. The value lives in the answer-input reducer; this
+ * item, so it stays mounted from the first word to the last and never loses a
+ * keystroke between items. With a mouse it is focused automatically; on a
+ * touch device the learner taps it (DECISIONS M7). The value lives in the answer-input reducer; this
  * component only forwards the input's committed value.
  */
 export const SpellingInput = forwardRef<HTMLInputElement, Props>(function SpellingInput(
@@ -38,6 +41,13 @@ export const SpellingInput = forwardRef<HTMLInputElement, Props>(function Spelli
 ) {
   const inner = useRef<HTMLInputElement>(null);
   useImperativeHandle(ref, () => inner.current as HTMLInputElement, []);
+
+  // Not the native autoFocus attribute: on a phone it would open the keyboard over the word being spoken.
+  useEffect(() => {
+    if (autoFocus) autoFocusText(inner.current);
+    // On mount only, like the attribute it replaces.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Keep the field (and the action under it) above the virtual keyboard on phones.
   useEffect(() => {
@@ -65,7 +75,6 @@ export const SpellingInput = forwardRef<HTMLInputElement, Props>(function Spelli
     <input
       ref={inner}
       id={id}
-      autoFocus={autoFocus}
       type="text"
       value={displayValue(state)}
       onChange={(e) => dispatch({ type: "change", value: e.target.value, t: performance.now() })}
