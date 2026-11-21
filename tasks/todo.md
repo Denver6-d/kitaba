@@ -109,5 +109,6 @@
 - [x] Generated layer A1, A2, B1, B2, C1 (every hinted game word has a file)
 - [x] Human layer A1 (635 human, 38 generated: no usable recording)
 - [x] Human layer A2 (1,178 human, 150 generated: no usable recording)
-- [ ] Human layer B1, B2, C1 (background upgrade run)
+- [x] Human layer B1 (1,937 human, 604 generated: no usable recording)
+- [ ] Human layer B2, C1 (background upgrade run)
 - [x] Credits: change notice and same licence for modified recordings (AU14); no audio for fallback-hint words (AU13)

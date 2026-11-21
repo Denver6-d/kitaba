@@ -32,6 +32,24 @@ export const PAUSE = join(RAW, "upgrade.pause");
 export const BUSY = join(RAW, "upgrade.busy");
 const PUBLISH_EVERY = 25;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+/** Wait after a download that failed every retry (a network outage, not a verdict on the file). */
+const OUTAGE_WAIT_MS = 5 * 60_000;
+
+/**
+ * A multi-hour run outlives short network outages: when a download fails all
+ * of downloadRecording's retries, wait and try the same file again. Rate
+ * limits are handled inside downloadRecording (Retry-After), not here.
+ */
+async function downloadPatiently(url, dest) {
+  for (;;) {
+    try {
+      return await downloadRecording(url, dest);
+    } catch (e) {
+      console.log(`  download failed (${e instanceof Error ? e.message : e}): waiting ${OUTAGE_WAIT_MS / 60_000} min, then retrying`);
+      await sleep(OUTAGE_WAIT_MS);
+    }
+  }
+}
 
 /** Runs `fn` while no pause is requested, marked busy. Busy is set before the pause check, so the two never miss each other. */
 async function busy(fn) {
@@ -69,7 +87,7 @@ export async function run({ levels } = {}) {
         const entry = state.words[t.id];
         const next = remainingCandidates(selection[t.id].usable, entry?.tried ?? [])[0];
         if (!next) continue;
-        const got = await downloadRecording(next.url, recordingPath(next.title, next.url));
+        const got = await downloadPatiently(next.url, recordingPath(next.title, next.url));
         await busy(async () => {
           if (got === "missing") {
             // Re-read: only this job writes this level's state now, but keep the latest copy.
