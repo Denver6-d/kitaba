@@ -106,6 +106,6 @@
 - [x] App: per-word file with Web Speech fallback, slower playback, recording credit after the answer, /credits section and TSV, offline cache and Settings download
 - [x] Validation after the power cut: every file and download checked, none broken
 - [x] User-Agent per the Wikimedia policy with the owner's contact URL; generated layer and upgrade step (AU12)
-- [x] Generated layer A1, A2
-- [ ] Generated layer B1, B2, C1
+- [x] Generated layer A1, A2, B1
+- [ ] Generated layer B2, C1
 - [ ] Human layer A1, A2, B1, B2, C1 (background upgrade run)
