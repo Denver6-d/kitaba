@@ -44,16 +44,17 @@ describe("pronunciation audio", () => {
     expect(manifest.credits.path).toBe(`audio-credits.${sha10(credits)}.tsv`);
   });
 
-  it("names every file by its word id and content hash, and every file exists", () => {
+  // Reads every published file (one per hinted game word, about 5,000): a data-sized timeout.
+  it("names every file by its word id and content hash, and every file exists", { timeout: 60_000 }, () => {
     for (const ix of indexes) {
       for (const [id, e] of Object.entries(ix.files)) {
         const p = `${ix.level}/${e[0]}`;
         expect(existsSync(new URL(p, OUT)), p).toBe(true);
-        expect(e[0]).toBe(`${id}.${sha10(read(p))}.mp3`);
+        const buf = read(p);
+        expect(e[0]).toBe(`${id}.${sha10(buf)}.mp3`);
         // MP3 frame sync (no ID3 tag is written).
-        const head = read(p).subarray(0, 2);
-        expect(head[0]).toBe(0xff);
-        expect(head[1]! & 0xe0).toBe(0xe0);
+        expect(buf[0]).toBe(0xff);
+        expect(buf[1]! & 0xe0).toBe(0xe0);
       }
     }
   });

@@ -96,7 +96,8 @@ describe("audio loader", () => {
     expect(caches.stores.has(AUDIO_CACHE)).toBe(true);
   });
 
-  it("downloads everything for offline use and reports it as stored", async () => {
+  // Stores every published file (about 5,000) through the real loader: a data-sized timeout.
+  it("downloads everything for offline use and reports it as stored", { timeout: 60_000 }, async () => {
     const caches = memoryCaches();
     const lib = createAudioLibrary({ fetch: fileFetch(), caches, objectUrl });
     const before = await lib.offlineStatus();
