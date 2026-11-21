@@ -3,3 +3,5 @@ export declare function checkLicense(meta: Meta): { ok: true; code: string; shor
 export declare function plainText(html: string): string;
 export declare function authorOf(meta: Meta): string;
 export declare function transcriptionOf(wikitext: string): string | null;
+export declare const PROCESSING: string;
+export declare function changeNotice(license: string, generated?: boolean): string;

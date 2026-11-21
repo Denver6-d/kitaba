@@ -3,8 +3,8 @@
  * 08-publish and by tests/data/audio.test.ts.
  *
  * A word is about 0.4-0.9 s of speech at 32 kbps mono: 2-4 KB. The 5,074 words
- * with their own Arabic hint come to about 14 MB; the budget leaves room for
- * the fallback-hint tier of a later session.
+ * with their own Arabic hint come to about 14 MB. The fallback-hint words get
+ * no audio (DECISIONS AU13).
  */
 export const BUDGET = {
   /** One file: 2.6 s (the longest accepted word) at 32 kbps is about 10.4 KB. */

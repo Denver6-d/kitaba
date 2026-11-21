@@ -6,7 +6,7 @@
  * a hint. They are ordered by level (A1 first), then bank words before library
  * words, then by frequency rank, so a run that stops early has covered the
  * words learners meet first. Words whose only hint is the fallback sentence
- * (B2 and C1) are the next tier, for a later session.
+ * (B2 and C1) get no file and keep Web Speech (owner's decision, DECISIONS AU13).
  *
  * Output: content-raw/audio/targets.json, [{ id, word, level, origin, rank }].
  */

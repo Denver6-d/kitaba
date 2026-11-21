@@ -75,8 +75,8 @@ const SOURCES: readonly Source[] = [
     licence: "Per file: CC BY-SA 3.0 or 4.0, CC BY 3.0 or 4.0, CC0, or public domain",
     licenceHref: "#audio-list",
     use: {
-      ar: "تسجيلات بأصوات بشرية لنطق الكلمات بلكنة أمريكية. قصصنا الصمت في أولها وآخرها، وعدّلنا مستوى الصوت، وحوّلناها إلى MP3. اسم صاحب كل تسجيل ورخصته يظهران بعد الإجابة وفي القائمة أدناه، والملفات المعدّلة تحت رخصة الملف الأصلي نفسها.",
-      en: "Human recordings of the words in an American accent. We trimmed the silence at both ends, normalised the loudness and converted them to MP3. Each recording's author and licence are shown after the answer and in the list below; the changed files keep the original file's licence.",
+      ar: "تسجيلات بأصوات بشرية لنطق الكلمات بلكنة أمريكية. عدّلنا كل تسجيل: قصصنا الصمت في أوله وآخره، وعدّلنا مستوى الصوت، وحوّلناه إلى MP3. كل ملف معدَّل من تسجيل برخصة CC BY-SA ننشره بالرخصة نفسها (CC BY-SA، بالإصدار نفسه)، وكل ملف من تسجيل برخصة CC BY ننشره برخصته. اسم صاحب كل تسجيل ورخصته يظهران بعد الإجابة وفي القائمة أدناه.",
+      en: "Human recordings of the words in an American accent. We modified every recording: we trimmed the silence at both ends, normalised the loudness and converted it to MP3. Each modified file from a CC BY-SA recording is shared under the same licence (CC BY-SA, same version), and each one from a CC BY recording under its CC BY licence. Each recording's author and licence are shown after the answer and in the list below.",
     },
   },
   {
@@ -103,7 +103,7 @@ const TEXT = {
     tatoebaListBody: "كل جملة مستخدمة من تاتويبا، ولغتها، واسم كاتبها، في ملف نصي واحد.",
     download: "نزّل القائمة",
     audioList: "تسجيلات النطق ومصادرها",
-    audioListBody: "كل ملف صوتي، ومصدره (تسجيل بشري أو صوت مولَّد)، واسم صاحبه، ورخصته، ورابط الملف الأصلي، في ملف نصي واحد.",
+    audioListBody: "كل ملف صوتي، ومصدره (تسجيل بشري أو صوت مولَّد)، واسم صاحبه، ورخصته، ورابط الملف الأصلي، والتعديلات التي أجريناها عليه، في ملف نصي واحد.",
     notices: "نصوص الرخص",
     noticesBody: "تطلب هذه المصادر إعادة نشر إشعاراتها كما هي. النصوص التالية منقولة حرفيًا وبلغتها الأصلية.",
   },
@@ -118,7 +118,7 @@ const TEXT = {
     tatoebaListBody: "Every Tatoeba sentence used, its language and its author's name, in one text file.",
     download: "Download the list",
     audioList: "Pronunciation recordings and their sources",
-    audioListBody: "Every audio file, its source (a human recording or the generated voice), its author, its licence and a link to the original file, in one text file.",
+    audioListBody: "Every audio file, its source (a human recording or the generated voice), its author, its licence, a link to the original file and the changes we made to it, in one text file.",
     notices: "Licence notices",
     noticesBody: "These sources ask for their notices to be reproduced as they are. The texts below are copied word for word, in their original language.",
   },

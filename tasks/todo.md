@@ -107,4 +107,6 @@
 - [x] Validation after the power cut: every file and download checked, none broken
 - [x] User-Agent per the Wikimedia policy with the owner's contact URL; generated layer and upgrade step (AU12)
 - [x] Generated layer A1, A2, B1, B2, C1 (every hinted game word has a file)
-- [ ] Human layer A1, A2, B1, B2, C1 (background upgrade run)
+- [x] Human layer A1 (635 human, 38 generated: no usable recording)
+- [ ] Human layer A2 (416 / 1,328 so far), B1, B2, C1 (background upgrade run, paused)
+- [x] Credits: change notice and same licence for modified recordings (AU14); no audio for fallback-hint words (AU13)

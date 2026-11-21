@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { readJson, writeAtomic } from "../content/lib/checkpoint.mjs";
 import { BUDGET } from "./lib/budget.mjs";
+import { changeNotice, PROCESSING } from "./lib/license.mjs";
 import { OUT } from "./lib/paths.mjs";
 import { TARGETS } from "./02-targets.mjs";
 import { renderFile } from "./07-render.mjs";
@@ -22,7 +23,6 @@ import { renderFile } from "./07-render.mjs";
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
 const hash10 = (s) => createHash("sha256").update(s).digest("hex").slice(0, 10);
 export const VOICE = { name: "Piper en_US-ljspeech-high", license: "Public domain", url: "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/ljspeech/high" };
-const CHANGES = "trimmed, loudness-normalised and re-encoded as MP3 (mono, 32 kbps)";
 
 const SOURCE_NAME = { "en-us": "Wikimedia Commons", lingualibre: "Lingua Libre (Wikimedia Commons)", tts: VOICE.name };
 
@@ -60,7 +60,7 @@ export async function run() {
         files[t.id] = [r.file, creditIdx.get(key), r.title];
         totals.human++;
       }
-      credits.push([t.id, t.word, level, SOURCE_NAME[r.src], r.title ?? "", r.page ?? "", r.author ?? "", r.license ?? VOICE.license, r.licenseUrl ?? "", CHANGES]);
+      credits.push([t.id, t.word, level, SOURCE_NAME[r.src], r.title ?? "", r.page ?? "", r.author ?? "", r.license ?? VOICE.license, r.licenseUrl ?? "", changeNotice(r.license ?? VOICE.license, r.src === "tts")]);
     }
     if (!Object.keys(files).length) continue;
     const body = `${JSON.stringify({ level, credits: creditRows, files })}\n`;
@@ -75,7 +75,8 @@ export async function run() {
 
   const header = [
     "# Pronunciation audio of this site: one row per file.",
-    "# Human recordings come from Wikimedia Commons (including Lingua Libre) under the licence named on each row; each was " + CHANGES + ".",
+    "# Human recordings come from Wikimedia Commons (including Lingua Libre) under the licence named on each row. Every one was modified: " + PROCESSING + ".",
+    "# A modified CC BY-SA recording is shared under the same licence as its original (the licence on its row); a modified CC BY recording under its CC BY licence.",
     `# Generated files use the ${VOICE.name} voice (public domain; trained on the public-domain LJ Speech dataset).`,
     "id\tword\tlevel\tsource\tfile\tpage\tauthor\tlicence\tlicence_url\tchanges",
   ].join("\n");

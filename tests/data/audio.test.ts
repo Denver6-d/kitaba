@@ -125,4 +125,24 @@ describe("pronunciation audio", () => {
     }
     expect(rows.length).toBe(indexes.reduce((s, ix) => s + Object.keys(ix.files).length, 0));
   });
+
+  it("says every human recording was modified, and that a CC BY-SA one is shared under the same licence", () => {
+    const text = read(manifest.credits.path).toString("utf8");
+    const rows = text
+      .split("\n")
+      .filter((l) => l && !l.startsWith("#") && !l.startsWith("id\t"))
+      .map((l) => l.split("\t"));
+    expect(text).toMatch(/^# .*CC BY-SA recording is shared under the same licence/m);
+    let shareAlike = 0;
+    for (const r of rows) {
+      if (/^Piper/.test(r[3]!)) continue;
+      expect(r[9], r[0]).toMatch(/^modified from the original: trimmed, loudness-normalised and converted to MP3/);
+      if (/^CC BY-SA /.test(r[7]!)) {
+        shareAlike++;
+        expect(r[9], r[0]).toContain(`shared under the same licence, ${r[7]}`);
+      }
+    }
+    // Not vacuous once human recordings are published.
+    if (indexes.some((ix) => ix.credits.some((c) => c[1].startsWith("CC BY-SA ")))) expect(shareAlike).toBeGreaterThan(0);
+  });
 });
