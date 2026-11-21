@@ -108,5 +108,6 @@
 - [x] User-Agent per the Wikimedia policy with the owner's contact URL; generated layer and upgrade step (AU12)
 - [x] Generated layer A1, A2, B1, B2, C1 (every hinted game word has a file)
 - [x] Human layer A1 (635 human, 38 generated: no usable recording)
-- [ ] Human layer A2 (416 / 1,328 so far), B1, B2, C1 (background upgrade run, paused)
+- [x] Human layer A2 (1,178 human, 150 generated: no usable recording)
+- [ ] Human layer B1, B2, C1 (background upgrade run)
 - [x] Credits: change notice and same licence for modified recordings (AU14); no audio for fallback-hint words (AU13)
