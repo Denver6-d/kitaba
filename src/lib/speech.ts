@@ -81,17 +81,19 @@ export function useSpeech() {
   const status: SpeechStatus = !hydrated ? "checking" : !supported() ? "unsupported" : voiceUri ? "ready" : waited ? "no-voice" : "checking";
 
   const speak = useCallback(
-    (text: string, rate = 0.9) => {
-      if (!supported() || !voiceUri) return;
+    /** Speaks with the on-device voice; false when there is none. */
+    (text: string, rate = 0.9): boolean => {
+      if (!supported() || !voiceUri) return false;
       const synth = window.speechSynthesis;
       const voice = synth.getVoices().find((v) => v.voiceURI === voiceUri);
-      if (!voice) return;
+      if (!voice) return false;
       synth.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.voice = voice;
       u.lang = voice.lang;
       u.rate = rate;
       synth.speak(u);
+      return true;
     },
     [voiceUri],
   );

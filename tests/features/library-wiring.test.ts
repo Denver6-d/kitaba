@@ -2,6 +2,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CONTENT_BASE, CONTENT_CACHE } from "@/features/library/library";
+import { AUDIO_BASE, AUDIO_CACHE } from "@/features/audio/audio-library";
 import { ar } from "@/i18n/ar";
 import { en } from "@/i18n/en";
 import { SCOWL_NOTICE, VARCON_NOTICE, CMUDICT_NOTICE, DICTIONARY_EN_NOTICE } from "@/data/credits/notices.generated";
@@ -29,7 +30,12 @@ describe("service worker and loader agree", () => {
   it("use the same content cache and path, and keep the cache across deploys", () => {
     expect(sw).toContain(`const CONTENT_CACHE = "${CONTENT_CACHE}"`);
     expect(sw).toContain(`const CONTENT_PREFIX = "${CONTENT_BASE}"`);
-    expect(sw).toMatch(/k !== VERSION && k !== CONTENT_CACHE/);
+    expect(sw).toMatch(/const LONG_LIVED = \[CONTENT_CACHE, AUDIO_CACHE\]/);
+    expect(sw).toMatch(/k !== VERSION && !LONG_LIVED\.includes\(k\)/);
+  });
+  it("use the same audio cache and path as the pronunciation loader", () => {
+    expect(sw).toContain(`const AUDIO_CACHE = "${AUDIO_CACHE}"`);
+    expect(sw).toContain(`const AUDIO_PREFIX = "${AUDIO_BASE}"`);
   });
   it("precaches the credits page with the other pages", () => {
     expect(sw).toMatch(/"\/credits"/);

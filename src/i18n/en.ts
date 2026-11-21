@@ -375,7 +375,7 @@ export const en: Dictionary = {
   settings: {
     title: "Settings",
     offlineTitle: "The full library offline",
-    offlineBody: "Games load the larger word and sentence library from this site when they need it. Download all of it now to play every level without a connection. It stays in this browser only.",
+    offlineBody: "Games load the larger word and sentence library, and the pronunciation recordings, from this site when they need them. Download all of it now to play every level without a connection. It stays in this browser only.",
     offlineDownload: "Download the whole library",
     offlineDownloading: (pct: string) => `Downloading… ${pct}`,
     offlineDone: "The whole library is on this device.",

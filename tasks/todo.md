@@ -100,3 +100,9 @@
 - [x] Every game word has a hint: hinted pool, masked-example fallback with Tatoeba translation, hints for library ranks 3,001–4,500
 - [x] Rules: verb-endings wording, "Example:" prefix for category tricks, ie/ei Arabic trick, roadmap item
 - [x] Sounds and vibration on by default, saved choices kept, nothing before a user gesture
+
+## Pronunciation audio (DECISIONS AU1–AU11)
+- [x] Pipeline `npm run audio:build`: portable tools in git-ignored tools/ (pinned hashes), targets, Commons index, Lingua Libre speaker accents, licence-checked selection, download, render, publish; resumable checkpoints
+- [x] App: per-word file with Web Speech fallback, slower playback, recording credit after the answer, /credits section and TSV, offline cache and Settings download
+- [x] Validation after the power cut: every file and download checked, none broken
+- [ ] A1 (21 / 673 so far), A2, B1, B2, C1: one commit per finished level

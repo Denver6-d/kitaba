@@ -1,0 +1,28 @@
+{
+  "files": {
+    "piper/piper_windows_amd64.zip": {
+      "url": "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip",
+      "sha256": "f3c58906402b24f3a96d92145f58acba6d86c9b5db896d207f78dc80811efcea",
+      "bytes": 22477236,
+      "pinnedAt": "2026-11-20T22:51:29.932Z"
+    },
+    "voice/en_US-ljspeech-high.onnx": {
+      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/e9c8a39444359388adaa94255becb37a5a2b8e51/en/en_US/ljspeech/high/en_US-ljspeech-high.onnx",
+      "sha256": "5d4f08ba6a2a48c44592eed3ce56bf85e9de3dd4e20df90541ae68a8310c029a",
+      "bytes": 114199011,
+      "pinnedAt": "2026-11-20T22:52:49.724Z"
+    },
+    "voice/en_US-ljspeech-high.onnx.json": {
+      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/e9c8a39444359388adaa94255becb37a5a2b8e51/en/en_US/ljspeech/high/en_US-ljspeech-high.onnx.json",
+      "sha256": "7e1f4634af596d83cca997fb7a931ba80b70f8a316a2655ee69c55365e0ace14",
+      "bytes": 4970,
+      "pinnedAt": "2026-11-20T22:52:50.471Z"
+    },
+    "voice/MODEL_CARD": {
+      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/e9c8a39444359388adaa94255becb37a5a2b8e51/en/en_US/ljspeech/high/MODEL_CARD",
+      "sha256": "289f7421072d689a3d91f6c632f486af46f9b8b04417536104a4ea667b8a394b",
+      "bytes": 513,
+      "pinnedAt": "2026-11-20T22:52:50.774Z"
+    }
+  }
+}

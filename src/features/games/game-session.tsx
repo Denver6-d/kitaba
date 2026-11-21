@@ -30,7 +30,10 @@ import { multiplierFor } from "@/domain/games/engine";
 import { sentenceMatches } from "@/domain/games/items";
 import { checkAnswer, type CheckResult } from "@/domain/spelling/check";
 import { useI18n } from "@/i18n";
-import { useSpeech } from "@/lib/speech";
+import { usePronunciation } from "@/features/audio/use-pronunciation";
+import { RecordingCreditLine } from "@/features/audio/recording-credit";
+import type { RecordingCredit } from "@/data/audio-schema";
+import { SLOW_SPEECH_RATE } from "@/lib/pronounce";
 import { useSettings } from "@/lib/settings-store";
 import { giveFeedback } from "@/lib/feedback";
 import { pressActivates, type Press } from "@/lib/press";
@@ -108,7 +111,8 @@ export function GameSession({
   const { t, lang, num } = useI18n();
   useKeyboardInset();
   const [settings] = useSettings();
-  const { status: voice, speak, usingOtherAccent } = useSpeech();
+  // The word's audio file when there is one, else the device voice (DECISIONS AU9).
+  const { status: voice, speak, say, canSay, hasFile, credit, usingOtherAccent } = usePronunciation(words);
   const record = useRecordAnswer();
   const [game, dispatch] = useReducer(reduceGame, null, () =>
     createGame(items, config),
@@ -171,17 +175,24 @@ export function GameSession({
       item.mode === "bee" ||
       item.mode === "review" ||
       item.kind === "sentence");
+  const sayable = speakText ? canSay(speakText, item?.wordId) : false;
+  /** The item last spoken on its own, so a voice or a file becoming ready later does not say it twice. */
+  const autoSpokenRef = useRef<string | null>(null);
   useEffect(() => {
     if (
-      voice === "ready" &&
+      item &&
+      sayable &&
       autoSpeak &&
       speakText &&
-      (!timed || game.startedAt !== null)
-    )
-      speak(speakText);
-    // Only when the item (or voice readiness) changes; replay is a button.
+      (!timed || game.startedAt !== null) &&
+      autoSpokenRef.current !== item.key
+    ) {
+      autoSpokenRef.current = item.key;
+      say(speakText, item.wordId);
+    }
+    // Only when the item (or readiness) changes; replay is a button.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item?.key, voice, game.startedAt]);
+  }, [item?.key, sayable, game.startedAt]);
 
   useEffect(() => {
     if (!revealing) return;
@@ -376,7 +387,8 @@ export function GameSession({
     (item.kind === "fix" && fixPick !== null);
   const mult = multiplierFor(game.combo);
   const info = CATEGORY_INFO[word.category];
-  const canSpeak = voice === "ready";
+  const canSpeak = item.speak ? canSay(item.speak, item.wordId) : voice === "ready";
+  const fileForWord = hasFile(item.wordId);
   const listenLike =
     item.mode === "listen" ||
     item.mode === "bee" ||
@@ -476,16 +488,17 @@ export function GameSession({
                   <>
                     <AudioButton
                       label={t.game.listen}
-                      onPlay={() => item.speak && speak(item.speak)}
+                      onPlay={() => item.speak && say(item.speak, item.wordId)}
                       onMouseDown={keepInputFocus}
                       ringing={!typingStarted && !answered}
                     />
                     <div className="flex flex-wrap justify-center gap-2">
-                      <Button variant="outline" size="sm" onMouseDown={keepInputFocus} onClick={() => speak(item.answer, 0.6)}>
+                      <Button variant="outline" size="sm" onMouseDown={keepInputFocus} onClick={() => say(item.answer, item.wordId, SLOW_SPEECH_RATE)}>
                         <Turtle className="size-4" strokeWidth={1.5} aria-hidden="true" />
                         {t.game.slow}
                       </Button>
-                      {item.kind !== "sentence" && word.example && (
+                      {/* Sentences stay on the device voice for now (DECISIONS AU9). */}
+                      {item.kind !== "sentence" && word.example && voice === "ready" && (
                         <Button variant="outline" size="sm" onMouseDown={keepInputFocus} onClick={() => speak(word.example ?? "")}>
                           {t.game.example}
                         </Button>
@@ -512,7 +525,7 @@ export function GameSession({
                     </Button>
                   </div>
                 )}
-                {canSpeak && usingOtherAccent && <p className="text-center text-sm text-fg-2">{t.game.otherAccent}</p>}
+                {canSpeak && usingOtherAccent && !(fileForWord && item.speak === item.answer) && <p className="text-center text-sm text-fg-2">{t.game.otherAccent}</p>}
               </div>
             )}
 
@@ -581,7 +594,9 @@ export function GameSession({
               word={word}
               info={info}
               lang={lang}
-              onListen={canSpeak ? () => speak(item.answer, 0.85) : null}
+              onListen={canSay(item.answer, item.wordId) ? () => say(item.answer, item.wordId, 0.85) : null}
+              // Credited where the recording is heard: listen-like items, and the correction's listen button.
+              recording={listenLike || !verdict.correct ? credit(item.wordId) : null}
             />
           )}
 
@@ -802,6 +817,7 @@ function Feedback({
   info,
   lang,
   onListen,
+  recording,
 }: {
   verdict: Verdict;
   item: GameItem;
@@ -809,6 +825,8 @@ function Feedback({
   info: CategoryInfo;
   lang: "ar" | "en";
   onListen: (() => void) | null;
+  /** Credit for the human recording of this word, when one was played. */
+  recording: RecordingCredit | null;
 }) {
   const { t } = useI18n();
   const v = verdict.check?.verdict;
@@ -825,6 +843,7 @@ function Feedback({
         {word.exampleCredit && (item.kind === "sentence" || word.example) && <TatoebaCreditLine credit={word.exampleCredit} />}
         {/* The fallback hint showed the example's Arabic translation: credit its own author (CC BY). */}
         {!word.ar && word.exampleAr && item.kind !== "sentence" && <TatoebaCreditLine credit={word.exampleAr.credit} />}
+        {recording && item.kind !== "sentence" && <RecordingCreditLine credit={recording} />}
       </div>
     );
   }
@@ -858,6 +877,7 @@ function Feedback({
             onListen={onListen}
             onMouseDown={keepInputFocus}
           />
+          {recording && <RecordingCreditLine credit={recording} />}
           <RuleCard
             label={t.game.rule}
             title={info.label[lang]}

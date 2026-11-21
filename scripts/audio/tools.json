@@ -1,0 +1,32 @@
+{
+  "$comment": "Portable tools for the audio pipeline (scripts/audio). Downloaded into tools/<id>/ (git-ignored), checked against tools.lock.json, never installed globally. Tools only: nothing here ships to the browser except the audio the voice model generates. Licences were read in the sources (DECISIONS AU2, AU3).",
+  "tools": [
+    {
+      "id": "ffmpeg",
+      "name": "FFmpeg 9.1, essentials build by Gyan Doshi (gyan.dev)",
+      "platform": "win32",
+      "url": "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-9.1-essentials_build.zip",
+      "sha256": "b9bbbb3acece000cbeec994f856649354e52c773807841e78908374b24d658fd",
+      "license": "GPL-3.0 (this build); a tool only, nothing of it is shipped",
+      "exe": "ffmpeg-9.1-essentials_build/bin/ffmpeg.exe"
+    },
+    {
+      "id": "piper",
+      "name": "Piper 2023.11.14-2 (rhasspy/piper, the last portable Windows release)",
+      "platform": "win32",
+      "url": "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip",
+      "license": "MIT (repository LICENSE.md); bundles espeak-ng (GPL-3.0) for phonemes; a tool only",
+      "exe": "piper/piper.exe"
+    },
+    {
+      "id": "voice",
+      "name": "Piper voice en_US-ljspeech-high (rhasspy/piper-voices, revision e9c8a39)",
+      "license": "Public domain: trained from scratch on the LJ Speech dataset (public domain, keithito.com/LJ-Speech-Dataset) by Bryce Beattie, who releases the model as public domain (brycebeattie.com/files/tts); repository metadata MIT",
+      "files": [
+        { "name": "en_US-ljspeech-high.onnx", "url": "https://huggingface.co/rhasspy/piper-voices/resolve/e9c8a39444359388adaa94255becb37a5a2b8e51/en/en_US/ljspeech/high/en_US-ljspeech-high.onnx", "md5": "dad093b5d2cff6a5fda99883ceda09d1" },
+        { "name": "en_US-ljspeech-high.onnx.json", "url": "https://huggingface.co/rhasspy/piper-voices/resolve/e9c8a39444359388adaa94255becb37a5a2b8e51/en/en_US/ljspeech/high/en_US-ljspeech-high.onnx.json", "md5": "de98fc398ddead60fb82d93bfafb3ad1" },
+        { "name": "MODEL_CARD", "url": "https://huggingface.co/rhasspy/piper-voices/resolve/e9c8a39444359388adaa94255becb37a5a2b8e51/en/en_US/ljspeech/high/MODEL_CARD", "md5": "bc3fe20b3e3f359ec423b98c1b6ed32e" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "accent": "us",
+  "voice": {
+    "name": "Piper en_US-ljspeech-high",
+    "license": "Public domain",
+    "url": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/ljspeech/high"
+  },
+  "credits": {
+    "path": "audio-credits.bd13d7c63c.tsv",
+    "bytes": 5749
+  },
+  "levels": {
+    "A1": {
+      "index": "index-A1.ec46aceb6c.json",
+      "bytes": 1488,
+      "files": 21,
+      "audioBytes": 53813
+    }
+  }
+}

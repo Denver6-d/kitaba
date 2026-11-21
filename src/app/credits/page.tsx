@@ -6,6 +6,7 @@ import { useI18n } from "@/i18n";
 import { Page } from "@/components/page";
 import { PRODUCT_NAME } from "@/config/brand";
 import { CONTENT_BASE, getLibrary } from "@/features/library/library";
+import { AUDIO_BASE, getAudioLibrary } from "@/features/audio/audio-library";
 import { CMUDICT_NOTICE, DICTIONARY_EN_NOTICE, SCOWL_NOTICE, VARCON_NOTICE } from "@/data/credits/notices.generated";
 
 interface Source {
@@ -68,6 +69,26 @@ const SOURCES: readonly Source[] = [
       en: "Finding sound-alike words and silent letters. The pronunciations themselves are not published.",
     },
   },
+  {
+    name: "Wikimedia Commons: English pronunciation recordings (En-us files and Lingua Libre)",
+    href: "https://commons.wikimedia.org/wiki/Category:U.S._English_pronunciation",
+    licence: "Per file: CC BY-SA 3.0 or 4.0, CC BY 3.0 or 4.0, CC0, or public domain",
+    licenceHref: "#audio-list",
+    use: {
+      ar: "تسجيلات بأصوات بشرية لنطق الكلمات بلكنة أمريكية. قصصنا الصمت في أولها وآخرها، وعدّلنا مستوى الصوت، وحوّلناها إلى MP3. اسم صاحب كل تسجيل ورخصته يظهران بعد الإجابة وفي القائمة أدناه، والملفات المعدّلة تحت رخصة الملف الأصلي نفسها.",
+      en: "Human recordings of the words in an American accent. We trimmed the silence at both ends, normalised the loudness and converted them to MP3. Each recording's author and licence are shown after the answer and in the list below; the changed files keep the original file's licence.",
+    },
+  },
+  {
+    name: "Piper text-to-speech, voice en_US-ljspeech-high",
+    href: "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/ljspeech/high",
+    licence: "Public domain (voice trained on the public-domain LJ Speech dataset)",
+    licenceHref: "https://keithito.com/LJ-Speech-Dataset/",
+    use: {
+      ar: "نطق مولَّد على جهاز التطوير للكلمات التي لا يوجد لها تسجيل بشري برخصة مناسبة. إن لم يوجد ملف، يستخدم الموقع صوت جهازك.",
+      en: "Pronunciation generated offline, on the development machine, for words with no human recording under a suitable licence. Where there is no file, the site uses your device's voice.",
+    },
+  },
 ];
 
 const TEXT = {
@@ -81,6 +102,8 @@ const TEXT = {
     tatoebaList: "قائمة جمل تاتويبا وكتّابها",
     tatoebaListBody: "كل جملة مستخدمة من تاتويبا، ولغتها، واسم كاتبها، في ملف نصي واحد.",
     download: "نزّل القائمة",
+    audioList: "تسجيلات النطق ومصادرها",
+    audioListBody: "كل ملف صوتي، ومصدره (تسجيل بشري أو صوت مولَّد)، واسم صاحبه، ورخصته، ورابط الملف الأصلي، في ملف نصي واحد.",
     notices: "نصوص الرخص",
     noticesBody: "تطلب هذه المصادر إعادة نشر إشعاراتها كما هي. النصوص التالية منقولة حرفيًا وبلغتها الأصلية.",
   },
@@ -94,6 +117,8 @@ const TEXT = {
     tatoebaList: "Tatoeba sentences and their authors",
     tatoebaListBody: "Every Tatoeba sentence used, its language and its author's name, in one text file.",
     download: "Download the list",
+    audioList: "Pronunciation recordings and their sources",
+    audioListBody: "Every audio file, its source (a human recording or the generated voice), its author, its licence and a link to the original file, in one text file.",
     notices: "Licence notices",
     noticesBody: "These sources ask for their notices to be reproduced as they are. The texts below are copied word for word, in their original language.",
   },
@@ -110,6 +135,7 @@ export default function CreditsPage() {
   const { t, lang } = useI18n();
   const c = TEXT[lang];
   const [listHref, setListHref] = useState<string | null>(null);
+  const [audioHref, setAudioHref] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
     void getLibrary()
@@ -117,6 +143,11 @@ export default function CreditsPage() {
       .then((m) => {
         const f = m?.files["tatoeba-credits"];
         if (alive && f) setListHref(CONTENT_BASE + f.path);
+      });
+    void getAudioLibrary()
+      .manifest()
+      .then((m) => {
+        if (alive && m) setAudioHref(AUDIO_BASE + m.credits.path);
       });
     return () => {
       alive = false;
@@ -157,6 +188,18 @@ export default function CreditsPage() {
           <p className="text-fg-2">{c.tatoebaListBody}</p>
           {listHref && (
             <a href={listHref} download="tatoeba-credits.tsv" className="inline-flex min-h-11 items-center rounded-md border border-line px-4 font-medium hover:bg-muted">
+              {c.download}
+            </a>
+          )}
+        </section>
+
+        <section id="audio-list" className="space-y-3" aria-labelledby="al-h">
+          <h2 id="al-h" className="text-2xl font-light">
+            {c.audioList}
+          </h2>
+          <p className="text-fg-2">{c.audioListBody}</p>
+          {audioHref && (
+            <a href={audioHref} download="audio-credits.tsv" className="inline-flex min-h-11 items-center rounded-md border border-line px-4 font-medium hover:bg-muted">
               {c.download}
             </a>
           )}

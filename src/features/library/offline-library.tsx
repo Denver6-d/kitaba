@@ -4,7 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CloudDownload, RotateCcw, Trash2 } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { Button } from "@/components/ui/button";
+import { getAudioLibrary } from "@/features/audio/audio-library";
 import { getLibrary, type OfflineStatus } from "./library";
+import { combineOffline } from "./offline-sources";
+
+/** The word library plus the pronunciation audio, as one download (DECISIONS AU10). */
+const offline = () => combineOffline(getLibrary(), getAudioLibrary());
 
 type State =
   | { readonly kind: "checking" }
@@ -29,14 +34,14 @@ export function OfflineLibrary() {
 
   const check = useCallback(() => {
     setState({ kind: "checking" });
-    void getLibrary()
+    void offline()
       .offlineStatus()
       .then((s) => setState(toState(s)));
   }, []);
 
   useEffect(() => {
     let alive = true;
-    void getLibrary()
+    void offline()
       .offlineStatus()
       .then((s) => alive && setState(toState(s)));
     return () => {
@@ -52,14 +57,14 @@ export function OfflineLibrary() {
     setState({ kind: "downloading", stored: state.stored, total: state.total });
     // The button is disabled while downloading: keep keyboard focus on the live status.
     statusRef.current?.focus();
-    const ok = await getLibrary().downloadAll((stored, total) => setState({ kind: "downloading", stored, total }), ctrl.signal);
+    const ok = await offline().downloadAll((stored, total) => setState({ kind: "downloading", stored, total }), ctrl.signal);
     if (ctrl.signal.aborted) return;
-    setState(toState(await getLibrary().offlineStatus(), ok));
+    setState(toState(await offline().offlineStatus(), ok));
   };
 
   const remove = async () => {
-    await getLibrary().removeOffline();
-    setState(toState(await getLibrary().offlineStatus()));
+    await offline().removeOffline();
+    setState(toState(await offline().offlineStatus()));
     statusRef.current?.focus();
   };
 

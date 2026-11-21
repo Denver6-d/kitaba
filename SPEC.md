@@ -39,6 +39,7 @@ The app answers one question for Arabic speakers: **"can I spell English words c
 | `progress` | XP, levels, streaks, daily goal, achievements, stats |
 | `accounts` | Supabase auth (Google OAuth behind `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN`, email), offline-tolerant sync, first-login merge, sign-out, account deletion |
 | `leaderboard` | Opt-in nickname, weekly spelling score, RPC submission with plausibility checks |
+| `audio` | One pronunciation MP3 per word in `public/audio/v1` (a Wikimedia Commons recording under an open licence, else a public-domain offline voice), loaded on demand, cached offline, credited per file; the device's Web Speech voice is the fallback (DECISIONS AU1–AU11) |
 | `writing` | Sentences and messages (§6.7): free writing with an on-device spell checker, sentence and message dictation, mistakes to SM-2, history |
 
 ## 3. Tech stack (unchanged)
@@ -52,6 +53,7 @@ npm run dev | build | start | lint | typecheck | test
 npm run validate:content     # content validation script (also covered by the test suite)
 npm run content:build        # open-data pipeline (dev-only, resumable; see DECISIONS "Open data")
 npm run check:bundle         # after build: first-load JS per page, budget and placement checks (OD14)
+npm run audio:build          # pronunciation audio pipeline (dev-only, resumable; tools in the git-ignored tools/ folder; DECISIONS AU1–AU11)
 ```
 
 ## 5. Routes
@@ -162,7 +164,7 @@ Leaderboard: `submit_score(p_points, p_correct, p_total, p_duration_s)` checks o
 - **Never:** a service_role key or provider secret in the repo or client; analytics or tracking; AI APIs; sending a learner's text anywhere; claiming to check grammar; content copied from copyrighted books or word lists; a sound before the learner has interacted with the page. (Sounds and vibration are on by default since DECISIONS M5, with toggles in Settings.)
 
 ## 9. Out of scope
-Typing speed, keyboard layouts, grammar or style checking (the writing section checks spelling and a few rule-based confusables only), professional-writing checklists, Apple sign-in (needs a paid account), teacher or class mode, recorded audio (speech is Web Speech only).
+Typing speed, keyboard layouts, grammar or style checking (the writing section checks spelling and a few rule-based confusables only), professional-writing checklists, Apple sign-in (needs a paid account), teacher or class mode.
 
 ## 10. Roadmap
 - Per-word memory tricks for the most commonly misspelled words (today a trick is per category and names one example word; DECISIONS M3).

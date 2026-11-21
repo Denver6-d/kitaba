@@ -1,0 +1,744 @@
+{
+  "$comment": "Lingua Libre speakers and their accent, decided from English Wiktionary accent labels on their files (04-speakers.mjs). null = unknown, never used.",
+  "speakers": {
+    "Grendelkhan": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Wodencafe": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Back ache": {
+      "accent": null,
+      "labels": 2,
+      "sample": [
+        "SSB",
+        "London"
+      ]
+    },
+    "Nattes à chat": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl": {
+      "accent": "uk",
+      "labels": 10,
+      "sample": [
+        "Southern England"
+      ]
+    },
+    "Naomi Persephone Amethyst (NaomiAmethyst)": {
+      "accent": null,
+      "labels": 2,
+      "sample": [
+        "North Carolina",
+        "GenAm"
+      ]
+    },
+    "GonFreeaks": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Rachlel": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Samuel Muldoon (Muldoonsamuel55)": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Simplificationalizer": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Arlo Barnes": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Robust Footman": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "She animates": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Assorted-Interests": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Pvanp7": {
+      "accent": null,
+      "labels": 4,
+      "sample": [
+        "UK",
+        "AU"
+      ]
+    },
+    "Lirazelf": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Sravani Jampana": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "AnshulBhagwat": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "TurtleMedicine": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Liyah26": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Semperosculto": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Ajshul": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Baswameenakshi": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Unignoramus": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Persent101": {
+      "accent": "us",
+      "labels": 6,
+      "sample": [
+        "US",
+        "GA"
+      ]
+    },
+    "SpringProof": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "LetsgoLeeLee": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Andre Vitor Kerr Lima (Andrevitorkerr)": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Greenman": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Lepticed7": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Melvin4444": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Boredcookie": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vivekteraiyavt": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Berrely": {
+      "accent": null,
+      "labels": 1,
+      "sample": [
+        "London"
+      ]
+    },
+    "Usmaan (Middle river exports)": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Exilexi": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Opsylac": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "I learned some phrases": {
+      "accent": "uk",
+      "labels": 8,
+      "sample": [
+        "RP",
+        "UK",
+        "Southern England"
+      ]
+    },
+    "Flame, not lame": {
+      "accent": "us",
+      "labels": 13,
+      "sample": [
+        "US",
+        "/ˈɡɹoʊʃɹi/",
+        "Milwaukee",
+        "Wisconsin"
+      ]
+    },
+    "Sayoxime": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vininn126": {
+      "accent": "us",
+      "labels": 10,
+      "sample": [
+        "US"
+      ]
+    },
+    "Fake estate": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Sudokara": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "VCcortex": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "ManjiroLL": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "KALYAN KUMAR NAIK": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Catjj": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Graycier": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Flame, not lame-self": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-seventy": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Dev Jadiya": {
+      "accent": null,
+      "labels": 1,
+      "sample": [
+        "Madhya Pradesh"
+      ]
+    },
+    "Vealhurl-eighty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Jjamesryan": {
+      "accent": null,
+      "labels": 3,
+      "sample": [
+        "Australia",
+        "Brisbane (broad)",
+        "AU"
+      ]
+    },
+    "Mathieu Kappler": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Julie Samothrace": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "PerfectSoundWhatever": {
+      "accent": "other",
+      "labels": 9,
+      "sample": [
+        "CA",
+        "Ontario"
+      ]
+    },
+    "Marie-Sarah (Opsylac)": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Flame, not lame-pseudo": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Adélaïde Calais WMFr": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-sixty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Ov3for": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Saikrishna gangula": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "SHUBHAM KR SONI": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Muldoonsamuel55": {
+      "accent": null,
+      "labels": 1,
+      "sample": [
+        "Colorado"
+      ]
+    },
+    "AcornFrog": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Bhuvanaalla": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Back ache-eighty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Back ache-fifty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Back ache-forty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Back ache-ninety": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Back ache-seventy": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Back ache-sixty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Back ache-thirty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Back ache-twenty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Mélody Xu YANG WMFr": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-self": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Benoît Prieur": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Rukmini Induru": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Sapaa": {
+      "accent": "us",
+      "labels": 8,
+      "sample": [
+        "US"
+      ]
+    },
+    "Vealhurl-fifty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-ninety": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Gt59514": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-twenty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "VETBAITEDLV": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "HimSha3008": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Microchip08": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "PinkberryMoloko": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-thirty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-forty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "AnotherFriendlyHuman": {
+      "accent": "us",
+      "labels": 6,
+      "sample": [
+        "US"
+      ]
+    },
+    "Qwertygiy": {
+      "accent": "us",
+      "labels": 7,
+      "sample": [
+        "US"
+      ]
+    },
+    "Flame, not lame-high": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Flame, not lame-half": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Zazollo": {
+      "accent": "us",
+      "labels": 5,
+      "sample": [
+        "US",
+        "GA"
+      ]
+    },
+    "Flame, not lame-all": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Tesco250": {
+      "accent": "uk",
+      "labels": 7,
+      "sample": [
+        "UK",
+        "triphthong smoothing"
+      ]
+    },
+    "Wodencafe-self": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-well": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Flame, not lame-one": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "WikiLucas00": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Che Xu king": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Xavier hillier": {
+      "accent": "uk",
+      "labels": 6,
+      "sample": [
+        "SSB",
+        "UK",
+        "/str/-retraction"
+      ]
+    },
+    "Mélange a trois": {
+      "accent": "uk",
+      "labels": 5,
+      "sample": [
+        "UK"
+      ]
+    },
+    "ALFONSIUS26": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Flame, not lame-low": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Byrhtnoð": {
+      "accent": null,
+      "labels": 5,
+      "sample": [
+        "Baltimore",
+        "Philadelphia"
+      ]
+    },
+    "Flame, not lame-ex": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Dumbledore (Dumbledore12)": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Aquild": {
+      "accent": null,
+      "labels": 4,
+      "sample": [
+        "Pacific Northwest"
+      ]
+    },
+    "Pink Bee": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Lepticed7-e": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Lyokoï": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-long": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Flame, not lame-cross": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Vealhurl-great": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "CaulkyAlphabet": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "PRB": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Acadienenexil": {
+      "accent": null,
+      "labels": 3,
+      "sample": [
+        "CA",
+        "US"
+      ]
+    },
+    "Vealhurl-she": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Flame, not lame-sex": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Persent101-twenty": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Persent101-well": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Knabrupt": {
+      "accent": null,
+      "labels": 2,
+      "sample": [
+        "GA",
+        "General American"
+      ]
+    },
+    "Flame, not lame-tea": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Rho9998": {
+      "accent": null,
+      "labels": 1,
+      "sample": [
+        "UK"
+      ]
+    },
+    "WangleLine": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Flame, not lame-swill": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Theboykisser": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Pushkar7077": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Flame, not lame-pro": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Benluks": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Fae7": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    },
+    "Flame, not lame-e": {
+      "accent": null,
+      "labels": 0,
+      "sample": []
+    }
+  }
+}
