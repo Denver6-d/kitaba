@@ -10,19 +10,45 @@ export type Accent = "us" | "uk";
 const ACCENT_RE: Record<Accent, RegExp> = { us: /^en[-_]US/i, uk: /^en[-_]GB/i };
 
 /**
- * Picks an on-device English voice, preferring the requested accent
- * (en-US or en-GB), then any other English. Network voices
- * (voice.localService === false, e.g. Chrome's "Google US English") are skipped
- * on purpose: they send the text to a third-party server (DECISIONS D11).
+ * Voices that are hard to understand: eSpeak (robotic formant synthesis) and
+ * the old macOS character and novelty voices. Used only when nothing else exists.
  */
-export function pickEnglishVoice<V extends Pick<SpeechSynthesisVoice, "lang" | "localService" | "default">>(
+const LOW_QUALITY_RE =
+  /espeak|\b(albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|fred|good news|hysterical|jester|junior|kathy|organ|princess|ralph|superstar|trinoids|whisper|wobble|zarvox)\b/i;
+/** The better on-device voices: Apple's downloaded "Enhanced"/"Premium" ones and neural voices. */
+const HIGH_QUALITY_RE = /\b(enhanced|premium|neural|natural)\b/i;
+
+/** 0: hard to understand, 1: ordinary, 2: one of the clearer voices. */
+export function voiceQuality(name: string): 0 | 1 | 2 {
+  if (LOW_QUALITY_RE.test(name)) return 0;
+  return HIGH_QUALITY_RE.test(name) ? 2 : 1;
+}
+
+/**
+ * Picks the clearest on-device English voice (DECISIONS DT2): first any voice
+ * that is not hard to understand, then the requested accent (en-US or en-GB),
+ * the other one, any other English; within those, the clearer voices, then the
+ * device default. Network voices (voice.localService === false, e.g. Chrome's
+ * "Google US English") are skipped on purpose: they send the text to a
+ * third-party server (DECISIONS D11).
+ */
+export function pickEnglishVoice<V extends Pick<SpeechSynthesisVoice, "lang" | "localService" | "default" | "name">>(
   voices: readonly V[],
   accent: Accent = "us",
 ): V | null {
   const local = voices.filter((v) => v.localService && /^en([-_]|$)/i.test(v.lang));
   const other: Accent = accent === "us" ? "uk" : "us";
-  const rank = (v: V) => (ACCENT_RE[accent].test(v.lang) ? 0 : ACCENT_RE[other].test(v.lang) ? 1 : 2) + (v.default ? -0.5 : 0);
-  return [...local].sort((a, b) => rank(a) - rank(b))[0] ?? null;
+  const key = (v: V) => {
+    const q = voiceQuality(v.name ?? "");
+    return [q === 0 ? 1 : 0, ACCENT_RE[accent].test(v.lang) ? 0 : ACCENT_RE[other].test(v.lang) ? 1 : 2, 2 - q, v.default ? 0 : 1];
+  };
+  const cmp = (a: V, b: V) => {
+    const ka = key(a);
+    const kb = key(b);
+    for (let i = 0; i < ka.length; i += 1) if (ka[i] !== kb[i]) return (ka[i] ?? 0) - (kb[i] ?? 0);
+    return 0;
+  };
+  return [...local].sort(cmp)[0] ?? null;
 }
 
 /** Which accent a voice speaks, for the "using the other accent" notice. */
@@ -81,23 +107,35 @@ export function useSpeech() {
   const status: SpeechStatus = !hydrated ? "checking" : !supported() ? "unsupported" : voiceUri ? "ready" : waited ? "no-voice" : "checking";
 
   const speak = useCallback(
-    /** Speaks with the on-device voice; false when there is none. */
-    (text: string, rate = 0.9): boolean => {
+    /**
+     * Speaks with the on-device voice, stopping whatever was playing; false
+     * when there is none. Several texts are queued as separate utterances, one
+     * per sentence: some engines cut a long single utterance short.
+     */
+    (text: string | readonly string[], rate = 0.9): boolean => {
       if (!supported() || !voiceUri) return false;
       const synth = window.speechSynthesis;
       const voice = synth.getVoices().find((v) => v.voiceURI === voiceUri);
       if (!voice) return false;
       synth.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.voice = voice;
-      u.lang = voice.lang;
-      u.rate = rate;
-      synth.speak(u);
+      for (const part of typeof text === "string" ? [text] : text) {
+        if (!part.trim()) continue;
+        const u = new SpeechSynthesisUtterance(part);
+        u.voice = voice;
+        u.lang = voice.lang;
+        u.rate = rate;
+        synth.speak(u);
+      }
       return true;
     },
     [voiceUri],
   );
 
+  /** Stops any speech, including queued sentences. */
+  const stop = useCallback(() => {
+    if (supported()) window.speechSynthesis.cancel();
+  }, []);
+
   const spoken = voiceLang ? voiceAccent(voiceLang) : null;
-  return { status, speak, accent, usingOtherAccent: spoken !== null && spoken !== accent };
+  return { status, speak, stop, accent, usingOtherAccent: spoken !== null && spoken !== accent };
 }

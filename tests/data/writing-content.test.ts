@@ -44,6 +44,27 @@ describe("writing content: schema and volume", () => {
   it("gives messages several sentences and keeps them longer than single sentences", () => {
     for (const m of dictationMessages) expect(m.sentences.length, m.id).toBeGreaterThanOrEqual(4);
   });
+
+  it("translates every dictation sentence and message line into Arabic, one translation per sentence (DECISIONS DT1)", () => {
+    for (const d of [...dictationSentences, ...dictationMessages]) {
+      expect(d.ar.length, d.id).toBe(d.sentences.length);
+      for (const ar of d.ar) {
+        expect(ar, d.id).toMatch(/[؀-ۿ]/);
+        expect(ar, d.id).not.toMatch(/[A-Za-z]/);
+        expect(ar, d.id).toBe(ar.trim());
+      }
+    }
+    expect(dictationSchema.safeParse({ ...dictationMessages[0], ar: dictationMessages[0]?.ar.slice(1) }).success).toBe(false);
+  });
+
+  it("keeps a question a question in Arabic, and never gives two different sentences the same translation", () => {
+    const pairs = [...dictationSentences, ...dictationMessages].flatMap((d) => d.sentences.map((en, i) => [en, d.ar[i] ?? ""] as const));
+    for (const [en, ar] of pairs) if (en.endsWith("?")) expect(ar, en).toMatch(/؟$/);
+    const long = pairs.filter(([en]) => en.split(" ").length > 4);
+    const byAr = new Map<string, Set<string>>();
+    for (const [en, ar] of long) byAr.set(ar, (byAr.get(ar) ?? new Set()).add(normalize(en)));
+    expect([...byAr].filter(([, ens]) => ens.size > 1).map(([ar]) => ar)).toEqual([]);
+  });
 });
 
 describe("writing content: no repeats", () => {

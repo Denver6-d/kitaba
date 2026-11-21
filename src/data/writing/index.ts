@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { LEVELS, type CefrLevel } from "@/domain/model";
 import { MESSAGES } from "./messages";
+import type { DictPair } from "./pair";
 import { SCENARIOS, type ScenarioKind } from "./scenarios";
 import { SENTENCES_A1, SENTENCES_A2 } from "./sentences-a";
 import { SENTENCES_B1, SENTENCES_B2, SENTENCES_C1 } from "./sentences-b";
@@ -48,8 +49,11 @@ export const dictationSchema = z
     title: z.object({ ar: arabic, en: z.string().min(1) }).optional(),
     /** One sentence for a dictation sentence; several for a message (read one at a time). */
     sentences: z.array(english.refine((s) => s.length <= 160, "sentence ≤ 160 chars")).min(1).max(8),
+    /** The Arabic translation of each sentence, in order: the meaning hint shown while the learner types. */
+    ar: z.array(arabic).min(1).max(8),
   })
-  .strict();
+  .strict()
+  .refine((d) => d.ar.length === d.sentences.length, "one Arabic translation per sentence");
 export type DictationText = z.infer<typeof dictationSchema>;
 
 const pad = (n: number) => String(n + 1).padStart(3, "0");
@@ -82,7 +86,7 @@ export const scenarios: readonly Scenario[] = LEVELS.flatMap((level) =>
   })),
 );
 
-const SENTENCES: Readonly<Record<CefrLevel, readonly string[]>> = {
+const SENTENCES: Readonly<Record<CefrLevel, readonly DictPair[]>> = {
   A1: SENTENCES_A1,
   A2: SENTENCES_A2,
   B1: SENTENCES_B1,
@@ -91,11 +95,11 @@ const SENTENCES: Readonly<Record<CefrLevel, readonly string[]>> = {
 };
 
 export const dictationSentences: readonly DictationText[] = LEVELS.flatMap((level) =>
-  SENTENCES[level].map((text, i) => ({ id: `ds-${lower(level)}-${pad(i)}`, level, kind: "sentence" as const, sentences: [text] })),
+  SENTENCES[level].map(([text, ar], i) => ({ id: `ds-${lower(level)}-${pad(i)}`, level, kind: "sentence" as const, sentences: [text], ar: [ar] })),
 );
 
 export const dictationMessages: readonly DictationText[] = LEVELS.flatMap((level) =>
-  MESSAGES[level].map((msg, i) => ({ id: `dm-${lower(level)}-${pad(i)}`, level, kind: "message" as const, title: msg.title, sentences: [...msg.sentences] })),
+  MESSAGES[level].map((msg, i) => ({ id: `dm-${lower(level)}-${pad(i)}`, level, kind: "message" as const, title: msg.title, sentences: msg.sentences.map(([en]) => en), ar: msg.sentences.map(([, ar]) => ar) })),
 );
 
 export const scenarioById: ReadonlyMap<string, Scenario> = new Map(scenarios.map((s) => [s.id, s]));
