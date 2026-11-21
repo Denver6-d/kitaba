@@ -7,6 +7,7 @@ import { Page } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/features/account/account-provider";
 import { passwordSchema, useAuthErrorText } from "@/features/account/auth-forms";
+import { EMAIL_SIGNIN_ENABLED } from "@/lib/auth-redirect";
 
 /** Reached from the password-reset email (via /auth/callback). */
 export default function ResetPasswordPage() {
@@ -18,6 +19,18 @@ export default function ResetPasswordPage() {
   const id = useId();
 
   if (!configured) return <Page title={t.account.newPassword}>{t.account.notConfigured}</Page>;
+  // Password reset is part of email sign-in (DECISIONS O6).
+  if (!EMAIL_SIGNIN_ENABLED)
+    return (
+      <Page title={t.account.newPassword} width="narrow">
+        <p className="text-fg-2">{t.account.emailOff}</p>
+        <p>
+          <Link href="/account" className="underline underline-offset-4">
+            {t.account.backToAccount}
+          </Link>
+        </p>
+      </Page>
+    );
 
   return (
     <Page title={t.account.newPassword} width="narrow">

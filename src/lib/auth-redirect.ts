@@ -17,7 +17,7 @@ export const PROVIDER_LABELS: Readonly<Record<OAuthProvider, string>> = { google
  * Providers shown on the sign-in screen: Google only when
  * NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN is exactly "true" (default off), because a
  * Google button for a project without the Google provider set up only fails.
- * Email sign-in is separate and always shown.
+ * Email sign-in has its own flag (emailSignInEnabled).
  */
 export function enabledOAuthProviders(googleFlag: string | undefined): readonly OAuthProvider[] {
   return OAUTH_PROVIDERS.filter((p) => p !== "google" || googleFlag?.trim() === "true");
@@ -26,7 +26,34 @@ export function enabledOAuthProviders(googleFlag: string | undefined): readonly 
 /** Read with the literal name, so Next.js inlines the public value at build time. */
 export const ENABLED_OAUTH_PROVIDERS: readonly OAuthProvider[] = enabledOAuthProviders(process.env.NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN);
 
-export const isOAuthProvider = (v: unknown): v is OAuthProvider => typeof v === "string" && (OAUTH_PROVIDERS as readonly string[]).includes(v);
+/**
+ * Email sign-in (password sign-in and sign-up, magic link, password reset),
+ * only when NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN is exactly "true" (default off,
+ * DECISIONS O6). Supabase's built-in mailer only sends to the project's own
+ * members, so without a custom SMTP server real visitors never get the email.
+ */
+export function emailSignInEnabled(emailFlag: string | undefined): boolean {
+  return emailFlag?.trim() === "true";
+}
+
+/** Read with the literal name, so Next.js inlines the public value at build time. */
+export const EMAIL_SIGNIN_ENABLED: boolean = emailSignInEnabled(process.env.NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN);
+
+/** What the sign-in screen shows for the enabled methods. */
+export interface SignInLayout {
+  readonly oauth: readonly OAuthProvider[];
+  readonly email: boolean;
+  /** The "or with email" divider: only between OAuth buttons and the email forms. */
+  readonly divider: boolean;
+  /** No method at all: the page explains that accounts are not available yet. */
+  readonly none: boolean;
+}
+
+export function signInLayout(oauth: readonly OAuthProvider[], email: boolean): SignInLayout {
+  return { oauth, email, divider: oauth.length > 0 && email, none: oauth.length === 0 && !email };
+}
+
+export const isOAuthProvider =(v: unknown): v is OAuthProvider => typeof v === "string" && (OAUTH_PROVIDERS as readonly string[]).includes(v);
 
 /** The callback URL for this site; null when the origin is not a plain http(s) origin. */
 export function callbackUrl(origin: string, next: string | null = "/account"): string | null {

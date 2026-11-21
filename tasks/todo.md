@@ -112,4 +112,10 @@
 - [x] Human layer B1 (1,937 human, 604 generated: no usable recording)
 - [x] Human layer B2 (199 human, 99 generated: no usable recording)
 - [x] Human layer C1 (138 human, 96 generated: no usable recording)
+- [x] README: re-check for new human recordings
+
+## Phone and sign-in follow-ups (DECISIONS M7, M8, O6)
+- [x] No automatic focus on the answer field on touch devices (M7)
+- [x] Spelling Bee on a phone: the clock starts on the first keystroke (M8)
+- [x] Email sign-in behind NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN, off by default; Google-only layout without divider; "accounts are not available yet" when both are off (O6)
 - [x] Credits: change notice and same licence for modified recordings (AU14); no audio for fallback-hint words (AU13)

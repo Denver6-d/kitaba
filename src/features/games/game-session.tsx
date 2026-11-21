@@ -36,6 +36,7 @@ import type { RecordingCredit } from "@/data/audio-schema";
 import { SLOW_SPEECH_RATE } from "@/lib/pronounce";
 import { useSettings } from "@/lib/settings-store";
 import { autoFocusText, mayAutoFocusText } from "@/lib/auto-focus";
+import { clockStartFor, startsClockOnInput } from "@/domain/games/clock";
 import { giveFeedback } from "@/lib/feedback";
 import { pressActivates, type Press } from "@/lib/press";
 import { SpellingInput, useAnswerInput } from "@/components/spelling-input";
@@ -148,6 +149,9 @@ export function GameSession({
   useEffect(() => {
     if (!timed) dispatch({ type: "start", t: performance.now() });
   }, [timed]);
+  /** Start was pressed on a touch device: the round shows, the clock waits for the first keystroke (M8). */
+  const [openedBeforeClock, setOpenedBeforeClock] = useState(false);
+  const roundOpen = !timed || game.startedAt !== null || openedBeforeClock;
 
   // Clock for timed rounds (also ends the round when time runs out).
   useEffect(() => {
@@ -185,7 +189,7 @@ export function GameSession({
       sayable &&
       autoSpeak &&
       speakText &&
-      (!timed || game.startedAt !== null) &&
+      roundOpen &&
       autoSpokenRef.current !== item.key
     ) {
       autoSpokenRef.current = item.key;
@@ -193,7 +197,7 @@ export function GameSession({
     }
     // Only when the item (or readiness) changes; replay is a button.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item?.key, sayable, game.startedAt]);
+  }, [item?.key, sayable, roundOpen]);
 
   useEffect(() => {
     if (!revealing) return;
@@ -265,6 +269,8 @@ export function GameSession({
   // Typing while a verdict is showing moves on and keeps the typed letters: the
   // input reducer stores them, and the "item" event carries them to the next word.
   const onInputEvent = (ev: AnswerInputEvent) => {
+    // A round opened on a touch device starts its clock with the first keystroke (M8).
+    if (startsClockOnInput(game, ev.type)) dispatch({ type: "start", t: "t" in ev ? ev.t : performance.now() });
     input.dispatch(ev);
     if (
       answered &&
@@ -354,7 +360,7 @@ export function GameSession({
   // An item without a text field (choice, fix) gets focus on its first control, so
   // keyboard and screen-reader users land on the new item instead of <body>.
   useEffect(() => {
-    if (!item || takesTyping(item) || (timed && game.startedAt === null))
+    if (!item || takesTyping(item) || !roundOpen)
       return;
     areaRef.current
       ?.querySelector<HTMLElement>("button:not([disabled])")
@@ -385,7 +391,7 @@ export function GameSession({
   if (!item || !word) return null;
 
   const left = remainingMs(game, Math.max(now, game.startedAt ?? 0));
-  const notStarted = timed && game.startedAt === null;
+  const notStarted = !roundOpen;
   const showInput =
     item.kind === "typed" ||
     item.kind === "sentence" ||
@@ -476,8 +482,13 @@ export function GameSession({
             variant="primary"
             size="lg"
             onClick={() => {
-              // Render the input now, then focus it in the same click (not on touch devices, DECISIONS M7).
-              flushSync(() => dispatch({ type: "start", t: performance.now() }));
+              // With a mouse: start the clock, render the input and focus it in the same click.
+              // On a touch device: open the round only; the clock starts with the first keystroke (M7, M8).
+              const touch = !mayAutoFocusText();
+              flushSync(() => {
+                if (clockStartFor(touch) === "on-first-key") setOpenedBeforeClock(true);
+                else dispatch({ type: "start", t: performance.now() });
+              });
               autoFocusText(inputRef.current);
             }}
           >

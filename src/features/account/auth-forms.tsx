@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import { z } from "zod";
 import type { AuthError } from "@supabase/supabase-js";
@@ -10,9 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAccount } from "./account-provider";
 import {
   callbackUrl,
+  EMAIL_SIGNIN_ENABLED,
   ENABLED_OAUTH_PROVIDERS,
   PROVIDER_LABELS,
+  signInLayout,
   type OAuthProvider,
+  type SignInLayout,
 } from "@/lib/auth-redirect";
 
 export const emailSchema = z.string().trim().toLowerCase().email().max(254);
@@ -45,7 +49,7 @@ export function useAuthErrorText() {
  * Google sign-in, only when NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true (Supabase OAuth with PKCE).
  * Client ids and secrets live only in the Supabase dashboard.
  */
-function OAuthButtons() {
+function OAuthButtons({ divider }: { divider: boolean }) {
   const { t } = useI18n();
   const { client } = useAccount();
   const [busy, setBusy] = useState<OAuthProvider | null>(null);
@@ -96,9 +100,11 @@ function OAuthButtons() {
           {t.account.oauthError}
         </p>
       )}
-      <p className="flex items-center gap-3 pt-2 text-sm text-fg-2 before:h-px before:flex-1 before:bg-line after:h-px after:flex-1 after:bg-line">
-        {t.account.orEmail}
-      </p>
+      {divider && (
+        <p className="flex items-center gap-3 pt-2 text-sm text-fg-2 before:h-px before:flex-1 before:bg-line after:h-px after:flex-1 after:bg-line">
+          {t.account.orEmail}
+        </p>
+      )}
     </div>
   );
 }
@@ -126,11 +132,37 @@ function GoogleMark() {
   );
 }
 
-export function AuthForms() {
-  const { t } = useI18n();
+/** The sign-in methods switched on at build time (DECISIONS O5, O6). */
+const LAYOUT = signInLayout(ENABLED_OAUTH_PROVIDERS, EMAIL_SIGNIN_ENABLED);
+
+export function AuthForms({ layout = LAYOUT }: { layout?: SignInLayout }) {
+  if (layout.none) return <AccountsUnavailable />;
   return (
     <div className="w-full max-w-md space-y-4">
-      <OAuthButtons />
+      {layout.oauth.length > 0 && <OAuthButtons divider={layout.divider} />}
+      {layout.email && <EmailForms />}
+    </div>
+  );
+}
+
+/** No sign-in method is switched on: say so plainly; every game works without an account. */
+export function AccountsUnavailable() {
+  const { t } = useI18n();
+  return (
+    <div className="panel space-y-4 p-6 sm:p-8">
+      <h2 className="text-2xl font-light">{t.account.unavailableTitle}</h2>
+      <p className="text-fg-2">{t.account.unavailable}</p>
+      <Button variant="primary" asChild className="h-11">
+        <Link href="/play">{t.nav.play}</Link>
+      </Button>
+    </div>
+  );
+}
+
+/** Email and password sign-in and sign-up, magic link and reset; behind NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN (O6). */
+function EmailForms() {
+  const { t } = useI18n();
+  return (
       <Tabs defaultValue="signin" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="signin">{t.account.signIn}</TabsTrigger>
@@ -143,7 +175,6 @@ export function AuthForms() {
           <SignUpForm />
         </TabsContent>
       </Tabs>
-    </div>
   );
 }
 

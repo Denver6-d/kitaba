@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { callbackProblem, callbackUrl, ENABLED_OAUTH_PROVIDERS, enabledOAuthProviders, isOAuthProvider, OAUTH_PROVIDERS } from "@/lib/auth-redirect";
+import { callbackProblem, callbackUrl, EMAIL_SIGNIN_ENABLED, emailSignInEnabled, ENABLED_OAUTH_PROVIDERS, enabledOAuthProviders, isOAuthProvider, OAUTH_PROVIDERS, signInLayout } from "@/lib/auth-redirect";
+import { en } from "@/i18n/en";
+import { ar } from "@/i18n/ar";
 
 describe("OAuth providers", () => {
   it("offers Google only (no GitHub, no Apple)", () => {
@@ -100,5 +102,57 @@ describe("GitHub sign-in is gone (DECISIONS R7)", () => {
     for (const file of ["../../src/features/account/auth-forms.tsx", "../../src/lib/auth-redirect.ts", "../../src/app/auth/callback/callback-view.tsx", "../../src/app/privacy/page.tsx"]) {
       expect(readFileSync(new URL(file, import.meta.url), "utf8"), file).not.toMatch(/github/i);
     }
+  });
+});
+
+describe("Email sign-in flag (NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN, DECISIONS O6)", () => {
+  it("is off by default and on only for exactly true", () => {
+    expect(emailSignInEnabled(undefined)).toBe(false);
+    expect(emailSignInEnabled("")).toBe(false);
+    expect(emailSignInEnabled("true")).toBe(true);
+    expect(emailSignInEnabled(" true ")).toBe(true);
+    for (const v of ["false", "1", "yes", "TRUE", "True", "on"]) expect(emailSignInEnabled(v), v).toBe(false);
+  });
+  it("is off in this build when the flag is not set", () => {
+    if (process.env.NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN === undefined) expect(EMAIL_SIGNIN_ENABLED).toBe(false);
+  });
+  it("reads the flag by its literal name, so Next.js inlines it at build time", () => {
+    const src = readFileSync(new URL("../../src/lib/auth-redirect.ts", import.meta.url), "utf8");
+    expect(src).toContain("process.env.NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN");
+  });
+});
+
+describe("signInLayout", () => {
+  it("Google only: the Google button, no email forms and no 'or' divider", () => {
+    expect(signInLayout(["google"], false)).toEqual({ oauth: ["google"], email: false, divider: false, none: false });
+  });
+  it("Google and email: both, with the divider between them", () => {
+    expect(signInLayout(["google"], true)).toEqual({ oauth: ["google"], email: true, divider: true, none: false });
+  });
+  it("email only: the forms, no divider", () => {
+    expect(signInLayout([], true)).toEqual({ oauth: [], email: true, divider: false, none: false });
+  });
+  it("neither: the 'accounts are not available yet' state", () => {
+    expect(signInLayout([], false)).toEqual({ oauth: [], email: false, divider: false, none: true });
+  });
+});
+
+describe("the sign-in screen follows the layout", () => {
+  const forms = readFileSync(new URL("../../src/features/account/auth-forms.tsx", import.meta.url), "utf8");
+  it("renders the email forms only when email is on, and the divider only when asked", () => {
+    expect(forms).toMatch(/\{layout\.email && <EmailForms \/>\}/);
+    expect(forms).toMatch(/\{divider && \(/);
+    expect(forms).toMatch(/if \(layout\.none\) return <AccountsUnavailable \/>/);
+  });
+  it("keeps the email code (sign-in, sign-up, magic link, reset) so it can be switched back on", () => {
+    for (const call of ["signInWithPassword", "signUp(", "signInWithOtp", "resetPasswordForEmail"]) expect(forms, call).toContain(call);
+  });
+  it("hides the password reset page behind the same flag", () => {
+    const reset = readFileSync(new URL("../../src/app/account/reset/page.tsx", import.meta.url), "utf8");
+    expect(reset).toMatch(/if \(!EMAIL_SIGNIN_ENABLED\)/);
+  });
+  it("the Google error no longer points to email", () => {
+    expect(en.account.oauthError).not.toMatch(/email/i);
+    expect(ar.account.oauthError).not.toMatch(/البريد/);
   });
 });
