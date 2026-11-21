@@ -7,6 +7,7 @@ import { BookOpenCheck, ChartNoAxesColumn, Gamepad2, House, PenLine } from "luci
 import { useI18n } from "@/i18n";
 import { PRIMARY_NAV } from "./nav-items";
 import { isActive } from "./site-header";
+import { isGameActive, subscribeGameActive } from "@/lib/game-active";
 
 const ICONS: Record<string, typeof House> = { "/": House, "/play": Gamepad2, "/write": PenLine, "/review": BookOpenCheck, "/progress": ChartNoAxesColumn };
 
@@ -24,13 +25,15 @@ const keyboardOpen = () => {
 
 /**
  * Phones: the five core areas within thumb reach. Hidden on the game and writing screens,
- * which has its own bottom action, and while the keyboard is open.
+ * which have their own bottom action, while any game session is on screen (the review
+ * session runs in place on /review, DECISIONS M9), and while the keyboard is open.
  */
 export function BottomNav() {
   const { t } = useI18n();
   const pathname = usePathname();
   const typing = useSyncExternalStore(subscribeViewport, keyboardOpen, () => false);
-  if (pathname.startsWith("/play/game") || pathname.startsWith("/write/") || typing) return null;
+  const inGame = useSyncExternalStore(subscribeGameActive, isGameActive, () => false);
+  if (pathname.startsWith("/play/game") || pathname.startsWith("/write/") || inGame || typing) return null;
   return (
     <nav aria-label={t.nav.bottom} className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-line bg-canvas pb-[env(safe-area-inset-bottom)] md:hidden">
       <ul className="mx-auto grid max-w-md grid-cols-5">

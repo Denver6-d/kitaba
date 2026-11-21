@@ -118,4 +118,5 @@
 - [x] No automatic focus on the answer field on touch devices (M7)
 - [x] Spelling Bee on a phone: the clock starts on the first keystroke (M8)
 - [x] Email sign-in behind NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN, off by default; Google-only layout without divider; "accounts are not available yet" when both are off (O6)
+- [x] After Check on a phone: keyboard closes, no typing-to-continue, double-tap settle, result revealed once; bottom nav hidden during review sessions (M9)
 - [x] Credits: change notice and same licence for modified recordings (AU14); no audio for fallback-hint words (AU13)

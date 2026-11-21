@@ -26,6 +26,8 @@ interface Props {
   readonly id?: string;
   /** Focus on mount, except on touch devices (lib/auto-focus.ts, DECISIONS M7). */
   readonly autoFocus?: boolean;
+  /** While a result shows on a touch device: no keyboard, no input events (DECISIONS M9). */
+  readonly readOnly?: boolean;
 }
 
 /**
@@ -36,7 +38,7 @@ interface Props {
  * component only forwards the input's committed value.
  */
 export const SpellingInput = forwardRef<HTMLInputElement, Props>(function SpellingInput(
-  { state, dispatch, onEnter, label, tone = "idle", describedBy, placeholder, size = "lg", id, autoFocus },
+  { state, dispatch, onEnter, label, tone = "idle", describedBy, placeholder, size = "lg", id, autoFocus, readOnly = false },
   ref,
 ) {
   const inner = useRef<HTMLInputElement>(null);
@@ -75,6 +77,8 @@ export const SpellingInput = forwardRef<HTMLInputElement, Props>(function Spelli
     <input
       ref={inner}
       id={id}
+      readOnly={readOnly}
+      aria-readonly={readOnly || undefined}
       type="text"
       value={displayValue(state)}
       onChange={(e) => dispatch({ type: "change", value: e.target.value, t: performance.now() })}

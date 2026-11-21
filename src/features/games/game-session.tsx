@@ -37,11 +37,15 @@ import { SLOW_SPEECH_RATE } from "@/lib/pronounce";
 import { useSettings } from "@/lib/settings-store";
 import { autoFocusText, mayAutoFocusText } from "@/lib/auto-focus";
 import { clockStartFor, startsClockOnInput } from "@/domain/games/clock";
+import { carriesIntoNext, tapTooSoon, typingAdvances } from "@/domain/games/advance";
+import { useCoarsePointer } from "@/lib/use-coarse-pointer";
+import { enterGame } from "@/lib/game-active";
 import { giveFeedback } from "@/lib/feedback";
 import { pressActivates, type Press } from "@/lib/press";
 import { SpellingInput, useAnswerInput } from "@/components/spelling-input";
 import {
   reduceAnswerInput,
+  sanitizeAnswer,
   type AnswerInputEvent,
 } from "@/domain/spelling/answer-input";
 import { Button } from "@/components/ui/button";
@@ -121,6 +125,9 @@ export function GameSession({
   );
   const first = items[0];
   const input = useAnswerInput(first?.key ?? "none");
+  const coarse = useCoarsePointer();
+  // While a session is on screen the phone's bottom navigation hides, wherever it runs (M9).
+  useEffect(() => enterGame(), []);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [fixPick, setFixPick] = useState<number | null>(null);
   const [revealing, setRevealing] = useState(false);
@@ -135,6 +142,13 @@ export function GameSession({
   const goNextRef = useRef<() => void>(() => undefined);
   const answeredKeyRef = useRef<string | null>(null);
   const areaRef = useRef<HTMLDivElement>(null);
+  /** When the action bar last changed (verdict shown, next word), for the touch settle rule (M9). */
+  const barChangedAtRef = useRef<number | null>(null);
+  /** When the last press on the action bar began. */
+  const barPressAtRef = useRef<number | null>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  /** The keyboard was open when Check was tapped on a touch device: wait for it to close before revealing the result. */
+  const keyboardWasOpenRef = useRef(false);
   const finishedRef = useRef(false);
   const liveId = useId();
   const headingId = useId();
@@ -211,13 +225,15 @@ export function GameSession({
   const goNext = useCallback(() => {
     if (!item || !answered) return;
     const t = performance.now();
+    const touch = !mayAutoFocusText();
     const following = game.items[game.index + 1];
     dispatch({ type: "next", t });
+    barChangedAtRef.current = t;
     // Same event: the input's value is cleared in the same update that changes the item.
-    // Letters typed during feedback carry over only into an item that takes typing.
+    // Letters typed during feedback carry over only into an item that takes typing, and never on touch (M9).
     if (following)
       input.dispatch(
-        takesTyping(following)
+        takesTyping(following) && carriesIntoNext(touch)
           ? { type: "item", itemKey: following.key, t }
           : { type: "item", itemKey: following.key, carry: "", t },
       );
@@ -229,7 +245,7 @@ export function GameSession({
     // does not cover the next word while it is spoken: the learner taps the field (DECISIONS M7).
     // Next keeps the field focused (keepInputFocus), so a phone's keyboard would stay over the new word:
     // release it there. This runs on the click, after the finger has lifted, so nothing moves under a press (M2).
-    if (!mayAutoFocusText()) inputRef.current?.blur();
+    if (touch) inputRef.current?.blur();
     else if (takesTyping(following))
       autoFocusText(inputRef.current, { preventScroll: true });
   }, [item, answered, game.items, game.index, input]);
@@ -252,6 +268,8 @@ export function GameSession({
         // The press was for Next: the click must not also activate whatever ended up under the finger.
         e.preventDefault();
         e.stopPropagation();
+        // The second half of a double tap on Check lands on Next: ignore it on touch (M9).
+        if (press && tapTooSoon({ touch: !mayAutoFocusText(), keyboard: false, changedAt: barChangedAtRef.current, pressedAt: press.t })) return;
         goNextRef.current();
       }
     };
@@ -266,19 +284,60 @@ export function GameSession({
     };
   }, []);
 
-  // Typing while a verdict is showing moves on and keeps the typed letters: the
-  // input reducer stores them, and the "item" event carries them to the next word.
+  // With a keyboard, typing while a verdict is showing moves on and keeps the typed letters:
+  // the input reducer stores them, and the "item" event carries them to the next word.
+  // On a touch device nothing typed during a verdict counts: a keystroke, a suggestion tap or the
+  // keyboard re-committing its word must never skip the result. Next is the only way on (M9).
   const onInputEvent = (ev: AnswerInputEvent) => {
+    const touch = !mayAutoFocusText();
+    if (answered && touch && ev.type !== "keydown") return;
     // A round opened on a touch device starts its clock with the first keystroke (M8).
     if (startsClockOnInput(game, ev.type)) dispatch({ type: "start", t: "t" in ev ? ev.t : performance.now() });
     input.dispatch(ev);
     if (
       answered &&
       (ev.type === "change" || ev.type === "compositionend") &&
-      reduceAnswerInput(input.state, ev).advanceRequested
+      typingAdvances(touch, reduceAnswerInput(input.state, ev).advanceRequested)
     )
       goNext();
   };
+
+  /**
+   * After a typed answer on a touch device (M9): focus moves to Next (a button: no keyboard, and
+   * Enter on a hardware keyboard still continues), and once the keyboard has closed the result is
+   * scrolled into view only if part of it is hidden. Nothing moves when it is already visible.
+   */
+  const revealResultOnTouch = useCallback(() => {
+    const vv = window.visualViewport;
+    const waitForKeyboard = keyboardWasOpenRef.current;
+    keyboardWasOpenRef.current = false;
+    let done = false;
+    let timer = 0;
+    const reveal = () => {
+      if (done) return;
+      done = true;
+      vv?.removeEventListener("resize", onResize);
+      window.clearTimeout(timer);
+      nextRef.current?.focus({ preventScroll: true });
+      const el = feedbackRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const bar = el.parentElement?.querySelector<HTMLElement>("[data-action-bar]")?.getBoundingClientRect().height ?? 0;
+      const visible = (vv?.height ?? window.innerHeight) - bar;
+      if (r.top >= 0 && r.bottom <= visible) return;
+      const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ block: r.height > visible ? "start" : "nearest", behavior: smooth ? "smooth" : "auto" });
+    };
+    // The keyboard closes over a few frames: reveal once the viewport has stopped growing.
+    const onResize = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(reveal, 120);
+    };
+    if (waitForKeyboard && vv) {
+      vv.addEventListener("resize", onResize);
+      timer = window.setTimeout(reveal, 600);
+    } else window.requestAnimationFrame(reveal);
+  }, []);
 
   const submit = useCallback(
     (answerText: string, opts?: { forcedWrong?: boolean }) => {
@@ -310,6 +369,7 @@ export function GameSession({
         t,
       });
       input.markChecked();
+      barChangedAtRef.current = t;
       giveFeedback(correct ? "correct" : "wrong", settings);
       const v: Verdict = {
         itemKey: item.key,
@@ -336,8 +396,10 @@ export function GameSession({
           )
           .catch(() => undefined);
       }
+      // On touch, every kind of item: focus Next and bring a hidden result into view (M9).
+      if (!mayAutoFocusText()) revealResultOnTouch();
       // Choice and fix-pick answers come from buttons: move focus to Next so Enter continues.
-      if (item.kind === "choice")
+      else if (item.kind === "choice")
         window.setTimeout(() => nextRef.current?.focus(), 0);
     },
     [
@@ -349,13 +411,38 @@ export function GameSession({
       input,
       record,
       revealed,
+      revealResultOnTouch,
     ],
   );
 
+  /**
+   * Check from the answer field. On a touch device the field is closed first (M9): that ends the
+   * keyboard's composition, so the committed text is what gets checked, the keyboard goes away
+   * before the result appears, and the keyboard has nothing left to re-commit into the emptied field.
+   */
+  const checkField = () => {
+    const el = inputRef.current;
+    let text = input.state.value;
+    if (!mayAutoFocusText() && el) {
+      keyboardWasOpenRef.current = document.activeElement === el;
+      el.blur();
+      text = sanitizeAnswer(el.value);
+    }
+    if (text.trim() !== "") submit(text);
+  };
+
   const onEnter = () => {
     if (answered) goNext();
-    else if (input.state.value.trim() !== "") submit(input.state.value);
+    else checkField();
   };
+
+  /** A press on the action bar (Check, I don't know, Next) to keep for the settle rule. */
+  const notePress = (e: { timeStamp: number }) => {
+    barPressAtRef.current = e.timeStamp;
+  };
+  /** A tap that is the second half of a double tap (or lands right after the bar changed) on touch. */
+  const tapIgnored = (e: { detail: number; timeStamp: number }) =>
+    tapTooSoon({ touch: !mayAutoFocusText(), keyboard: e.detail === 0, changedAt: barChangedAtRef.current, pressedAt: barPressAtRef.current ?? e.timeStamp });
 
   // An item without a text field (choice, fix) gets focus on its first control, so
   // keyboard and screen-reader users land on the new item instead of <body>.
@@ -599,25 +686,28 @@ export function GameSession({
                 size={item.kind === "sentence" ? "md" : "lg"}
                 // The input is mounted again only when switching between item kinds (mixed rounds).
                 autoFocus
+                readOnly={coarse && answered}
               />
             </form>
           )}
 
           {verdict && (
-            <Feedback
-              verdict={verdict}
-              item={item}
-              word={word}
-              info={info}
-              lang={lang}
-              onListen={canSay(item.answer, item.wordId) ? () => say(item.answer, item.wordId, 0.85) : null}
-              // Credited where the recording is heard: listen-like items, and the correction's listen button.
-              recording={listenLike || !verdict.correct ? credit(item.wordId) : null}
-            />
+            <div ref={feedbackRef} className="scroll-mt-20 scroll-mb-28">
+              <Feedback
+                verdict={verdict}
+                item={item}
+                word={word}
+                info={info}
+                lang={lang}
+                onListen={canSay(item.answer, item.wordId) ? () => say(item.answer, item.wordId, 0.85) : null}
+                // Credited where the recording is heard: listen-like items, and the correction's listen button.
+                recording={listenLike || !verdict.correct ? credit(item.wordId) : null}
+              />
+            </div>
           )}
 
           {(answered || showInput) && (
-            <div className="flex flex-wrap items-center gap-3 max-sm:sticky max-sm:bottom-[var(--keyboard-inset,0px)] max-sm:z-10 max-sm:-mx-4 max-sm:border-t max-sm:border-line max-sm:bg-canvas max-sm:px-4 max-sm:py-3">
+            <div data-action-bar className="flex flex-wrap items-center gap-3 max-sm:sticky max-sm:bottom-[var(--keyboard-inset,0px)] max-sm:z-10 max-sm:-mx-4 max-sm:border-t max-sm:border-line max-sm:bg-canvas max-sm:px-4 max-sm:py-3">
               {answered ? (
                 <Button
                   variant="primary"
@@ -626,10 +716,12 @@ export function GameSession({
                   onMouseDown={showInput ? keepInputFocus : undefined}
                   onPointerDown={(e) => {
                     nextPressRef.current = { itemKey: item.key, x: e.clientX, y: e.clientY, t: e.timeStamp };
+                    notePress(e);
                   }}
                   onClick={(e) => {
                     // Keyboard and plain clicks; a press the window listener already handled is skipped.
                     if (handledClickRef.current === e.nativeEvent) return;
+                    if (tapIgnored(e)) return;
                     goNext();
                   }}
                   className="flex-1 sm:flex-none sm:min-w-48"
@@ -643,19 +735,38 @@ export function GameSession({
                       variant="primary"
                       size="lg"
                       onMouseDown={keepInputFocus}
-                      onClick={onEnter}
+                      onPointerDown={notePress}
+                      onClick={(e) => {
+                        if (tapIgnored(e)) return;
+                        onEnter();
+                      }}
                       disabled={input.state.value.trim() === ""}
                       className="flex-1 sm:flex-none sm:min-w-48"
                     >
                       {t.game.check}
                     </Button>
-                    <Button variant="quiet" size="lg" onMouseDown={keepInputFocus} onClick={() => submit("", { forcedWrong: true })}>
+                    <Button
+                      variant="quiet"
+                      size="lg"
+                      onMouseDown={keepInputFocus}
+                      onPointerDown={notePress}
+                      onClick={(e) => {
+                        if (tapIgnored(e)) return;
+                        // On touch, close the keyboard before the result appears (M9).
+                        if (!mayAutoFocusText()) {
+                          keyboardWasOpenRef.current = document.activeElement === inputRef.current;
+                          inputRef.current?.blur();
+                        }
+                        submit("", { forcedWrong: true });
+                      }}
+                    >
                       {t.game.dontKnow}
                     </Button>
                   </>
                 )
               )}
-              {answered && showInput && <p className="text-sm text-fg-3 max-sm:hidden">{t.game.pressEnter}</p>}
+              {/* "Press Enter or start typing": a keyboard shortcut, never shown on touch devices (M9). */}
+              {answered && showInput && !coarse && <p className="text-sm text-fg-3 max-sm:hidden">{t.game.pressEnter}</p>}
             </div>
           )}
         </>

@@ -71,7 +71,9 @@ describe("every answer field goes through the rule", () => {
   });
 
   it("releases the field on Next on a touch device, so the keyboard closes over the new word", () => {
-    expect(src("features/games/game-session.tsx")).toMatch(/if \(!mayAutoFocusText\(\)\) inputRef\.current\?\.blur\(\);/);
+    // goNext computes `touch` once (M9) and releases the field with it.
+    const game = src("features/games/game-session.tsx");
+    expect(game).toMatch(/const goNext = useCallback\(\(\) => \{[\s\S]*?const touch = !mayAutoFocusText\(\);[\s\S]*?if \(touch\) inputRef\.current\?\.blur\(\);/);
   });
 
   it("keeps the keyboard inset on the field (unchanged)", () => {
