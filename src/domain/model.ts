@@ -171,6 +171,13 @@ export type TableName = keyof TableMap;
 
 export const TABLE_NAMES: readonly TableName[] = ["srs", "mastery", "activity", "achievements", "profile", "sessions", "stages", "writings", "dictionary"];
 
+/**
+ * Tables that hold real practice (reviews, games, writing, streak activity).
+ * The profile (levels, goal), achievements and the own dictionary do not count:
+ * they never send a learner to the level screen or trigger the merge question.
+ */
+export const PROGRESS_TABLES: readonly TableName[] = ["srs", "mastery", "sessions", "stages", "writings", "activity"];
+
 export const DEFAULT_PROFILE: ProfileRecord = {
   id: "me",
   updatedAt: 0,

@@ -1,17 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { canonicalJson, decideFirstSync, reconcilePulled, PULL_OVERLAP_MS } from "@/domain/sync/session";
+import { canonicalJson, decideFirstSync, reconcilePulled, PULL_OVERLAP_MS, type FirstSyncInput } from "@/domain/sync/session";
 import type { MasteryRecord, StageRecord } from "@/domain/model";
 
 describe("decideFirstSync", () => {
+  const fresh: FirstSyncInput = { userId: "u1", linkedUserId: null, ownerUserId: null, hasProgress: false, hasAnyData: false, guestProgress: false };
   it("syncs normally when this device is already linked to the account", () => {
-    expect(decideFirstSync({ linkedUserId: "u1", userId: "u1", localHasData: true })).toBe("sync");
+    expect(decideFirstSync({ ...fresh, linkedUserId: "u1", ownerUserId: "u1", hasProgress: true, hasAnyData: true })).toBe("sync");
   });
   it("adopts the account's data when this device has no progress", () => {
-    expect(decideFirstSync({ linkedUserId: null, userId: "u1", localHasData: false })).toBe("adopt-remote");
+    expect(decideFirstSync(fresh)).toBe("adopt-remote");
   });
-  it("asks before mixing local progress into an account (never silent)", () => {
-    expect(decideFirstSync({ linkedUserId: null, userId: "u1", localHasData: true })).toBe("ask");
-    expect(decideFirstSync({ linkedUserId: "u2", userId: "u1", localHasData: true })).toBe("ask");
+  it("a guest's level or settings alone never ask", () => {
+    expect(decideFirstSync({ ...fresh, hasAnyData: true })).toBe("adopt-remote");
+  });
+  it("asks before mixing a guest's real progress into an account (never silent)", () => {
+    expect(decideFirstSync({ ...fresh, hasProgress: true, hasAnyData: true })).toBe("ask");
+  });
+  it("asks before mixing another account's data, whatever it is", () => {
+    expect(decideFirstSync({ ...fresh, linkedUserId: "u2", ownerUserId: "u2", hasProgress: true, hasAnyData: true })).toBe("ask");
+    expect(decideFirstSync({ ...fresh, ownerUserId: "u2", hasAnyData: true })).toBe("ask");
+    expect(decideFirstSync({ ...fresh, ownerUserId: "u2" })).toBe("adopt-remote");
+  });
+  it("relinks silently to the account whose data is here, unless a guest played since", () => {
+    expect(decideFirstSync({ ...fresh, ownerUserId: "u1", hasProgress: true, hasAnyData: true })).toBe("relink");
+    expect(decideFirstSync({ ...fresh, ownerUserId: "u1", hasProgress: true, hasAnyData: true, guestProgress: true })).toBe("ask");
   });
 });
 

@@ -650,6 +650,21 @@ The owner asked for a full dictionary, a large graded word set and tens of thous
   - **Checked in a browser (production build):** first visit → `/welcome`; choose B1, then F5 on the result screen → `/play`; `/welcome?test=1` → `/play`; `/welcome?retake=1` → the test, address cleaned; landing button → "تابع التعلّم".
   - **Tests:** `tests/features/level-once.test.ts` (F5 with IndexedDB, skip, old accounts with progress, guests, delete → the test is offered again, delete → sign in → no test with the account's level, a new device, sync errors, blocked storage, the `/welcome` address), and in `tests/lib/first-visit.test.ts` the gate table and the sign-in link on the welcome screen.
 
+## The merge question is asked once (2026-11-22)
+
+- **A9. "You have progress on this device" only for real, unlinked guest progress (refines A5).**
+  - **The bug.** Signed in, every reload asked again. "Delete all my data" (and an import that replaces) cleared every IndexedDB store, `meta` included. That removed the device's link to the account (`linkedUser`) and the pull position, while the learner stayed signed in. The engine pulled the account's progress back down, and from then on every load saw "local progress, no link". A level alone (the profile row) also counted as "data" and could trigger the question.
+  - **Link survives deletes.** `store.clear()` keeps `linkedUser` and `dataOwner` (`KEPT_META_KEYS`). The pull position is still cleared, so a signed-in device downloads the account again.
+  - **Decision** (`decideFirstSync`, pure; inputs read by `readFirstSyncInput`, `features/account/first-sync.ts`):
+    - linked to this account → sync;
+    - data that belongs to another account (linked or last owner) → ask if anything is stored, whatever it is (never mixed silently across accounts);
+    - this account's own data (`dataOwner`, kept after a sign-out that keeps progress) → relink silently, unless real progress was written as a guest since (`guestProgress`) → ask;
+    - a guest: real progress (`PROGRESS_TABLES`: reviews, mastery, games, stages, writing, activity) → ask; a level, settings or the marker alone → adopt the account, and the guest's level and settings go up with it (merge rules apply).
+  - **Recorded.** Merge, keep separate, adopt and relink all mark the device linked (`linkedUser`, `dataOwner`, `guestProgress` false), so the question never returns on reload, browser restart or later sign-ins with the same account. A sign-out that keeps progress clears only `linkedUser`; one that deletes progress, and account deletion, clear all three. A progress write while no account is linked sets `guestProgress`.
+  - **Devices left broken by the old build** (no link, the account's data pulled back): a pull position for this account (`cursor:<id>`) counts as the owner, so they relink without the dialog.
+  - **Tests.** `tests/sync/merge-dialog-once.test.ts` runs on IndexedDB (fake-indexeddb) with real reloads: the reported bug (written first and seen failing: "ask" instead of "sync"), a device in the old broken state, import-replace, level-only guest, merge and replace then reloads and a later sign-in, guest play after sign-out, sign-out with delete, and another account. The decision table is in `tests/domain/sync/session.test.ts`.
+  - **Smoke test (production build, fresh browser profile, 2026-11-22).** Pass: first visit → placement test (16 questions) → result → F5 twice (no test); guest game → F5 (progress kept, no dialog); JSON and the three CSV exports; writing correction (3 mistakes found); Settings retake (test starts, F5 goes to /play); delete all data → test offered again; welcome "sign in" link → /account. Sign-in and sign-out flows need a real account and are covered by the tests above.
+
 ## Google sign-in behind a flag (2026-11-20)
 
 - **O5. Google is hidden unless `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true`.**

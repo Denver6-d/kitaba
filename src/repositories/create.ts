@@ -1,4 +1,4 @@
-import { DEFAULT_PROFILE, TABLE_NAMES, WRITING_MISSED_MAX, WRITING_TEXT_MAX, type StageRecord, type SyncRecord, type TableMap, type TableName } from "@/domain/model";
+import { DEFAULT_PROFILE, PROGRESS_TABLES, TABLE_NAMES, WRITING_MISSED_MAX, WRITING_TEXT_MAX, type StageRecord, type SyncRecord, type TableMap, type TableName } from "@/domain/model";
 import { compareStage, mergeTable } from "@/domain/sync/merge";
 import { dayKey } from "@/domain/progress/streak";
 import { EXPORT_VERSION, type ExportFile } from "./export";
@@ -14,8 +14,6 @@ export interface RepositoryDeps {
 const live = <R extends SyncRecord>(rows: R[]): R[] => rows.filter((r) => r.deletedAt === undefined);
 const alive = <R extends SyncRecord>(r: R | undefined): R | undefined => (r && r.deletedAt === undefined ? r : undefined);
 
-/** Tables that hold real practice (DataRepository.hasProgress). Profile, achievements and the own dictionary do not count. */
-const PROGRESS_TABLES: readonly TableName[] = ["srs", "mastery", "sessions", "stages", "writings", "activity"];
 
 /** The better of two results for one stage, keeping the earliest clear time. */
 export function bestStage(previous: StageRecord | null, candidate: StageRecord): StageRecord {

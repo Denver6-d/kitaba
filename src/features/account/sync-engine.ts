@@ -1,6 +1,6 @@
 import { TABLE_NAMES, type SyncRecord, type TableMap, type TableName } from "@/domain/model";
 import { nextRetryDelay } from "@/domain/sync/outbox";
-import { PULL_OVERLAP_MS, reconcilePulled } from "@/domain/sync/session";
+import { cursorKey, PULL_OVERLAP_MS, reconcilePulled } from "@/domain/sync/session";
 import type { OutboxStore } from "@/repositories/local/outbox";
 import type { RecordStore } from "@/repositories/store";
 import type { SupabaseRemote } from "@/repositories/supabase/store";
@@ -59,7 +59,7 @@ export class SyncEngine {
   constructor(private readonly d: Deps) {}
 
   private get cursorKey() {
-    return `cursor:${this.d.userId}`;
+    return cursorKey(this.d.userId);
   }
 
   start(): void {

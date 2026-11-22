@@ -3,6 +3,7 @@ import { TABLE_NAMES, type TableMap, type TableName } from "@/domain/model";
 import type { OutboxItem } from "@/domain/sync/outbox";
 import { migrateV1Row, V1_DROPPED_TABLES } from "@/domain/sync/migrate-v1";
 import { migrateProfileRow } from "@/domain/sync/migrate-profile";
+import { KEPT_META_KEYS } from "@/domain/sync/session";
 import type { RecordStore } from "../store";
 
 export interface MetaRow {
@@ -110,7 +111,11 @@ export function createDexieStore(db: KitabaDb): RecordStore {
     },
     async clear() {
       await db.transaction("rw", ALL_STORES, async () => {
+        // The device's link to an account survives (DECISIONS A9): deleting progress on a
+        // signed-in device must not make the account's own data look like unlinked guest progress.
+        const kept = (await db.meta.bulkGet([...KEPT_META_KEYS])).filter((m): m is MetaRow => m !== undefined);
         await Promise.all(ALL_STORES.map((n) => db.table(n).clear()));
+        if (kept.length > 0) await db.meta.bulkPut(kept);
       });
     },
     atomic: (work) => db.transaction("rw", ALL_STORES, work),

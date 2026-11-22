@@ -3,8 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import { TABLE_NAMES } from "@/domain/model";
-import { decideFirstSync } from "@/domain/sync/session";
+import { cursorKey, decideFirstSync } from "@/domain/sync/session";
 import { isSupabaseConfigured, loadSupabase } from "@/lib/supabase/client";
 import { downloadJson, exportFilename } from "@/lib/download";
 import { forgetLevels } from "@/lib/first-visit";
@@ -12,9 +11,9 @@ import { createRepositories } from "@/repositories/create";
 import { createSupabaseStore } from "@/repositories/supabase/store";
 import { useRepoContext } from "@/repositories/provider";
 import { SyncEngine, type SyncSnapshot } from "./sync-engine";
+import { markLinked, markSignedOut, noteGuestWrite, readFirstSyncInput } from "./first-sync";
 import { MergeDialog, type MergeChoice } from "./merge-dialog";
 
-const LINKED_KEY = "linkedUser";
 const FLUSH_TIMEOUT_MS = 5000;
 
 interface AccountValue {
@@ -109,7 +108,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     async (uid: string, fullResync: boolean) => {
       if (!client) return null;
       await stopEngine();
-      if (fullResync) await outbox.setMeta(`cursor:${uid}`, null);
+      if (fullResync) await outbox.setMeta(cursorKey(uid), null);
       const engine = new SyncEngine({
         userId: uid,
         local: baseStore,
@@ -127,31 +126,30 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   );
 
   // Account changes (including A → B without a sign-out in between) always stop the old engine first.
-  // First sign-in on this device never mixes or replaces local progress without asking.
+  // Real guest progress is never mixed into an account without asking; once linked, it never asks again (DECISIONS A9).
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       await stopEngine();
       if (!userId || !client || cancelled) return;
-      const linked = (await outbox.getMeta<string | null>(LINKED_KEY)) ?? null;
-      let localHasData = false;
-      for (const t of TABLE_NAMES) {
-        if ((await baseStore.all(t)).length > 0) {
-          localHasData = true;
-          break;
-        }
-      }
+      const input = await readFirstSyncInput(baseStore, outbox, userId);
       if (cancelled) return;
-      const decision = decideFirstSync({ linkedUserId: linked, userId, localHasData });
+      const decision = decideFirstSync(input);
       if (decision === "ask") {
         setAskMerge(true);
         return;
       }
-      if (decision === "adopt-remote") {
-        await outbox.clear(); // anything queued belonged to a previous account
-        await outbox.setMeta(LINKED_KEY, userId);
+      if (decision === "sync") {
+        await startEngine(userId, false);
+        return;
       }
-      if (!cancelled) await startEngine(userId, decision === "adopt-remote");
+      // A guest's level and settings (no progress, nothing from another account) go up with the account.
+      const sendLocal = decision === "relink" || (input.linkedUserId === null && input.ownerUserId === null);
+      if (decision === "adopt-remote") await outbox.clear(); // anything queued belonged to a previous account
+      await markLinked(outbox, userId);
+      if (cancelled) return;
+      const engine = await startEngine(userId, true);
+      if (sendLocal) await engine?.enqueueAllLocal();
     })();
     return () => {
       cancelled = true;
@@ -164,8 +162,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       onWrite((table, records) => {
         const engine = engineRef.current;
         if (engine) void engine.enqueue(table, records);
+        else void noteGuestWrite(outbox, table);
       }),
-    [onWrite],
+    [onWrite, outbox],
   );
 
   useEffect(() => () => engineRef.current?.stop(), []);
@@ -179,13 +178,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       }
       await outbox.clear(); // only this device's data, queued below, may go to this account
       if (choice === "merge") {
-        await outbox.setMeta(LINKED_KEY, userId);
+        await markLinked(outbox, userId);
         const engine = await startEngine(userId, true);
         await engine?.enqueueAllLocal();
         await engine?.syncNow();
       } else {
         await baseStore.clear();
-        await outbox.setMeta(LINKED_KEY, userId);
+        await markLinked(outbox, userId);
         invalidate();
         const engine = await startEngine(userId, true);
         await engine?.syncNow();
@@ -213,7 +212,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         if (engine) await withTimeout(engine.syncNow(), FLUSH_TIMEOUT_MS);
         await stopEngine();
         await outbox.clear();
-        await outbox.setMeta(LINKED_KEY, null);
+        await markSignedOut(outbox, !removeLocalData);
         if (removeLocalData) {
           // A fresh device: the level screen is offered again (DECISIONS L2). Forgotten first,
           // so the re-read that follows the clear already sees no marker.
@@ -235,7 +234,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         if (error) throw new Error(error.message);
         // "Delete my account and all my data": this device's copy goes too.
         await outbox.clear();
-        await outbox.setMeta(LINKED_KEY, null);
+        await markSignedOut(outbox, false);
         forgetLevels();
         await baseStore.clear();
         invalidate();
