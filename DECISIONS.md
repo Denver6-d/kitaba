@@ -642,11 +642,13 @@ The owner asked for a full dictionary, a large graded word set and tens of thous
     - local data has been read, after the latest local change (a read from before a sync pull is stale and ignored, so the gate cannot redirect between "pull done" and "re-read");
     - no level, no real progress (`DataRepository.hasProgress`: reviews, mastery, games, stages, writing, activity), and no device marker;
     - signed in: the first pull has finished ("synced"). Offline, a sync error or the 8-second wait mean "do not ask" (the account may hold a level).
-  - **Device marker.** `kitaba:levels-set` (localStorage) is set whenever a level or progress is seen, and is never removed (not by sign-out, "delete my progress" or "delete all my data"). Guests are asked once per device.
+  - **Device marker.** `kitaba:levels-set` (localStorage) is set whenever a fresh read finds a level or progress. Guests are asked once per device.
+  - **Deleting progress makes the device fresh (decided 2026-11-22).** "Delete all my data" (Settings), sign-out with "delete my progress from this device", and account deletion clear the marker, so the level screen is offered again. The marker is cleared before the data, and it is set again only from a read made after the latest data change, so a read from before the delete cannot bring it back.
+  - **Returning learners on /welcome.** When accounts are available and nobody is signed in, the welcome screen offers "Already have an account? Sign in" (`/account`), with a line saying the account's level is used. After sign-in, the next page waits for the first pull (the rule above) and uses the account's level: no test. A sign-out that keeps progress keeps the marker and the level.
   - **`/welcome`.** A learner who already has a level is sent on to `next`. `?retake=1` (Settings) is the only way to take the test again. `retake` and `test` are removed from the address at once, so a reload never restarts the test.
   - **Landing page.** For a learner with a level, the main button is "Continue learning" (`/play`).
   - **Checked in a browser (production build):** first visit → `/welcome`; choose B1, then F5 on the result screen → `/play`; `/welcome?test=1` → `/play`; `/welcome?retake=1` → the test, address cleaned; landing button → "تابع التعلّم".
-  - **Tests:** `tests/features/level-once.test.ts` (F5 with IndexedDB, skip, old accounts with progress, guests, a new device, sign-out and sign-in, sync errors, the `/welcome` address) and the gate table in `tests/lib/first-visit.test.ts`.
+  - **Tests:** `tests/features/level-once.test.ts` (F5 with IndexedDB, skip, old accounts with progress, guests, delete → the test is offered again, delete → sign in → no test with the account's level, a new device, sync errors, blocked storage, the `/welcome` address), and in `tests/lib/first-visit.test.ts` the gate table and the sign-in link on the welcome screen.
 
 ## Google sign-in behind a flag (2026-11-20)
 

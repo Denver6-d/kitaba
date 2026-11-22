@@ -7,6 +7,7 @@ import { useHydrated } from "@/lib/use-hydrated";
 import { LoadingBlock } from "@/components/page";
 import { Welcome } from "@/features/levels/welcome";
 import { useLevelCheck } from "@/features/levels/use-level-check";
+import { useAccount } from "@/features/account/account-provider";
 import { returnPath, welcomeIntent, welcomeUrlWithoutIntent } from "@/lib/first-visit";
 
 /**
@@ -30,6 +31,9 @@ export function WelcomeView() {
   // Read once: the address loses these flags right after.
   const [intent] = useState(() => welcomeIntent(params));
   const check = useLevelCheck("/welcome");
+  const account = useAccount();
+  // Signing in on /account: the next page the learner opens waits for the account's level (the gate), so no test.
+  const signInHref = account.configured && account.ready && !account.unavailable && account.user === null ? "/account" : undefined;
   /** Decided once, so a level saved here (or a later sync) never yanks the learner off the result screen. */
   const [mode, setMode] = useState<"pending" | "welcome" | "leave">(intent.retake ? "welcome" : "pending");
   if (mode === "pending" && check !== "wait") setMode(check === "known" ? "leave" : "welcome");
@@ -46,7 +50,7 @@ export function WelcomeView() {
   return (
     <div className="mx-auto min-h-[calc(100svh-4rem)] max-w-3xl px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
       <h1 className="sr-only">{t.welcome.title}</h1>
-      {hydrated && mode === "welcome" ? <Welcome startWithTest={intent.test} next={next} onSkip={() => router.replace(next)} /> : <LoadingBlock label={t.common.loading} />}
+      {hydrated && mode === "welcome" ? <Welcome startWithTest={intent.test} next={next} signInHref={signInHref} onSkip={() => router.replace(next)} /> : <LoadingBlock label={t.common.loading} />}
     </div>
   );
 }

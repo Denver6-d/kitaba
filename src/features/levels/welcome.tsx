@@ -22,7 +22,18 @@ type Step =
  * First visit (no level stored), or "retake the placement test" from settings:
  * choose a level, take the adaptive test, or skip (A2).
  */
-export function Welcome({ startWithTest = false, onSkip, next = "/play" }: { startWithTest?: boolean; onSkip: () => void; next?: string }) {
+export function Welcome({
+  startWithTest = false,
+  onSkip,
+  next = "/play",
+  signInHref,
+}: {
+  startWithTest?: boolean;
+  onSkip: () => void;
+  next?: string;
+  /** Shown when accounts are available and nobody is signed in: a returning learner signs in instead of retaking the test (DECISIONS L2). */
+  signInHref?: string | undefined;
+}) {
   const { t } = useI18n();
   const { setAll } = useLevels();
   const [step, setStep] = useState<Step>(() => (startWithTest ? { kind: "test", seed: Date.now() } : { kind: "menu" }));
@@ -139,6 +150,15 @@ export function Welcome({ startWithTest = false, onSkip, next = "/play" }: { sta
           </Button>
         </div>
       </Reveal>
+
+      {signInHref && (
+        <Reveal immediate delay={420} className="space-y-1 border-t border-line pt-6">
+          <Button asChild variant="link" data-welcome="sign-in" className="h-auto px-0 text-base text-fg">
+            <Link href={signInHref}>{t.welcome.haveAccount}</Link>
+          </Button>
+          <p className="text-sm text-fg-2">{t.welcome.haveAccountHint}</p>
+        </Reveal>
+      )}
     </section>
   );
 }

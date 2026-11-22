@@ -7,6 +7,7 @@ import { TABLE_NAMES } from "@/domain/model";
 import { decideFirstSync } from "@/domain/sync/session";
 import { isSupabaseConfigured, loadSupabase } from "@/lib/supabase/client";
 import { downloadJson, exportFilename } from "@/lib/download";
+import { forgetLevels } from "@/lib/first-visit";
 import { createRepositories } from "@/repositories/create";
 import { createSupabaseStore } from "@/repositories/supabase/store";
 import { useRepoContext } from "@/repositories/provider";
@@ -214,6 +215,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         await outbox.clear();
         await outbox.setMeta(LINKED_KEY, null);
         if (removeLocalData) {
+          // A fresh device: the level screen is offered again (DECISIONS L2). Forgotten first,
+          // so the re-read that follows the clear already sees no marker.
+          forgetLevels();
           await baseStore.clear();
           invalidate();
         }
@@ -232,6 +236,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         // "Delete my account and all my data": this device's copy goes too.
         await outbox.clear();
         await outbox.setMeta(LINKED_KEY, null);
+        forgetLevels();
         await baseStore.clear();
         invalidate();
         await client.auth.signOut();

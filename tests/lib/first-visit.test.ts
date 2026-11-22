@@ -129,5 +129,14 @@ describe("welcome screen", () => {
     expect(tag("choose")).toMatch(/data-variant="outline"/);
     expect(tag("skip")).toMatch(/data-variant="quiet"/);
     expect(html).toContain(ar.welcome.test);
+    expect(html).not.toContain('data-welcome="sign-in"');
+  });
+  it("offers 'Already have an account? Sign in' when accounts are available", () => {
+    const html = renderToStaticMarkup(
+      createElement(I18nProvider, null, createElement(RepositoriesProvider, null, createElement(Welcome, { onSkip: () => undefined, signInHref: "/account" }))),
+    );
+    const link = html.match(/<a[^>]*data-welcome="sign-in"[^>]*>/)?.[0] ?? "";
+    expect(link).toContain('href="/account"');
+    expect(html).toContain(ar.welcome.haveAccount);
   });
 });

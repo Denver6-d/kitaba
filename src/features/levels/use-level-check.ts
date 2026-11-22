@@ -40,10 +40,7 @@ export function useLevelCheck(key: string): LevelCheck {
       } catch {
         r = { levelSource: "error", hasProgress: false, deviceMarker: hasLevelsMarker() };
       }
-      if (!alive) return;
-      // Levels or progress on this device: remember it, so later pages are never hidden, not even for a frame.
-      if ((r.levelSource !== null && r.levelSource !== "error") || r.hasProgress) rememberLevels();
-      setRead({ key, revision, ...r });
+      if (alive) setRead({ key, revision, ...r });
     })();
     return () => {
       alive = false;
@@ -56,6 +53,12 @@ export function useLevelCheck(key: string): LevelCheck {
   }, [key]);
 
   const fresh = read && read.key === key && read.revision === revision ? read : null;
+  const seenLevels = fresh !== null && ((fresh.levelSource !== null && fresh.levelSource !== "error") || fresh.hasProgress);
+  // Levels or progress on this device: remember it, so later pages are never hidden, not even for a frame.
+  // Only from a fresh read: a read from before "delete my data" must not bring the marker back.
+  useEffect(() => {
+    if (seenLevels) rememberLevels();
+  }, [seenLevels]);
   return levelCheck({
     levelSource: fresh ? fresh.levelSource : undefined,
     hasProgress: fresh?.hasProgress ?? false,

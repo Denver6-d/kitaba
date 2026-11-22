@@ -241,6 +241,8 @@ export const en: Dictionary = {
     title: "Let's find your spelling level first",
     intro: "A short test picks words that fit you. You can change your level any time.",
     levelsPreview: "Levels A1 to C1",
+    haveAccount: "Already have an account? Sign in",
+    haveAccountHint: "We use the level saved in your account, so you can skip the test.",
     testTag: "3 minutes, recommended",
     choose: "I choose my level",
     chooseDesc: "Know your level? Pick it, from A1 to C1.",

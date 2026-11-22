@@ -1,11 +1,11 @@
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createDexieStore, openDb } from "@/repositories/local/db";
 import { createRepositories } from "@/repositories/create";
 import { createMemoryStore } from "@/repositories/store";
 import { DEFAULT_PROFILE, sameLevels, type ProfileRecord } from "@/domain/model";
 import { reconcilePulled } from "@/domain/sync/session";
-import { levelCheck, welcomeIntent, welcomeUrlWithoutIntent, type LevelCheckInput } from "@/lib/first-visit";
+import { forgetLevels, hasLevelsMarker, levelCheck, rememberLevels, welcomeIntent, welcomeUrlWithoutIntent, type LevelCheckInput } from "@/lib/first-visit";
 
 /**
  * The level screen is shown once (DECISIONS L2): never again after a reload,
@@ -73,10 +73,83 @@ describe("learners who already have progress (old accounts without the level fla
   });
 });
 
-describe("guests", () => {
-  it("are asked once per device: the device marker survives deleting progress or signing out", () => {
+/** A browser's localStorage for the device marker (the tests run in Node). */
+function fakeLocalStorage() {
+  const data = new Map<string, string>();
+  return {
+    getItem: (k: string) => data.get(k) ?? null,
+    setItem: (k: string, v: string) => void data.set(k, v),
+    removeItem: (k: string) => void data.delete(k),
+  };
+}
+
+describe("guests and deleting progress from the device", () => {
+  beforeEach(() => {
+    Object.defineProperty(globalThis, "localStorage", { value: fakeLocalStorage(), configurable: true });
+  });
+  afterEach(() => {
+    Reflect.deleteProperty(globalThis, "localStorage");
+  });
+
+  it("are asked once per device while its progress is kept", () => {
     expect(levelCheck(guest)).toBe("unknown");
-    expect(levelCheck({ ...guest, deviceMarker: true })).toBe("known");
+    rememberLevels();
+    expect(levelCheck({ ...guest, deviceMarker: hasLevelsMarker() })).toBe("known");
+  });
+
+  // Mirrors "delete all my data" (Settings) and sign-out with "delete my progress" (account-provider):
+  // forgetLevels() first, then the store is cleared.
+  async function deleteFromDevice(store: ReturnType<typeof createMemoryStore>) {
+    forgetLevels();
+    await store.clear();
+  }
+
+  it("delete → the device is fresh, and the test is offered again", async () => {
+    const store = createMemoryStore();
+    const repos = createRepositories({ store });
+    await repos.profile.save({ levels: sameLevels("B1"), levelSource: "placement", levelsAt: 1 });
+    await repos.games.saveSession({ mode: "listen", stageId: null, items: 5, correct: 5, points: 20, maxCombo: 5, seconds: 30, at: 1, missed: [] }, 0);
+    rememberLevels();
+    expect(await readCheck(repos, { deviceMarker: hasLevelsMarker() })).toBe("known");
+
+    await deleteFromDevice(store);
+    expect(hasLevelsMarker()).toBe(false);
+    expect(await readCheck(repos, { deviceMarker: hasLevelsMarker() })).toBe("unknown");
+  });
+
+  it("delete → sign in → no test: the gate waits for the pull and uses the account's level", async () => {
+    const store = createMemoryStore();
+    const repos = createRepositories({ store });
+    await repos.profile.save({ levels: sameLevels("B2"), levelSource: "placement", levelsAt: 7 });
+    const inAccount = await repos.profile.get(); // already synced to the account
+    rememberLevels();
+
+    await deleteFromDevice(store);
+    const fresh = { deviceMarker: hasLevelsMarker() };
+    // "Already have an account? Sign in" on /welcome: signed in, first pull running.
+    expect(await readCheck(repos, { ...fresh, signedIn: true, syncStatus: null })).toBe("wait");
+    expect(await readCheck(repos, { ...fresh, signedIn: true, syncStatus: "syncing" })).toBe("wait");
+
+    const pulled = reconcilePulled("profile", await store.get("profile", "me"), inAccount);
+    if (pulled.toLocal) await store.put("profile", pulled.toLocal);
+    expect(await readCheck(repos, { ...fresh, signedIn: true, syncStatus: "synced" })).toBe("known");
+    expect((await repos.profile.get()).levels).toEqual(sameLevels("B2"));
+  });
+
+  it("storage blocked: forgetting and reading the marker never throw", () => {
+    Object.defineProperty(globalThis, "localStorage", {
+      value: {
+        getItem: () => {
+          throw new Error("SecurityError");
+        },
+        removeItem: () => {
+          throw new Error("SecurityError");
+        },
+      },
+      configurable: true,
+    });
+    expect(() => forgetLevels()).not.toThrow();
+    expect(hasLevelsMarker()).toBe(false);
   });
 });
 
@@ -105,19 +178,6 @@ describe("signed-in learners", () => {
     const store = createMemoryStore();
     if (pulled.toLocal) await store.put("profile", pulled.toLocal);
     expect(await readCheck(createRepositories({ store }), { signedIn: true, syncStatus: "synced" })).toBe("known");
-  });
-
-  it("sign-out with 'delete my progress' then sign-in again: the account's level comes back with the pull", async () => {
-    const store = createMemoryStore();
-    const repos = createRepositories({ store });
-    await repos.profile.save({ levels: sameLevels("B1"), levelSource: "choice", levelsAt: 5 });
-    const inAccount = await repos.profile.get();
-    await store.clear(); // removeLocalData
-    // Signed in again, pull still running: wait (the marker is set on a real device; here it is not).
-    expect(await readCheck(repos, { signedIn: true, syncStatus: "syncing" })).toBe("wait");
-    const pulled = reconcilePulled("profile", await store.get("profile", "me"), inAccount);
-    if (pulled.toLocal) await store.put("profile", pulled.toLocal);
-    expect(await readCheck(repos, { signedIn: true, syncStatus: "synced" })).toBe("known");
   });
 
   it("a newer device profile without a level never erases the account's level", () => {

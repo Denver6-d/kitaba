@@ -13,9 +13,10 @@ import { safeNext } from "./safe-next";
 
 /**
  * localStorage key set once this device has seen levels (choice, placement,
- * skip, or real progress). It is never removed, not even when progress is
- * deleted from the device or on sign-out: the level screen is shown once per
- * device (DECISIONS L2).
+ * skip, or real progress). It is removed only when the learner deletes their
+ * progress from the device ("delete all my data", sign-out with "delete my
+ * progress", account deletion): the device is then fresh and the level screen
+ * is offered again (DECISIONS L2).
  */
 export const LEVELS_MARKER = "kitaba:levels-set";
 
@@ -25,6 +26,15 @@ export function rememberLevels(): void {
     localStorage.setItem(LEVELS_MARKER, "1");
   } catch {
     // Storage blocked: the page is simply shown after the check each time.
+  }
+}
+
+/** Forgets the marker: the device is fresh again (after its progress was deleted). */
+export function forgetLevels(): void {
+  try {
+    localStorage.removeItem(LEVELS_MARKER);
+  } catch {
+    // Storage blocked: there is no marker to remove.
   }
 }
 

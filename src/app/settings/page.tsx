@@ -9,6 +9,7 @@ import { TEXT_SCALES } from "@/lib/settings";
 import { canVibrate } from "@/lib/haptics";
 import { useHydrated } from "@/lib/use-hydrated";
 import { downloadJson, exportFilename } from "@/lib/download";
+import { forgetLevels } from "@/lib/first-visit";
 import { parseExportFile } from "@/repositories/export";
 import { CSV_TABLES, type CsvTableName } from "@/features/export/progress-csv";
 import { csvLabels, downloadProgressCsv } from "@/features/export/download-progress-csv";
@@ -190,6 +191,7 @@ export default function SettingsPage() {
                 <AlertDialogAction
                   variant="destructive"
                   onClick={async () => {
+                    forgetLevels(); // a fresh device: the level screen is offered again (DECISIONS L2)
                     await repos.data.clearAll();
                     setMessage({ kind: "ok", text: t.settings.cleared });
                   }}
