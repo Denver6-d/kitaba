@@ -1,129 +1,172 @@
-# Kitaba: master English spelling
+# Kitaba
 
-Short spelling games for Arabic speakers (A1–C1). Learners listen and spell, fix the mistake, fill in missing letters, unscramble words and pick the right spelling. They work through 8 worlds × 10 stages and a daily challenge, and their own mistakes come back on a spaced-repetition schedule. The UI is Arabic first (RTL), with an English toggle.
+**English spelling practice built for Arabic speakers: short games, instant feedback that names the rule, and spaced repetition for your own mistakes.**
 
-The product name lives in one place: `src/config/brand.ts`.
+**Live:** <https://kitaba-amber.vercel.app>
 
-- **Spelling only.** Every screen serves one question: can the learner spell the word? After each mistake, feedback shows a letter diff and the rule in one line.
-- **Guest-first.** Everything works with no account, and offline after the first visit. Progress is stored in IndexedDB on the device.
-- **Optional account:** Google and email sign-in, each shown only once it is set up and switched on (`NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true`, `NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN=true`). It adds cloud sync across devices and an opt-in weekly leaderboard. With neither switched on, the account page says accounts are not available yet.
-- **No analytics, no tracking, no AI APIs.** The only network calls go to Supabase, and only when it is configured.
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-optional%20sync-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com/)
+[![Tests: 706 passing](https://img.shields.io/badge/tests-706%20passing-brightgreen?logo=vitest&logoColor=white)](#quality)
+[![Lighthouse 100](https://img.shields.io/badge/Lighthouse-100%20mobile%20%26%20desktop-brightgreen?logo=lighthouse&logoColor=white)](#quality)
 
-See [SPEC.md](SPEC.md), [DESIGN.md](DESIGN.md) and [DECISIONS.md](DECISIONS.md). The pivot from the earlier typing and writing product is in DECISIONS, section "Pivot".
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/home.jpg" width="230" alt="Home screen in Arabic: master English spelling, word by word"><br><sub>Home</sub></td>
+    <td align="center"><img src="docs/screenshots/journey.jpg" width="230" alt="Campaign map: World 1, sounds Arabic doesn't have, with stars and locked stages"><br><sub>Campaign worlds</sub></td>
+    <td align="center"><img src="docs/screenshots/game.jpg" width="230" alt="Listen and Spell: play the word, slower, in a sentence, Arabic hint, letter tiles"><br><sub>Listen and Spell</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/correction.jpg" width="230" alt="Feedback after a mistake: letter diff on victory, the V and F rule in Arabic, example sentence, audio credit"><br><sub>Feedback with the rule</sub></td>
+    <td align="center"><img src="docs/screenshots/result.jpg" width="230" alt="Stage result: stars, accuracy, XP, streak and the words that will come back for review"><br><sub>Stage result</sub></td>
+    <td align="center"><img src="docs/screenshots/progress.jpg" width="230" alt="Progress: daily goal ring, streak, words due for review, level and XP"><br><sub>Progress</sub></td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><img src="docs/screenshots/desktop.png" width="720" alt="Desktop layout: the first-visit level screen with A1 to C1 and a placement test"><br><sub>Desktop: first-visit level choice and placement test</sub></td>
+  </tr>
+</table>
 
 ## Features
 
-| Area | What it does |
+- **Seven game modes:** Listen and Spell, Spelling Bee (60 seconds, combo multiplier), Fix the Mistake, Missing Letters, Word Scramble, Pick the Right Spelling, and Review.
+- **Campaign:** 8 worlds × 10 stages, 1–3 stars per stage, unlocks, a boss stage per world (mixed modes and dictated sentences), and a daily challenge.
+- **Feedback that teaches:** after a mistake the learner sees the correct spelling, their own answer with the differences marked letter by letter, and the rule in one line of Arabic.
+- **Spaced repetition:** every missed word goes into an SM-2 review queue and comes back when it is due.
+- **Sentences and messages:** dictation of whole sentences and longer messages with a word-by-word comparison, plus free writing for an Arabic scenario, spell-checked on the device.
+- **Levels A1–C1:** choose a level, take a short adaptive placement test, or skip and start at A2. Word, sentence and test levels can be changed at any time.
+- **Pronunciation:** a short MP3 per game word, with American or British English for both the voice and the expected spelling. Words without a file fall back to the device's voice.
+- **Motivation:** XP and levels, streaks, a daily goal, achievements, stats on the weakest categories, and an opt-in weekly leaderboard.
+- **Guest-first and offline:** everything works with no account and offline after the first visit. An optional account adds sync across devices.
+- **No analytics, no tracking, no AI APIs.** The only network calls go to Supabase, and only when it is configured.
+
+## Built for Arabic speakers
+
+- **The curriculum follows the mistakes Arabic speakers make.** World 1 is *Sounds Arabic doesn't have* (p/b, v/f). World 2 is *The vowels Arabic leaves out* (short vowels, e/i/a confusion). Later worlds cover double and silent letters, word endings, ie/ei, prefixes and suffixes, British vs American spelling and homophones.
+- **Arabic first, right to left.** The interface is Arabic by default with an English toggle. Rule explanations are written in Arabic, and Western digits are used in both languages.
+- **Every word has an Arabic meaning hint.** The 1,591 hand-written words in 15 categories each have an Arabic hint and an example sentence, written for this project.
+- **Built for phones.** Learners study in short sessions on a phone, so the keyboard stays open between words, a timer starts on the first keystroke, and the layout, text size, reading-friendly font and reduced-motion options are tuned for that.
+
+## Tech stack
+
+| Layer | Choice |
 |---|---|
-| Content | 1,591 original words in 15 categories (double letters, silent letters, ie/ei, plurals, -ed/-ing, -ly, prefixes, suffixes, British/American, homophones, p/b, v/f, short vowels, e/i/a confusion, commonly misspelled). Every word has an Arabic hint and an example sentence. There are 1,589 dictation sentences. |
-| Modes | Listen and Spell, Spelling Bee (60 s, combo multiplier), Fix the Mistake, Missing Letters, Word Scramble, Pick the Right Spelling, Review (SM-2). |
-| Campaign | 8 worlds × 10 stages, 1–3 stars, unlocks, a boss per world (mixed modes and dictated sentences), a daily challenge, XP and levels, streaks, achievements. |
-| No repeats | A shuffle-bag per word pool, so a word only comes back once the pool is used up. |
-| Accents | American or British English (voice and expected spelling), using on-device voices only. |
-| Accounts | Google OAuth behind a public flag (off by default), email and password, magic link. Offline-tolerant sync, merging on first sign-in, export, account deletion. |
-| Leaderboard | Weekly points, opt-in nickname, server-side plausibility checks. |
-| Platform | One dark design (calm, one gold accent), Western digits in both languages, text size, a reading-friendly font, reduced motion, sounds and vibration (on by default, can be turned off), an installable PWA, phone and desktop layouts. |
-
-## Getting started
-
-Requires Node.js 20.9 or later.
-
-```
-npm install
-npm run dev               # http://localhost:3000
-```
-
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Development server |
-| `npm run build` / `npm run start` | Production build and server |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | `tsc --noEmit` (strict) |
-| `npm test` | Vitest: domain, repositories and the Dexie migration, sync, content, auth redirects |
-| `npm run validate:content` | Content validator: schema, duplicates, examples, volumes, stage pools, the open-data library (hashes, credits, blocklist, a clean spell check of every sentence) |
-| `npm run check:bundle` | After a build: first-load JS per page, the size budget, and that the spell checker, library data and licence notices stay off the pages that do not need them |
-| `npm run content:build` | Dev-only open-data pipeline (downloads to the git-ignored `content-raw/`, writes `public/content/v1`); see DECISIONS, "Open data" |
-| `npm run audio:build` | Dev-only pronunciation audio pipeline (portable tools in the git-ignored `tools/`, writes `public/audio/v1`); see below and DECISIONS, "Pronunciation audio" |
-
-The service worker is registered in production builds only.
-
-### Pronunciation audio
-
-Every game word with its own Arabic hint has a short MP3 in `public/audio/v1`: a human recording from Wikimedia Commons under an open licence when a usable one exists, otherwise the public-domain Piper voice. Words without a file use the device's voice. Licences and authors are on `/credits` and in the downloadable credits list (DECISIONS AU1–AU14).
-
-**Re-check for new human recordings every few months.** Wikimedia Commons keeps receiving recordings, so some words that use the generated voice today may get a human recording later. To pick them up:
-
-```
-npm run audio:build -- --only=index --force    # list the Commons pronunciation files again
-npm run audio:build -- --only=speakers         # accents of any new Lingua Libre speakers
-npm run audio:build -- --only=select           # licences and authors of new files; the new candidates per word
-npm run audio:build -- --only=upgrade          # download them and replace generated files (slow, polite, resumable)
-```
-
-Then run the usual checks (`lint`, `typecheck`, `test`, `validate:content`, `build`) and commit `public/audio/v1` and `scripts/audio/speakers.json`. The upgrade can be stopped at any time and resumed later. To pause it without stopping, create `content-raw/audio/upgrade.pause` and delete it to continue.
-
-## Optional: accounts, sync and leaderboard (Supabase)
-
-Without configuration the app runs in guest mode, and the account and leaderboard pages say so.
-
-1. Create a Supabase project.
-2. In the SQL editor, run `supabase/migrations/20261117000001_progress.sql`, then `supabase/migrations/20261117000002_leaderboard.sql`.
-3. Run `supabase/tests/rls_tests.sql`. It rolls back and prints `ALL RLS TESTS PASSED`. Then go through `supabase/tests/rls_checklist.md`.
-4. Under **Authentication → URL Configuration**, set the Site URL and add `https://<your-site>/auth/callback**` (and `http://localhost:3000/auth/callback**` for development) to the Redirect URLs. The app adds `?next=…` to the callback, and Supabase matches the whole URL, so the trailing `**` is needed.
-5. Copy `.env.example` to `.env.local` and set only the two public values: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-6. **Google sign-in is hidden by default.** The "Continue with Google" button appears only when `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true` is set at build time (any other value, or none, keeps it hidden). Set it only after the Google provider is configured in Supabase (steps below). Otherwise the button would only lead to an error. The flag is public (it only controls a button) and holds no secret. Rebuild after changing it, because Next.js inlines `NEXT_PUBLIC_*` values at build time.
-7. **Email sign-in is hidden by default.** Email and password sign-in and sign-up, the magic link and the password reset appear only when `NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN=true` is set at build time (any other value, or none, keeps them hidden). Supabase's built-in mailer only sends to the project's own members, so set up a custom SMTP server first (**Authentication → Emails → SMTP Settings**), or real visitors never receive their confirmation or sign-in emails. With email off and Google on, the account page shows only "Continue with Google". With both off, it says accounts are not available yet. The email code and its tests stay in place. Rebuild after changing the flag.
-
-**Never put a `service_role` key, or any OAuth client secret, in this repo, in `.env` files or in the client.** Account deletion uses a `SECURITY DEFINER` function that can only delete the caller.
-
-## تفعيل الدخول بحساب Google
-
-هذه الخطوات تُنفَّذ مرة واحدة. **لا تضع معرّف العميل (Client ID) ولا السرّ (Client Secret) في الكود ولا في ملفات ‎.env**؛ مكانهما الوحيد هو لوحة تحكم Supabase.
-
-### أولًا: احصل على رابط الرجوع (Callback URL) من Supabase
-1. افتح مشروعك في Supabase، ثم **Authentication ← Sign In / Providers ← Google**.
-2. ستجد حقلًا باسم **Callback URL (for OAuth)**، وشكله:
-   `https://<معرّف-مشروعك>.supabase.co/auth/v1/callback`
-   انسخه كما هو، فهو الرابط الذي ستلصقه في Google.
-
-### ثانيًا: أنشئ عميل OAuth في Google Cloud Console
-1. ادخل إلى <https://console.cloud.google.com/> وأنشئ مشروعًا جديدًا (أو اختر مشروعًا موجودًا).
-2. من القائمة: **Google Auth Platform** (كان اسمها سابقًا APIs & Services ← OAuth consent screen). في **Branding** اكتب اسم التطبيق وبريد الدعم، وأضف في **Authorized domains** النطاق `<معرّف-مشروعك>.supabase.co` ونطاق موقعك. وفي **Audience** اختر **External**. احفظ.
-3. **مهم:** التطبيق الجديد يكون في وضع **Testing**، فلا يستطيع الدخول إلا من تضيفهم في **Test users**. عندما تريد فتحه للجميع، اضغط **Publish app** في صفحة **Audience** ليصبح **In production**.
-4. انتقل إلى **Google Auth Platform ← Clients ← Create client** (أو **APIs & Services ← Credentials ← Create Credentials ← OAuth client ID**).
-5. في **Application type** اختر **Web application**.
-6. في **Authorized JavaScript origins** أضف عنوان موقعك، مثل `https://your-site.com` (و`http://localhost:3000` للتجربة).
-7. في **Authorized redirect URIs** الصق رابط Supabase الذي نسخته في الخطوة الأولى بالضبط:
-   `https://<معرّف-مشروعك>.supabase.co/auth/v1/callback`
-8. اضغط **Create**، فيظهر لك **Client ID** و**Client Secret**.
-
-### ثالثًا: أدخل المعرّف والسرّ في Supabase
-1. ارجع إلى **Authentication ← Sign In / Providers ← Google** في Supabase.
-2. فعّل **Enable Sign in with Google**.
-3. الصق **Client ID** في حقل Client IDs، و**Client Secret** في حقل Client Secret، ثم اضغط **Save**.
-4. تأكّد أن **Authentication ← URL Configuration ← Redirect URLs** يحتوي على `https://your-site.com/auth/callback**` و`http://localhost:3000/auth/callback**` للتجربة (النجمتان في النهاية ضروريتان لأن التطبيق يضيف `?next=` إلى الرابط). التطبيق لا يعيد المستخدم إلا إلى هذا الرابط على موقعه نفسه.
-
-### رابعًا: أظهر زر Google
-زر «المتابعة باستخدام Google» **مخفي افتراضيًا**. بعد إكمال الخطوات السابقة، أضف إلى ملف ‎`.env.local` (أو إلى إعدادات البيئة في الاستضافة) السطر `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true`، ثم أعد البناء (`npm run build`)، لأن قيم ‎`NEXT_PUBLIC_*` تُضمَّن وقت البناء. أي قيمة أخرى، أو ترك السطر فارغًا، تُبقي الزر مخفيًا. هذا المتغير عام ولا يحمل أي سرّ.
-
-الدخول بالبريد الإلكتروني (إنشاء حساب وتسجيل الدخول بكلمة مرور، ورابط الدخول، واستعادة كلمة المرور) **مخفي افتراضيًا** أيضًا، ولا يظهر إلا مع `NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN=true` ثم إعادة البناء. خدمة البريد المدمجة في Supabase لا ترسل إلا إلى أعضاء المشروع، فأعدّ خادم SMTP خاصًا أولًا (**Authentication ← Emails ← SMTP Settings**) قبل تفعيله. إن كان البريد مطفأً وGoogle مفعّلًا، تعرض صفحة الحساب زر «المتابعة باستخدام Google» وحده دون فاصل «أو». وإن كان الاثنان مطفأين، تعرض الصفحة رسالة بأن الحسابات غير متاحة بعد.
-
-### للتجربة
-افتح صفحة **الحساب** في الموقع واضغط «المتابعة باستخدام Google» (بعد تفعيل الزر كما في الخطوة الرابعة). بعد الموافقة تعود إلى `/auth/callback` ثم إلى صفحة الحساب. إن كان على الجهاز تقدّم سابق، يسألك التطبيق هل تدمجه مع حسابك أم لا. وإذا ضغطت «إلغاء» في شاشة Google، تظهر رسالة هادئة ويبقى تقدّمك محفوظًا.
+| Framework | Next.js 16 (App Router, prerendered pages with Cache Components), React 19 |
+| Language | TypeScript (strict) |
+| UI | Tailwind CSS 4, shadcn/ui on Radix, `motion` (respects reduced motion), lucide-react |
+| Local data | Dexie 4 (IndexedDB) with versioned migrations |
+| Validation | zod 4 |
+| Spell check | `nspell` with `dictionary-en` (SCOWL), run on the device |
+| Backend (optional) | Supabase: Postgres with row-level security, Auth (Google and email, each behind a flag) |
+| Tests | Vitest with `fake-indexeddb` |
+| Hosting | Vercel |
 
 ## Architecture
 
+- **Local-first, with optional sync.** Progress is written to IndexedDB first and the UI never waits on the network. When a learner signs in, an outbox pushes local changes to Supabase and pulls remote ones using a server-clock cursor, with last-write-wins merging. On the first sign-in, existing guest progress can be merged into the account.
+- **Repository interfaces.** The UI and domain code depend on typed interfaces (`src/repositories/types.ts`: words, games, mastery, achievements, profile, writing, leaderboard and so on). Behind them sit a Dexie store, an in-memory store for tests, and a Supabase store, chosen at runtime.
+- **Pure domain layer.** The game engine, answer checking (US/UK variants), letter diff, misspelling generator, campaign rules and SM-2 scheduler are plain TypeScript in `src/domain`, with no React and no I/O, so they are unit-tested directly.
+- **Lazy-loaded content and audio.** The hand-written word bank ships with the app. A larger open-data library of graded words and Tatoeba sentences lives in content-hashed JSON files in `public/content/v1` and is fetched only when needed. Pronunciation MP3s in `public/audio/v1` are loaded per word. The Supabase client, the spell checker and the licence notices are kept off the pages that do not use them, and `npm run check:bundle` enforces a first-load JS budget.
+- **PWA.** It is installable, and a service worker (production builds only) caches the app shell, the open-data library and the audio for offline play. The app-shell cache is named per build, so it is replaced on each deploy, while the content-hashed data and audio caches are kept. Settings can download the full library for offline use.
+
 ```
-src/app            routes (thin)
-src/features       React features: games, account, leaderboard, rewards, landing
-src/domain         pure TypeScript: game engine, items, misspellings, campaign, SRS, merge rules
-src/repositories   interfaces + RecordStore backends (Dexie v2, in-memory, Supabase), outbox
-src/data           spelling content (one file per category), rules, schemas, validator
-src/config/brand.ts  the product name
-supabase/          migrations and RLS tests
+src/app            thin routes
+src/features       React features (games, writing, levels, account, leaderboard, ...)
+src/domain         pure TypeScript: engine, spelling, campaign, SRS, sync rules
+src/repositories   interfaces + Dexie, in-memory and Supabase backends, outbox
+src/data           hand-written content, rules, schemas, validator
+scripts/           open-data and audio pipelines, CSP hashing, bundle report
+supabase/          SQL migrations and RLS tests
 tests/             Vitest suites
 ```
 
-## Licence of content
+## Security
 
-All words, Arabic hints, example sentences and rule texts were written for this project. Nothing was copied from word lists or books.
+- **Row-level security on every table.** Users can read only their own rows. All writes go through `SECURITY DEFINER` functions that only ever touch `auth.uid()` and pin `search_path`. Clients have no direct insert or update grant. `supabase/tests/rls_tests.sql` checks this, including that a direct `UPDATE` is refused.
+- **Only the public anon key in the client.** No `service_role` key or OAuth secret is in the repo or the browser. Account deletion uses a function that can delete only the caller.
+- **Content-Security-Policy by script hash.** Every page gets a strict CSP. After the build, `scripts/csp-hashes.mjs` adds the SHA-256 hash of each inline script to every prerendered page, so there is no `'unsafe-inline'` for scripts and pages stay static. There are also HSTS, `X-Frame-Options: DENY`, `nosniff`, a referrer policy and a restrictive permissions policy.
+- **Rate limits and abuse limits.** Leaderboard scores are limited to one per 20 seconds and 30 per rolling day, with plausibility checks and a per-user lock. Synced data has per-record and per-user storage quotas kept by a counter trigger. Nicknames are normalised (including Arabic tatweel and letter variants) before the profanity filter runs.
+- **Safe redirects.** Auth callbacks only redirect to paths on the same site.
+- **Security review.** A full-codebase security review on 2026-11-22 found no critical or high issues. The medium and low findings were fixed and are documented in [DECISIONS.md, "Security hardening"](DECISIONS.md#security-hardening-security-review-2026-11-22). The one remaining item is a moderate advisory in a dev-only CLI dependency.
+
+## Quality
+
+- **706 automated tests in 64 files** (Vitest): the domain logic, the repositories and Dexie migrations, sync and merging, auth redirects, the CSP, and content validation (schema, duplicates, stage pools, open-data hashes, credits, blocklist, and a clean spell check of every sentence).
+- **Lighthouse 100 on mobile and desktop** for Performance, Accessibility, Best Practices and SEO (PageSpeed Insights, 2026-11-22):
+
+| Mobile | Desktop |
+|---|---|
+| <img src="docs/screenshots/pagespeed-mobile.png" width="420" alt="PageSpeed Insights mobile: 100 Performance, 100 Accessibility, 100 Best Practices, 100 SEO"> | <img src="docs/screenshots/pagespeed-desktop.png" width="420" alt="PageSpeed Insights desktop: 100 Performance, 100 Accessibility, 100 Best Practices, 100 SEO"> |
+
+- Strict TypeScript (`npm run typecheck`), ESLint, and a bundle-size report after each build.
+
+## Open data and audio credits
+
+All 1,591 core words, Arabic hints, example sentences and rule texts were written for this project. The larger library and the audio build on open data:
+
+| Source | Used for | Licence |
+|---|---|---|
+| [Tatoeba](https://tatoeba.org/) | Dictation and example sentences (filtered and normalised) | CC BY 2.0 FR, each sentence's author credited |
+| [Wikimedia Commons](https://commons.wikimedia.org/) (incl. Lingua Libre) | Human pronunciation recordings (trimmed, normalised, converted to MP3) | Per file: mostly CC BY-SA 3.0/4.0, some CC BY and CC0 |
+| [Piper](https://github.com/rhasspy/piper) `en_US-ljspeech-high` voice | Generated pronunciation where no recording exists | Public domain |
+| [SCOWL](http://wordlist.aspell.net/) and [VarCon](http://wordlist.aspell.net/varcon/) | Word frequency tiers, American/British pairs | Permissive (MIT-like, BSD notices) |
+| [dictionary-en](https://github.com/wooorm/dictionaries) | On-device spell check | MIT and SCOWL |
+| [CMU Pronouncing Dictionary](https://github.com/cmusphinx/cmudict) | Homophone detection and silent-letter hints (not shipped) | BSD-2-Clause-style |
+
+- Full credits, reproduced notices and the Tatoeba author list are on the **[credits page](https://kitaba-amber.vercel.app/credits)**.
+- Every audio file, with its author, source page, licence and changes, is listed in **[`public/audio/v1/audio-credits.5917475e86.tsv`](public/audio/v1/audio-credits.5917475e86.tsv)**. The Tatoeba credits are in [`public/content/v1/tatoeba-credits.cf615f1f8b.tsv`](public/content/v1/tatoeba-credits.cf615f1f8b.tsv).
+- Modified CC BY-SA recordings are shared under the same licence as their originals.
+
+## Run locally
+
+Requires Node.js 20.9 or later.
+
+```bash
+npm install
+npm run dev          # http://localhost:3000
+```
+
+The app runs fully in guest mode with no configuration. Other commands:
+
+```bash
+npm test             # Vitest
+npm run typecheck    # tsc --noEmit
+npm run lint         # ESLint
+npm run build        # production build + CSP hashes (deploy with this, not plain `next build`)
+npm run check:bundle # after a build: first-load JS budget
+```
+
+Supabase setup, the Google sign-in guide, the content and audio pipelines and the source layout are in **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**. The product spec, design notes and full decision log are in [SPEC.md](SPEC.md), [DESIGN.md](DESIGN.md) and [DECISIONS.md](DECISIONS.md).
+
+### Environment variables
+
+All are optional. Copy `.env.example` to `.env.local`. Only public values are used, and no secrets belong in any `.env` file.
+
+| Name | Purpose |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (enables accounts, sync and the leaderboard) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key |
+| `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN` | `true` to show Google sign-in (off by default) |
+| `NEXT_PUBLIC_ENABLE_EMAIL_SIGNIN` | `true` to show email sign-in (off by default) |
+| `KITABA_BUILD_STAMP` | Optional fixed service-worker cache name; defaults to the build time |
+
+## Licence
+
+The code licence will be added in a `LICENSE` file. Third-party data and audio keep their own licences, as listed above and on the [credits page](https://kitaba-amber.vercel.app/credits).
+
+## How it was built
+
+Built with AI-assisted development (Claude Code), designed and tested by me.
+
+---
+
+## بالعربية
+
+**Kitaba** تطبيق مجاني لتعلّم الإملاء الإنجليزي، صُمّم للناطقين بالعربية من المستوى A1 إلى C1. تسمع الكلمة وتكتبها في جولات قصيرة، وإن أخطأت ترى الحروف التي أخطأت فيها والقاعدة بجملة واحدة بالعربية، ثم تعود إليك الكلمة للمراجعة في وقتها (التكرار المتباعد).
+
+- سبعة أنماط لعب، و8 عوالم في كل منها 10 مراحل، وتحدٍّ يومي، وإملاء جمل ورسائل كاملة.
+- المنهج مبني على أخطاء الناطقين بالعربية: أصوات ليست في العربية (p/b وv/f)، والحركات التي لا تُكتب، والحروف المضاعفة والصامتة، وغيرها.
+- لكل كلمة معنى بالعربية وجملة مثال، ونطق بلكنة أمريكية أو بريطانية.
+- يعمل دون حساب ودون إنترنت بعد الزيارة الأولى، ويُحفظ التقدّم على جهازك. الحساب اختياري للمزامنة بين الأجهزة.
+- لا إعلانات ولا تتبّع ولا ذكاء اصطناعي داخل التطبيق.
+
+جرّبه الآن: <https://kitaba-amber.vercel.app>
