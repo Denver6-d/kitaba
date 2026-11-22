@@ -54,8 +54,16 @@ export function applySettingsToDocument(s: Settings, doc: Document = document): 
  * Runs before React hydrates so the first paint already has the right
  * direction and text size (no flash), and hides the page of a first
  * visit until the level check has run (lib/first-visit.ts). Kept dependency-free on purpose.
+ *
+ * It also switches zod to jitless before any bundle loads (ZOD_JITLESS): zod
+ * builds its schemas when their modules load, and without this each one
+ * probes `new Function`, which the CSP (no 'unsafe-eval', DECISIONS SEC1) blocks
+ * and reports on every page. zod reads globalThis.__zod_globalConfig and keeps
+ * a value already there; parsing is unchanged, without the compiled fast path.
  */
-export const PRE_PAINT_SCRIPT = `(function(){try{var s=JSON.parse(localStorage.getItem(${JSON.stringify(
+export const ZOD_JITLESS = `try{var g=globalThis;(g.__zod_globalConfig=g.__zod_globalConfig||{}).jitless=true;}catch(_){}`;
+
+export const PRE_PAINT_SCRIPT = `(function(){${ZOD_JITLESS}try{var s=JSON.parse(localStorage.getItem(${JSON.stringify(
   SETTINGS_KEY,
 )})||"{}");var e=document.documentElement;var l=s.lang==="en"?"en":"ar";e.lang=l;e.dir=l==="ar"?"rtl":"ltr";e.dataset.font=s.readableFont===true?"readable":"default";e.dataset.motion=s.motion==="reduce"||s.motion==="full"?s.motion:"system";var x=Number(s.textScale);if(x>=0.9&&x<=1.4)e.style.setProperty("--text-scale",String(x));if(s.motion==="full"||(s.motion!=="reduce"&&!matchMedia("(prefers-reduced-motion: reduce)").matches))e.dataset.reveal="on";}catch(_){}${GATE_PRE_PAINT}})();`;
 

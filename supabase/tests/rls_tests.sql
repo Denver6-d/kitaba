@@ -184,6 +184,68 @@ do $$ begin
   if (select count(*) from public.leaderboard_weekly where nickname = 'Test_A') <> 0 then raise exception 'left user still public'; end if;
 end $$;
 
+-- ---------------------------------------------------------------- security hardening (migration 20261122000001)
+-- Skipped automatically if that migration has not been run yet.
+do $$
+declare
+  rows_now integer;
+begin
+  if to_regclass('public.progress_usage') is null then
+    raise notice 'progress_usage not found: skipping security-hardening tests';
+    return;
+  end if;
+
+  -- SEC2. A record over 16 KB of JSON text is refused.
+  perform pg_temp.act_as('00000000-0000-4000-8000-00000000000a');
+  begin
+    perform public.upsert_progress(jsonb_build_array(jsonb_build_object(
+      'table_name', 'writings', 'id', 'big', 'updated_at', 1,
+      'data', jsonb_build_object('id', 'big', 'updatedAt', 1, 'text', repeat('a', 17000)))));
+    raise exception 'record over 16 KB accepted';
+  exception when check_violation then null;
+  end;
+
+  -- SEC2. Clients cannot read or change the usage counters.
+  begin
+    perform count(*) from public.progress_usage;
+    raise exception 'progress_usage readable by clients';
+  exception when insufficient_privilege then null;
+  end;
+
+  -- SEC2. The counter follows inserts, a losing last-write-wins upsert (no change) and deletes.
+  select count(*) into rows_now from public.progress_records;
+  perform set_config('role', 'postgres', true);
+  if (select records from public.progress_usage where user_id = '00000000-0000-4000-8000-00000000000a') <> rows_now then
+    raise exception 'usage counter does not match the stored rows';
+  end if;
+  perform pg_temp.act_as('00000000-0000-4000-8000-00000000000a');
+  perform public.upsert_progress('[{"table_name":"profile","id":"me","data":{"id":"me","updatedAt":1},"updated_at":1}]'::jsonb);
+  delete from public.progress_records where table_name = 'dictionary';
+  perform set_config('role', 'postgres', true);
+  if (select records from public.progress_usage where user_id = '00000000-0000-4000-8000-00000000000a') <> rows_now - 1 then
+    raise exception 'usage counter wrong after a stale upsert and a delete';
+  end if;
+
+  if to_regclass('public.leaderboard_scores') is null then return; end if;
+  perform pg_temp.act_as('00000000-0000-4000-8000-00000000000b');
+
+  -- SEC3. Tatweel and letter variants no longer get past the blocked words.
+  if (public.set_leaderboard_nickname('كـلب123')) ->> 'status' <> 'blocked' then raise exception 'tatweel nickname accepted'; end if;
+  if (public.set_leaderboard_nickname('قحبه12')) ->> 'status' <> 'blocked' then raise exception 'ه-for-ة nickname accepted'; end if;
+  if (public.set_leaderboard_nickname('حمـار12')) ->> 'status' <> 'blocked' then raise exception 'tatweel nickname accepted'; end if;
+
+  -- SEC4. Under 1.5 s per item is implausible (10 items in 14 s); 15 s passes the time check.
+  perform public.set_leaderboard_nickname('Test_B');
+  if (public.submit_score(120, 9, 10, 14)) ->> 'status' <> 'implausible' then raise exception 'game under 1.5 s per item accepted'; end if;
+  if (public.submit_score(120, 9, 10, 15)) ->> 'status' <> 'ok' then raise exception 'game at 1.5 s per item rejected'; end if;
+
+  -- SEC5. The public view gives the day of the last game, not the time.
+  if (select data_type from information_schema.columns
+      where table_schema = 'public' and table_name = 'leaderboard_weekly' and column_name = 'last_at') <> 'date' then
+    raise exception 'leaderboard_weekly.last_at is not a date';
+  end if;
+end $$;
+
 select 'ALL RLS TESTS PASSED' as result;
 
 rollback;

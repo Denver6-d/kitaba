@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { TABLE_NAMES, type SyncRecord, type TableMap, type TableName } from "@/domain/model";
+import { PROGRESS_RECORD_PUSH_MAX_BYTES, TABLE_NAMES, type SyncRecord, type TableMap, type TableName } from "@/domain/model";
 import { recordSchemas } from "../export";
 import type { RecordStore } from "../store";
 import { migrateV1Row } from "@/domain/sync/migrate-v1";
@@ -45,6 +45,11 @@ function parseRow(row: Row): PulledRecord | null {
   return again?.success ? { table: row.table_name, record: again.data as SyncRecord } : null;
 }
 
+const encoder = new TextEncoder();
+
+/** False for a record the server would refuse as too large (DECISIONS SEC2); it stays on this device only. */
+export const fitsServerCap = (r: SyncRecord): boolean => encoder.encode(JSON.stringify(r)).length <= PROGRESS_RECORD_PUSH_MAX_BYTES;
+
 const toRow = (table: TableName, r: SyncRecord) => ({
   table_name: table,
   id: r.id,
@@ -54,7 +59,9 @@ const toRow = (table: TableName, r: SyncRecord) => ({
 });
 
 export function createSupabaseStore(client: SupabaseClient): SupabaseRemote {
-  const upsert: SupabaseRemote["upsert"] = async (items) => {
+  const upsert: SupabaseRemote["upsert"] = async (all) => {
+    // One oversized row would make upsert_progress() fail the whole batch, and the outbox would retry it forever.
+    const items = all.filter((x) => fitsServerCap(x.record));
     for (let i = 0; i < items.length; i += BATCH) {
       const batch = items.slice(i, i + BATCH).map((x) => toRow(x.table, x.record));
       const { error } = await client.rpc("upsert_progress", { records: batch });

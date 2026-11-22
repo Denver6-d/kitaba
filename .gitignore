@@ -62,3 +62,6 @@ ehthumbs.db
 
 # audio pipeline: portable tools (ffmpeg, piper, voice model), downloaded by scripts/audio
 /tools/
+
+# local security review report
+/security-review.md

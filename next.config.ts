@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
+import { contentSecurityPolicy } from "./src/config/csp";
 
 const securityHeaders = [
+  // Narrowed per page to hashed inline scripts by scripts/csp-hashes.mjs (DECISIONS SEC1).
+  {
+    key: "Content-Security-Policy",
+    value: contentSecurityPolicy({ supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL, dev: process.env.NODE_ENV === "development" }),
+  },
+  // Browsers ignore it over plain http (localhost). No includeSubDomains: other subdomains are not ours to decide.
+  { key: "Strict-Transport-Security", value: "max-age=63072000" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

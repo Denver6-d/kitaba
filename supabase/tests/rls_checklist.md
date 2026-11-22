@@ -10,8 +10,8 @@ Run `rls_tests.sql` in the Supabase SQL editor after the migrations. Then check 
 - [ ] `upsert_progress` always writes `user_id = auth.uid()`; it cannot create or change another user's rows.
 - [ ] `upsert_progress` with an older `updated_at` does not overwrite a newer row (last-write-wins guard).
 - [ ] `upsert_progress` rejects batches over 500 rows and rejects anonymous callers.
-- [ ] Rows over 64 KB, with an unknown `table_name` (allowed: `srs, mastery, activity, achievements, profile, sessions, stages`, plus `writings, dictionary` after migration `20261118000001_writing.sql`), or with an `updated_at` after the year 2100 are rejected by the check constraints.
-- [ ] A user cannot store more than 50,000 records (quota trigger).
+- [ ] Rows over 16 KB of JSON text (64 KB before migration `20261122000001_security_hardening.sql`), with an unknown `table_name` (allowed: `srs, mastery, activity, achievements, profile, sessions, stages`, plus `writings, dictionary` after migration `20261118000001_writing.sql`), or with an `updated_at` after the year 2100 are rejected by the check constraints.
+- [ ] A user cannot store more than 30,000 records or 20 MB (the `progress_usage` counter, migration `20261122000001`; before it, 50,000 records). Clients cannot read `progress_usage`. Two parallel uploads cannot pass the limit together (the counter row is locked per write).
 
 - [ ] After migration 3, `writings` and `dictionary` rows are accepted through `upsert_progress` and, like every other row, are visible only to their owner (the script stores one of each as user A; user B's checks below cover them too).
 
@@ -22,10 +22,10 @@ Run `rls_tests.sql` in the Supabase SQL editor after the migrations. Then check 
 ## Leaderboard (migration 2)
 - [ ] RLS is enabled on `leaderboard_profiles` and `leaderboard_scores`.
 - [ ] The client has **no** insert or update policy on `leaderboard_scores`. Scores can only be written through `submit_score()`.
-- [ ] `submit_score(points, correct, total, duration_s)` rejects: not opted in; fewer than 5 or more than 60 items; `correct > total`; under 50% correct; more than 45 points per correct word; under 1 second per item; more than 1 submission per 20 s; more than 60 per day. It takes a per-user advisory lock, so parallel calls cannot bypass the rate limit.
+- [ ] `submit_score(points, correct, total, duration_s)` rejects: not opted in; fewer than 5 or more than 60 items; `correct > total`; under 50% correct; more than 45 points per correct word; under 1.5 seconds per item; more than 1 submission per 20 s; more than 30 per day (1 s and 60 before migration `20261122000001`). It takes a per-user advisory lock, so parallel calls cannot bypass the rate limit.
 - [ ] `anon` cannot call `submit_score()`, `set_leaderboard_nickname()` or `leave_leaderboard()`, and no client can read `leaderboard_blocked_words`.
 - [ ] User B cannot read user A's `leaderboard_profiles` or `leaderboard_scores` rows directly.
-- [ ] The public view `leaderboard_weekly` exposes only `rank, nickname, points, words, last_at` (the weekly sum since Monday 00:00 UTC). No `user_id`, no email. The old `leaderboard_all_time` view no longer exists.
+- [ ] The public view `leaderboard_weekly` exposes only `rank, nickname, points, words, last_at` (the weekly sum since Monday 00:00 UTC; `last_at` is the UTC day, a `date`, since migration `20261122000001`). No `user_id`, no email. The old `leaderboard_all_time` view no longer exists.
 - [ ] Opted-out users never appear in the view. `leave_leaderboard()` deletes the caller's scores.
 - [ ] Nicknames are unique (case-insensitive), 3–20 characters, letters (Latin or Arabic), digits, space, `_` and `-`, and not on the blocked-word list.
 

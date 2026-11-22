@@ -143,7 +143,7 @@ Dexie v3 and export v3 reshape the profile. v2 rows (with one `level`) are migra
 ### 6.5 Supabase
 Unchanged in principle (DECISIONS A1–A8, L1–L6): RLS on every table, writes only through `SECURITY DEFINER` RPCs, and no service_role key anywhere. Google OAuth uses `signInWithOAuth` with PKCE. The `redirectTo` is built from the current origin plus `/auth/callback`, and the `next` path is validated by `safeNext`. Provider client IDs and secrets live only in the Supabase dashboard.
 
-Leaderboard: `submit_score(p_points, p_correct, p_total, p_duration_s)` checks opt-in, 5 ≤ total ≤ 60, correct ≤ total, accuracy ≥ 50%, points ≤ correct × 40, duration ≥ 2 s per item, ≤ 1 per 20 s and ≤ 60 per day. The public view `leaderboard_weekly` exposes `rank, nickname, points, words, last_at` (weekly sum, Monday 00:00 UTC).
+Leaderboard: `submit_score(p_points, p_correct, p_total, p_duration_s)` checks opt-in, 5 ≤ total ≤ 60, correct ≤ total, accuracy ≥ 50%, points ≤ correct × 45, duration ≥ 1.5 s per item, ≤ 1 per 20 s and ≤ 30 per day (DECISIONS SEC4). The public view `leaderboard_weekly` exposes `rank, nickname, points, words, last_at` (weekly sum, Monday 00:00 UTC; `last_at` is the UTC day of the last game, DECISIONS SEC5).
 
 ## 7. Acceptance criteria
 1. The removed V1 features have no route, navigation entry, module or test left.

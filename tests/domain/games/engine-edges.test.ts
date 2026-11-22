@@ -90,15 +90,23 @@ describe("game engine edges", () => {
 });
 
 describe("leaderboard plausibility matches what the engine can produce", () => {
-  it("accepts a perfect, fastest-possible timed round", () => {
+  const perfectBee = (msPerAnswer: number) => {
     const n = 40;
-    // One answer per second for 40 seconds, every one correct and fast.
     let s = reduceGame(createGame(items(n), bee), { type: "start", t: 0 });
-    s = play(s, Array.from({ length: n }, (_, i) => ({ correct: true, at: (i + 1) * 1000 })));
-    const sum = summarize(s);
+    s = play(s, Array.from({ length: n }, (_, i) => ({ correct: true, at: (i + 1) * msPerAnswer })));
+    return { s, sum: summarize(s) };
+  };
+
+  it("accepts a perfect timed round at the fastest pace the server allows (1.5 s a word: 40 words in 60 s)", () => {
+    const { s, sum } = perfectBee(1500);
     expect(sum.points).toBe(s.results.reduce((p, r) => p + r.points, 0));
     expect(sum.points).toBeLessThanOrEqual(sum.correct * LEADERBOARD_RULES.maxPointsPerCorrect);
     expect(checkScore({ points: sum.points, correct: sum.correct, total: sum.answered, durationS: sum.seconds })).toBe("ok");
+  });
+
+  it("does not submit a round faster than that (DECISIONS SEC4: one word a second is refused)", () => {
+    const { sum } = perfectBee(1000);
+    expect(checkScore({ points: sum.points, correct: sum.correct, total: sum.answered, durationS: sum.seconds })).toBe("implausible");
   });
 
   it("never awards more per correct answer than the server allows", () => {

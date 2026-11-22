@@ -11,9 +11,14 @@ export const LEADERBOARD_RULES = {
   minAccuracy: 50,
   /** 10 points × the top combo multiplier (4) + the largest speed bonus (5). */
   maxPointsPerCorrect: 45,
-  minSecondsPerItem: 1,
+  /**
+   * 1.5 s per word: the fastest game the app itself plans for is a Spelling Bee
+   * of 40 words in 60 s (BEE_WORDS). Was 1 s (DECISIONS SEC4).
+   */
+  minSecondsPerItem: 1.5,
   minSecondsBetween: 20,
-  maxPerDay: 60,
+  /** Games per rolling 24 hours. Was 60 (DECISIONS SEC4). */
+  maxPerDay: 30,
 } as const;
 
 export type ScoreCheck = "ok" | "too_short" | "low_accuracy" | "implausible";

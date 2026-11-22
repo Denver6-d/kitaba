@@ -137,6 +137,19 @@ export interface WritingRecord extends SyncRecord {
 export const WRITING_TEXT_MAX = 4000;
 export const WRITING_MISSED_MAX = 50;
 
+/**
+ * Server cap on one synced record: octet_length(data::text) in
+ * 20261122000001_security_hardening.sql (DECISIONS SEC2). The largest real
+ * record, a 4,000-character writing with 50 marked mistakes, can pass 8 KB.
+ */
+export const PROGRESS_RECORD_MAX_BYTES = 16_384;
+/**
+ * Records above this (compact JSON, UTF-8) are never pushed: Postgres prints
+ * jsonb with a space after every ":" and ",", and one rejected row would fail
+ * its whole batch and stall the sync queue. The margin covers those spaces.
+ */
+export const PROGRESS_RECORD_PUSH_MAX_BYTES = 15_000;
+
 /** A word the learner added to their own dictionary. id = the word in lower case; removal is a tombstone. */
 export interface DictionaryRecord extends SyncRecord {
   readonly word: string;
