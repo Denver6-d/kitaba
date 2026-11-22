@@ -11,16 +11,29 @@ import { safeNext } from "./safe-next";
  *   are never hidden, not even for a frame.
  */
 
-/** localStorage key set once the learner has levels (choice, placement or skip). */
+/**
+ * localStorage key set once this device has seen levels (choice, placement,
+ * skip, or real progress). It is never removed, not even when progress is
+ * deleted from the device or on sign-out: the level screen is shown once per
+ * device (DECISIONS L2).
+ */
 export const LEVELS_MARKER = "kitaba:levels-set";
 
-/** Remembers (or forgets) that this browser has levels; storage errors are ignored. */
-export function rememberLevels(set: boolean): void {
+/** Remembers that this device has levels; storage errors are ignored. */
+export function rememberLevels(): void {
   try {
-    if (set) localStorage.setItem(LEVELS_MARKER, "1");
-    else localStorage.removeItem(LEVELS_MARKER);
+    localStorage.setItem(LEVELS_MARKER, "1");
   } catch {
     // Storage blocked: the page is simply shown after the check each time.
+  }
+}
+
+/** True when this device has had levels before (see LEVELS_MARKER). */
+export function hasLevelsMarker(): boolean {
+  try {
+    return localStorage.getItem(LEVELS_MARKER) !== null;
+  } catch {
+    return false;
   }
 }
 
@@ -47,12 +60,32 @@ export function returnPath(next: string | null | undefined): string {
   return path === "/welcome" || path.startsWith("/welcome?") || path.startsWith("/welcome/") || path.startsWith("/welcome#") ? "/play" : path;
 }
 
-export interface GateInput {
-  readonly pathname: string;
-  /** The profile's levelSource once read; undefined while loading; "error" if it could not be read. */
+/** What /welcome was opened for: `retake=1` (Settings, manual only) or `test=1` (start with the test). */
+export function welcomeIntent(params: { get(name: string): string | null }): { readonly retake: boolean; readonly test: boolean } {
+  const retake = params.get("retake") === "1";
+  return { retake, test: retake || params.get("test") === "1" };
+}
+
+/** The same /welcome address without `test` and `retake` (null when there is nothing to remove), so a reload never restarts the test. */
+export function welcomeUrlWithoutIntent(href: string): string | null {
+  const url = new URL(href);
+  if (!url.searchParams.has("test") && !url.searchParams.has("retake")) return null;
+  url.searchParams.delete("test");
+  url.searchParams.delete("retake");
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+export interface LevelCheckInput {
+  /**
+   * The profile's levelSource, read from local data AFTER the latest local
+   * change (a sync pull included); undefined while that read is pending;
+   * "error" if it could not be read.
+   */
   readonly levelSource: string | null | undefined | "error";
-  /** False when IndexedDB is unavailable (private mode): progress is not kept, so never insist. */
-  readonly persistent: boolean;
+  /** Real progress is stored (reviews, games, writing…): an old account without the level flag. */
+  readonly hasProgress: boolean;
+  /** This device has had levels before (LEVELS_MARKER). */
+  readonly deviceMarker: boolean;
   readonly accountReady: boolean;
   readonly signedIn: boolean;
   /** The first sync's status for a signed-in learner (levels may be in the account). */
@@ -61,16 +94,43 @@ export interface GateInput {
   readonly timedOut: boolean;
 }
 
+/** "known": never ask; "unknown": ask once (the level screen); "wait": local data or the first pull is still loading. */
+export type LevelCheck = "wait" | "known" | "unknown";
+
+/**
+ * Does this learner still need the level screen? (DECISIONS L2.) Asks only when
+ * it is certain: local data has been read, a signed-in learner's first pull has
+ * finished, and there is no level, no progress and no device marker. Any doubt
+ * (storage error, sync error, offline, the safety wait) means "do not ask".
+ */
+export function levelCheck(i: LevelCheckInput): LevelCheck {
+  if (i.levelSource === "error") return "known";
+  if (i.levelSource === undefined) return i.timedOut ? "known" : "wait";
+  if (i.levelSource !== null || i.hasProgress || i.deviceMarker) return "known";
+  if (!i.accountReady) return i.timedOut ? "known" : "wait";
+  if (!i.signedIn) return "unknown";
+  // The account may hold levels from another device: only a finished pull can say it does not.
+  if (i.syncStatus === "synced") return "unknown";
+  if (i.syncStatus === "offline" || i.syncStatus === "error") return "known";
+  return i.timedOut ? "known" : "wait";
+}
+
+export interface GateInput extends LevelCheckInput {
+  readonly pathname: string;
+  /** False when IndexedDB is unavailable (private mode): progress is not kept, so never insist. */
+  readonly persistent: boolean;
+}
+
 export type GateDecision = "wait" | "show" | "welcome";
 
+/** The gate's action on a page, given the level check. */
+export function gateFor(pathname: string, persistent: boolean, check: LevelCheck): GateDecision {
+  if (!shouldGate(pathname) || !persistent) return "show";
+  return check === "wait" ? "wait" : check === "known" ? "show" : "welcome";
+}
+
 export function gateDecision(g: GateInput): GateDecision {
-  if (!shouldGate(g.pathname) || !g.persistent) return "show";
-  if (g.levelSource === "error") return "show";
-  if (g.levelSource === undefined) return g.timedOut ? "show" : "wait";
-  if (g.levelSource !== null) return "show";
-  // A signed-in learner on a new device: wait for the first sync, which may bring the levels.
-  if (!g.accountReady || (g.signedIn && g.syncStatus !== "synced" && g.syncStatus !== "offline" && g.syncStatus !== "error")) return g.timedOut ? "show" : "wait";
-  return "welcome";
+  return gateFor(g.pathname, g.persistent, levelCheck(g));
 }
 
 /**

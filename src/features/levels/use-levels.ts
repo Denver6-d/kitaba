@@ -19,7 +19,7 @@ export function useLevels() {
         levelSource: current.levelSource ?? "choice",
         levelsAt: Date.now(),
       });
-      rememberLevels(true);
+      rememberLevels();
     },
     [repos],
   );
@@ -29,7 +29,7 @@ export function useLevels() {
     async (level: CefrLevel | LearnerLevels, source: LevelSource) => {
       await repos.profile.save({ levels: typeof level === "string" ? sameLevels(level) : level, levelSource: source, levelsAt: Date.now() });
       // The next page opens without the first-visit check hiding it.
-      rememberLevels(true);
+      rememberLevels();
     },
     [repos],
   );

@@ -89,6 +89,12 @@ export interface DataRepository {
   /** "merge" applies the sync merge rules; "replace" clears local data first. */
   importAll(file: ExportFile, mode: "merge" | "replace"): Promise<void>;
   clearAll(): Promise<void>;
+  /**
+   * True when real practice is stored (reviews, mastery, games, stages, writing,
+   * activity), deleted rows aside. A learner with progress is never sent to the
+   * level screen, even if the profile has no level (old accounts, DECISIONS L2).
+   */
+  hasProgress(): Promise<boolean>;
 }
 
 export interface Repositories {

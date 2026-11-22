@@ -46,7 +46,7 @@ describe("welcomeHref and returnPath", () => {
 });
 
 describe("gateDecision", () => {
-  const base: GateInput = { pathname: "/play", levelSource: null, persistent: true, accountReady: true, signedIn: false, syncStatus: null, timedOut: false };
+  const base: GateInput = { pathname: "/play", levelSource: null, hasProgress: false, deviceMarker: false, persistent: true, accountReady: true, signedIn: false, syncStatus: null, timedOut: false };
   it("sends a visitor with no stored level to /welcome", () => {
     expect(gateDecision(base)).toBe("welcome");
   });
@@ -66,7 +66,9 @@ describe("gateDecision", () => {
     expect(gateDecision({ ...signedIn, syncStatus: "syncing" })).toBe("wait");
     expect(gateDecision({ ...signedIn, syncStatus: "syncing", levelSource: "choice" })).toBe("show");
     expect(gateDecision({ ...signedIn, syncStatus: "synced" })).toBe("welcome");
-    expect(gateDecision({ ...signedIn, syncStatus: "offline" })).toBe("welcome");
+    // The account could not be read: never force the test on a signed-in learner (DECISIONS L2).
+    expect(gateDecision({ ...signedIn, syncStatus: "offline" })).toBe("show");
+    expect(gateDecision({ ...signedIn, syncStatus: "error" })).toBe("show");
     expect(gateDecision({ ...base, accountReady: false })).toBe("wait");
   });
   it("never redirects an exempt page", () => {

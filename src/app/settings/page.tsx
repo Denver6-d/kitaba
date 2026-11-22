@@ -109,7 +109,7 @@ export default function SettingsPage() {
           <p className="text-fg-2">{t.levels.retakeHint}</p>
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="outline" className="h-11 gap-2">
-              <Link href="/welcome?test=1">
+              <Link href="/welcome?retake=1">
                 <ClipboardCheck className="size-4" aria-hidden="true" />
                 {t.levels.retake}
               </Link>

@@ -58,6 +58,7 @@ export const en: Dictionary = {
     headline: "Master English spelling, one word at a time.",
     sub: "Short rounds where you hear a word and type it. Get it wrong and you learn the rule, then the word comes back until it sticks.",
     ctaTest: "Test my level",
+    ctaContinue: "Continue learning",
     ctaTry: "Try a round",
     startFree: "Start free",
     noAccount: "Free, no account needed. Your progress stays on your device.",

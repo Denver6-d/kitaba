@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { MomentLabel } from "@/components/ui/card";
 import { Reveal } from "@/components/reveal";
 import { MiniGame } from "@/features/landing/mini-game";
+import { useHydrated } from "@/lib/use-hydrated";
+import { hasLevelsMarker } from "@/lib/first-visit";
 
 /** One section per screen height (DESIGN.md V3, landing), content centred vertically. */
 const SCREEN = "flex min-h-[calc(100svh-4rem)] flex-col justify-center py-16 md:min-h-[calc(100svh-4.5rem)] md:py-24";
@@ -16,6 +18,8 @@ const STEP_ICONS = [Ear, Keyboard, Lightbulb] as const;
 
 export default function HomePage() {
   const { t, lang } = useI18n();
+  // A learner who already has a level continues; the test is offered only once (DECISIONS L2). Retaking is in Settings.
+  const hasLevels = useHydrated() && hasLevelsMarker();
   return (
     <>
       <section aria-labelledby="hero-h" className={`mx-auto max-w-6xl px-4 sm:px-6 ${SCREEN}`}>
@@ -31,7 +35,7 @@ export default function HomePage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 {/* The header's "Start free" appears only once this button has scrolled away (DECISIONS R8). */}
                 <Button id="hero-cta" variant="primary" asChild size="lg">
-                  <Link href="/welcome?test=1">{t.home.ctaTest}</Link>
+                  {hasLevels ? <Link href="/play">{t.home.ctaContinue}</Link> : <Link href="/welcome?test=1">{t.home.ctaTest}</Link>}
                 </Button>
                 <Button asChild variant="outline" size="lg">
                   <Link href="/play/game?stage=w1-s1">{t.home.ctaTry}</Link>

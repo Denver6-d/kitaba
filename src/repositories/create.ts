@@ -14,6 +14,9 @@ export interface RepositoryDeps {
 const live = <R extends SyncRecord>(rows: R[]): R[] => rows.filter((r) => r.deletedAt === undefined);
 const alive = <R extends SyncRecord>(r: R | undefined): R | undefined => (r && r.deletedAt === undefined ? r : undefined);
 
+/** Tables that hold real practice (DataRepository.hasProgress). Profile, achievements and the own dictionary do not count. */
+const PROGRESS_TABLES: readonly TableName[] = ["srs", "mastery", "sessions", "stages", "writings", "activity"];
+
 /** The better of two results for one stage, keeping the earliest clear time. */
 export function bestStage(previous: StageRecord | null, candidate: StageRecord): StageRecord {
   if (!previous) return candidate;
@@ -200,6 +203,10 @@ export function createRepositories({ store, now = Date.now, newId = () => crypto
       },
       async clearAll() {
         await store.clear();
+      },
+      async hasProgress() {
+        for (const t of PROGRESS_TABLES) if ((await store.all(t)).some((r) => r.deletedAt === undefined)) return true;
+        return false;
       },
     },
   };

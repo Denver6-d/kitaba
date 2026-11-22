@@ -634,6 +634,20 @@ The owner asked for a full dictionary, a large graded word set and tens of thous
     - the pre-paint script itself, run in a VM, including blocked storage;
     - the welcome buttons' order and variants.
 
+## The level screen is shown once (2026-11-22)
+
+- **L2. Asked once; remembered locally and in the account.**
+  - **The bug.** `/welcome` is exempt from the gate and never checked for a stored level. After the test, the result screen stayed on `/welcome?test=1` (or `/welcome?next=…`), so a reload (F5) started the test, or the welcome screen, again. The landing page's main button also always opened `/welcome?test=1`, although only learners with a level ever see that page. The level itself was saved (the IndexedDB profile) and synced (the `profile` row in `progress_records`); no database change was needed.
+  - **One rule** (`levelCheck`, `lib/first-visit.ts`), used by the gate and by `/welcome` (`useLevelCheck`). Ask only when it is certain:
+    - local data has been read, after the latest local change (a read from before a sync pull is stale and ignored, so the gate cannot redirect between "pull done" and "re-read");
+    - no level, no real progress (`DataRepository.hasProgress`: reviews, mastery, games, stages, writing, activity), and no device marker;
+    - signed in: the first pull has finished ("synced"). Offline, a sync error or the 8-second wait mean "do not ask" (the account may hold a level).
+  - **Device marker.** `kitaba:levels-set` (localStorage) is set whenever a level or progress is seen, and is never removed (not by sign-out, "delete my progress" or "delete all my data"). Guests are asked once per device.
+  - **`/welcome`.** A learner who already has a level is sent on to `next`. `?retake=1` (Settings) is the only way to take the test again. `retake` and `test` are removed from the address at once, so a reload never restarts the test.
+  - **Landing page.** For a learner with a level, the main button is "Continue learning" (`/play`).
+  - **Checked in a browser (production build):** first visit → `/welcome`; choose B1, then F5 on the result screen → `/play`; `/welcome?test=1` → `/play`; `/welcome?retake=1` → the test, address cleaned; landing button → "تابع التعلّم".
+  - **Tests:** `tests/features/level-once.test.ts` (F5 with IndexedDB, skip, old accounts with progress, guests, a new device, sign-out and sign-in, sync errors, the `/welcome` address) and the gate table in `tests/lib/first-visit.test.ts`.
+
 ## Google sign-in behind a flag (2026-11-20)
 
 - **O5. Google is hidden unless `NEXT_PUBLIC_ENABLE_GOOGLE_SIGNIN=true`.**
