@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { checkText, isMistake, twoSlipSuggestion, vowelOrDoubleSlips, type Speller } from "@/domain/writing/check";
+import { checkText, isLearnerSlip, isMistake, twoSlipSuggestion, vowelOrDoubleSlips, type Speller } from "@/domain/writing/check";
 import { bankWords } from "@/features/writing/bank";
 import { tokenize } from "@/domain/writing/tokenize";
 import { realSpeller } from "../../helpers/speller";
@@ -103,11 +103,11 @@ describe("checkText: known misspellings", () => {
   });
 
   it("corrects every word of a paragraph with one- and two-slip mistakes (regression: prestegeous had no suggestion)", () => {
-    const text = "Real discpline is prestegeous, and knowlege grows when you endevor every day.";
+    const text = "Real discpline is prestegeous. Knowlege grows when you endevor every day.";
     expect(mistakes(text, { bank: bankWords }).map(([w, s]) => [w, s])).toEqual([
       ["discpline", "discipline"],
       ["prestegeous", "prestigious"],
-      ["knowlege", "knowledge"],
+      ["Knowlege", "Knowledge"],
       ["endevor", "endeavor"],
     ]);
   });
@@ -235,5 +235,49 @@ describe("two-slip suggestions", () => {
     expect(twoSlipSuggestion("abcde", isWord)).toBeNull();
     expect(twoSlipSuggestion("Prestegeous", isWord)).toBeNull();
     expect(twoSlipSuggestion("don'tt", isWord)).toBeNull();
+  });
+});
+
+describe("a capitalised first word gets the same slip suggestions, with its capital", () => {
+  const fix = (text: string) => mistakes(text, { bank: bankWords }).map(([w, s]) => [w, s]);
+
+  it("at the start of the text", () => {
+    expect(fix("Knowlege is power.")).toEqual([["Knowlege", "Knowledge"]]);
+    expect(fix("Definately I will come.")).toEqual([["Definately", "Definitely"]]);
+    expect(fix("Prestegeous schools are expensive.")).toEqual([["Prestegeous", "Prestigious"]]);
+  });
+
+  it("after a full stop, a question mark or an exclamation mark", () => {
+    expect(fix("I read a lot. Knowlege matters.")).toEqual([["Knowlege", "Knowledge"]]);
+    expect(fix("Is it hard? Definately not!")).toEqual([["Definately", "Definitely"]]);
+    expect(fix("Wow! Sepperate rooms are nice.")).toEqual([["Sepperate", "Separate"]]);
+  });
+
+  it("after a new line", () => {
+    expect(fix("Dear Sam\nOcasionaly I visit you.\nEndevor to come too")).toEqual([
+      ["Ocasionaly", "Occasionally"],
+      ["Endevor", "Endeavor"],
+    ]);
+  });
+
+  it("keeps the possessive", () => {
+    expect(fix("Knowlege's value is clear.")).toEqual([["Knowlege's", "Knowledge's"]]);
+  });
+
+  it("leaves names alone: in mid-sentence, and at the start when they are not a strict slip from a word", () => {
+    expect(fix("I met Knowlege and Definately at school.")).toEqual([]);
+    expect(fix("My friend Prestegeous lives in Zarqa.")).toEqual([]);
+    expect(fix("Salman is my cousin. Rashad lives in Tabuk. Majd plays football.\nSulaiman came too.")).toEqual([]);
+    expect(fix("Marwa and Eman are here. Raed is late.")).toEqual([]);
+  });
+
+  it("isLearnerSlip accepts only vowel, double-letter and silent-letter slips in longer lower-case words", () => {
+    expect(isLearnerSlip("definately", "definitely")).toBe(true);
+    expect(isLearnerSlip("sepperate", "separate")).toBe(true);
+    expect(isLearnerSlip("knowlege", "knowledge")).toBe(true);
+    expect(isLearnerSlip("endevor", "endeavor")).toBe(true);
+    expect(isLearnerSlip("sulaiman", "Suleiman")).toBe(false); // a proper noun is never the fix
+    expect(isLearnerSlip("tabuk", "taboo")).toBe(false); // too short
+    expect(isLearnerSlip("kareem", "karate")).toBe(false); // not a slip
   });
 });

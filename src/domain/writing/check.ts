@@ -91,6 +91,8 @@ const KNOWN_NAMES = new Set(
     "layla leila laila lina nora noura nour noor sara sarah fatima fatma aisha aysha mona muna mariam maryam huda hala rania reem dina salma yasmin yasmine " +
     "hanan samira amal nadia lubna ghada dalia razan rawan shahd jana joud " +
     "khalil haddad saadi nasr " +
+    // Names a real word is one or two slips from (Salman/salmon, Rashad/rushed, Raed/read, Eman/mean).
+    "salman rashad raed eman iman marwa lamees sherif sulaiman suleiman soliman " +
     "riyadh jeddah mecca makkah medina madinah dammam doha dubai abu dhabi sharjah ajman muscat manama amman beirut damascus baghdad basra mosul " +
     "sanaa aden khartoum tripoli tunis algiers rabat casablanca marrakesh alexandria giza luxor aswan gaza ramallah hebron nablus irbid aqaba " +
     "ramadan eid hajj umrah"
@@ -182,6 +184,19 @@ export function vowelOrDoubleSlips(w: string): string[] {
   }
   out.delete(w);
   return [...out];
+}
+
+/**
+ * Whether `right` is a typical learner slip from `wrong` in a word long enough to trust it (both lower case):
+ * one or two vowel or double-letter slips (Definately → Definitely, Sepperate → Separate), one vowel left out or
+ * added (Endevor → Endeavor) or one silent letter left out (Knowlege → Knowledge). Used for a capitalised first word, which could otherwise be a name.
+ */
+export function isLearnerSlip(wrong: string, right: string): boolean {
+  if (wrong.length < MIN_SLIP_LENGTH || !/^[a-z]+$/.test(wrong) || !/^[a-z]+$/.test(right)) return false;
+  const d = charDistance(wrong, right);
+  if (d === 1 && ["silent", "vowel"].includes(classifyMistake(wrong, right))) return true;
+  if (d < 1 || d > 2) return false;
+  return vowelOrDoubleSlips(wrong).some((one) => one === right || (d === 2 && vowelOrDoubleSlips(one).includes(right)));
 }
 
 /**
@@ -293,9 +308,10 @@ export function checkText(text: string, opts: CheckOptions): TextCheck {
         return c ? { suggestion: c + possessive, kind: "spelling", type: classifyMistake(base, c.toLowerCase()) } : null;
       }
       // First word of a sentence: flag it only for a typical learner slip (ie/ei, p/b, v/f, a double or swapped
-      // letter) or a day or month, so a name such as Majd or Tabuk is never "corrected" into maid or taboo.
+      // letter; in a longer word also one or two vowel or double-letter slips, or a silent letter left out) or a
+      // day or month, so a name such as Majd or Tabuk is never "corrected" into maid or taboo.
       const s = calendarMatch(base) ?? bestSuggestion(base, speller, cache, bank);
-      const common = s !== null && (CALENDAR.has(s) || ruleCandidates(base).includes(s.toLowerCase()));
+      const common = s !== null && (CALENDAR.has(s) || ruleCandidates(base).includes(s.toLowerCase()) || isLearnerSlip(base, s));
       if (!s || !common || charDistance(base, s.toLowerCase()) > 2) return null;
       return { suggestion: matchCase(word, s + possessive), kind: "spelling", type: classifyMistake(base, s) };
     }
