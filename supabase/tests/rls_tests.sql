@@ -74,11 +74,17 @@ do $$ begin
   end if;
 end $$;
 
--- B sees nothing of A's and cannot change or delete it.
+-- B sees nothing of A's and cannot change or delete it. Clients have no UPDATE grant at
+-- all (writes go only through upsert_progress), so a direct update is refused outright;
+-- DELETE is granted and RLS limits it to B's own rows, so it removes nothing of A's.
 select pg_temp.act_as('00000000-0000-4000-8000-00000000000b');
 do $$ begin
   if (select count(*) from public.progress_records) <> 0 then raise exception 'B can read A''s rows'; end if;
-  update public.progress_records set updated_at = 999 where id = 'me';
+  begin
+    update public.progress_records set updated_at = 999 where id = 'me';
+    raise exception 'direct update of progress_records allowed';
+  exception when insufficient_privilege then null;
+  end;
   delete from public.progress_records where id = 'me';
 end $$;
 select pg_temp.act_as('00000000-0000-4000-8000-00000000000a');
