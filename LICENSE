@@ -1,0 +1,77 @@
+MIT License
+
+Copyright (c) 2026 Denver
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+Scope: what the MIT License above covers, and what it does not
+--------------------------------------------------------------------------------
+
+The MIT License above applies to the source code of this repository only:
+the application code, scripts, SQL migrations, tests and configuration.
+It does not apply to the content and data described below.
+
+1. Original learning content: CC BY-SA 4.0
+
+   The learning content written for this project is licensed under the
+   Creative Commons Attribution-ShareAlike 4.0 International licence
+   (https://creativecommons.org/licenses/by-sa/4.0/).
+   Copyright (c) 2026 Denver.
+
+   This covers the hand-written words, Arabic hints, example sentences,
+   dictation sentences, messages, scenarios and spelling-rule texts in:
+
+     - src/data/words/          (the word bank, one file per category)
+     - src/data/rules.ts        (the spelling-rule explanations)
+     - src/data/writing/        (dictation sentences, messages and scenarios)
+     - scripts/content/hints/   (Arabic hints for the open-data library words)
+     - scripts/content/original/ (original example sentences)
+
+   and the same hints and examples where the build copies them into
+   public/content/v1/. Code in these files (types, helpers) is under the
+   MIT License above.
+
+   Attribution: "Kitaba (https://kitaba-amber.vercel.app), CC BY-SA 4.0".
+
+2. Third-party data and audio: their own licences
+
+   Data and audio from other sources keep the licence they were published
+   under. They are not covered by the MIT License or by the CC BY-SA 4.0
+   grant above.
+
+     - public/audio/v1/      Pronunciation recordings from Wikimedia Commons
+                             (including Lingua Libre), modified, each under
+                             the licence named on its row in the audio
+                             credits file in that folder (mostly CC BY-SA
+                             3.0 or 4.0; some CC BY or CC0), and generated
+                             files from the public-domain Piper
+                             en_US-ljspeech-high voice.
+     - public/content/v1/    The open-data library. Tatoeba sentences and
+                             translations are under CC BY 2.0 FR, with each
+                             sentence's author named in the Tatoeba credits
+                             file in that folder. Word data derived from
+                             SCOWL, VarCon and the CMU Pronouncing Dictionary
+                             keeps their notices.
+     - public/dict/          (copied at build time from dictionary-en)
+                             MIT and the SCOWL licence.
+
+   The full list of sources, licences, authors and reproduced notices is
+   on the credits page: https://kitaba-amber.vercel.app/credits
+   and in scripts/content/sources.json.

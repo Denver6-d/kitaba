@@ -113,7 +113,7 @@ All 1,591 core words, Arabic hints, example sentences and rule texts were writte
 | [CMU Pronouncing Dictionary](https://github.com/cmusphinx/cmudict) | Homophone detection and silent-letter hints (not shipped) | BSD-2-Clause-style |
 
 - Full credits, reproduced notices and the Tatoeba author list are on the **[credits page](https://kitaba-amber.vercel.app/credits)**.
-- Every audio file, with its author, source page, licence and changes, is listed in **[`public/audio/v1/audio-credits.5917475e86.tsv`](public/audio/v1/audio-credits.5917475e86.tsv)**. The Tatoeba credits are in [`public/content/v1/tatoeba-credits.cf615f1f8b.tsv`](public/content/v1/tatoeba-credits.cf615f1f8b.tsv).
+- Every audio file, with its author, source page, licence and changes, is listed in the `audio-credits.*.tsv` file in **[`public/audio/v1/`](public/audio/v1/)**, which is also downloadable from the credits page. The Tatoeba author list is the `tatoeba-credits.*.tsv` file in [`public/content/v1/`](public/content/v1/).
 - Modified CC BY-SA recordings are shared under the same licence as their originals.
 
 ## Run locally
@@ -151,7 +151,11 @@ All are optional. Copy `.env.example` to `.env.local`. Only public values are us
 
 ## Licence
 
-The code licence will be added in a `LICENSE` file. Third-party data and audio keep their own licences, as listed above and on the [credits page](https://kitaba-amber.vercel.app/credits).
+- **Code:** [MIT](LICENSE).
+- **Original learning content** (the hand-written words, Arabic hints, example sentences and rule texts): [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+- **Third-party data and audio** keep their own licences, as listed above, in the credit files and on the [credits page](https://kitaba-amber.vercel.app/credits).
+
+[LICENSE](LICENSE) lists which folders each licence applies to.
 
 ## How it was built
 
