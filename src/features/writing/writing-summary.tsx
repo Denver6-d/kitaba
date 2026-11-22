@@ -8,7 +8,7 @@ import { useSettings } from "@/lib/settings-store";
 import { giveFeedback } from "@/lib/feedback";
 import { AnimatedNumber } from "@/components/animated-number";
 import { Star } from "@/features/games/results-panel";
-import type { SavedWriting } from "./use-save-writing";
+import { addedToReview, type SavedWriting } from "./use-save-writing";
 
 /**
  * End-of-text summary with the same celebration as a cleared stage (DESIGN
@@ -24,6 +24,7 @@ export function WritingSummaryPanel({ summary, saved, saveFailed }: { summary: W
   }, [summary]);
   const headline = summary.stars === 3 ? t.writing.great : summary.stars > 0 ? t.writing.good : t.writing.keepGoing;
   const types = Object.entries(summary.byType) as [MistakeType, number][];
+  const added = saved ? addedToReview(summary.practice, saved.reviewed) : 0;
 
   return (
     <section aria-labelledby="w-sum" className="panel space-y-6 p-5 sm:p-8">
@@ -76,12 +77,26 @@ export function WritingSummaryPanel({ summary, saved, saveFailed }: { summary: W
           <h3 className="font-semibold">{t.writing.practise}</h3>
           <ul className="flex flex-wrap gap-2" dir="ltr" lang="en">
             {summary.practice.map((p) => (
-              <li key={`${p.wrong}-${p.right ?? ""}`} className="rounded-full border border-line px-3 py-1.5 font-word">
-                {p.right ?? p.wrong}
+              <li key={p.right.toLowerCase()} className="rounded-full border border-line px-3 py-1.5 font-word">
+                {p.right}
               </li>
             ))}
           </ul>
-          {saved && saved.reviewed > 0 && <p className="text-sm text-fg">{t.writing.toReview(saved.reviewed)}</p>}
+          {added > 0 && <p className="text-sm text-fg">{t.writing.toReview(added)}</p>}
+        </div>
+      )}
+
+      {summary.unmatched.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-semibold">{t.writing.unmatched}</h3>
+          <p className="text-sm text-fg-2">{t.writing.unmatchedBody}</p>
+          <ul className="flex flex-wrap gap-2" dir="ltr" lang="en">
+            {summary.unmatched.map((m) => (
+              <li key={m.wrong.toLowerCase()} className="rounded-full border border-dashed border-line-strong px-3 py-1.5 font-word text-error line-through">
+                {m.wrong}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
       {saveFailed && <p className="rounded-lg bg-error-tint p-3 text-sm text-error">{t.game.saveFailed}</p>}

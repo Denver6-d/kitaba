@@ -1,7 +1,8 @@
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { describe, expect, it } from "vitest";
 import { buildSession, writingWord, WRITING_WORD_AR } from "@/features/games/build-session";
-import { sentenceWith, writingCardId } from "@/features/writing/use-save-writing";
+import { addedToReview, addToReview, sentenceWith, writingCardId } from "@/features/writing/use-save-writing";
+import { summarizeWriting } from "@/domain/writing/summary";
 import { DAY_MS, newCard } from "@/domain/spelling/srs";
 import { WRITING_TEXT_MAX } from "@/domain/model";
 import { seededRng } from "@/domain/shared/random";
@@ -86,6 +87,35 @@ describe("mistakes go to the review deck", () => {
     expect(writingCardId("colour")).toBe("w-color");
     expect(writingCardId("tomorrow's")).toMatch(/^x-|^w-/);
     expect(writingCardId("padel")).toBe("x-padel");
+  });
+
+  it("adds exactly the words shown to practise, never a misspelling without a suggestion (regression: prestegeous)", async () => {
+    const r = repos();
+    const text = "Real discpline is prestegeous. Knowlege grows when you endevor every day.";
+    const summary = summarizeWriting(12, [
+      { wrong: "discpline", right: "discipline", type: "other" },
+      { wrong: "prestegeous", right: null, type: "other" },
+      { wrong: "Knowlege", right: "Knowledge", type: "silent" },
+      { wrong: "endevor", right: "endeavor", type: "vowel" },
+      { wrong: "i", right: "I", type: "capital" },
+    ]);
+    const saved = await addToReview(r.words, { text, summary }, NOW);
+    expect(saved.reviewed).toEqual(["discipline", "knowledge", "endeavor"]);
+    expect(addedToReview(summary.practice, saved.reviewed)).toBe(summary.practice.length);
+    const cards = await r.words.allCards();
+    expect(cards).toHaveLength(3);
+    expect(cards.map((c) => c.word ?? c.id).join(" ")).not.toMatch(/prestegeous|prestig/);
+    expect(cards.find((c) => c.id === writingCardId("Knowledge"))?.context).toBe("Knowledge grows when you endevor every day.");
+  });
+
+  it("keeps the count in step with the words shown when one is removed (added to the dictionary)", async () => {
+    const summary = summarizeWriting(8, [
+      { wrong: "discpline", right: "discipline", type: "other" },
+      { wrong: "endevor", right: "endeavor", type: "vowel" },
+    ]);
+    const saved = await addToReview(repos().words, { text: "My discpline. I endevor.", summary }, NOW);
+    const after = summarizeWriting(8, [{ wrong: "endevor", right: "endeavor", type: "vowel" }]);
+    expect(addedToReview(after.practice, saved.reviewed)).toBe(1);
   });
 
   it("finds the sentence a word came from", () => {

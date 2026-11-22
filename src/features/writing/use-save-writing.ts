@@ -4,8 +4,9 @@ import { useCallback } from "react";
 import type { CefrLevel } from "@/domain/model";
 import { levelInfo } from "@/domain/progress/levels";
 import { applyAnswer } from "@/domain/spelling/srs";
-import type { WritingSummary } from "@/domain/writing/summary";
+import type { PracticeWord, WritingSummary } from "@/domain/writing/summary";
 import { useRepos } from "@/repositories/provider";
+import type { WordRepository } from "@/repositories/types";
 import { useAchievementCheck } from "@/features/rewards/use-achievement-check";
 import { bankIdBySpelling } from "./bank";
 
@@ -16,8 +17,8 @@ const CONTEXT_MAX = 400;
 
 export interface SavedWriting {
   readonly xp: number;
-  /** Words added to (or brought forward in) the review deck. */
-  readonly reviewed: number;
+  /** Words added to (or brought forward in) the review deck: the lower-cased right spellings of `summary.practice`. */
+  readonly reviewed: readonly string[];
   readonly levelUp: number | null;
   /** The history record, so it can be amended when the learner adds a word to their dictionary. */
   readonly recordId: string;
@@ -45,6 +46,48 @@ export function sentenceWith(text: string, word: string): string {
 /** The sentence with the misspelling replaced by the right spelling (whole word only), capped for storage. */
 export function correctedSentence(text: string, wrong: string, right: string): string {
   return sentenceWith(text, wrong).replace(wholeWord(wrong), right).slice(0, CONTEXT_MAX);
+}
+
+/**
+ * How many of the words shown to practise are in the review deck, for "N words were added to your review".
+ * Counted from the words shown, so it stays exact when the learner later adds one to their dictionary.
+ */
+export function addedToReview(practice: readonly PracticeWord[], reviewed: readonly string[]): number {
+  const inDeck = new Set(reviewed);
+  return practice.filter((p) => inDeck.has(p.right.toLowerCase())).length;
+}
+
+/**
+ * Adds an SM-2 card for every word of `summary.practice` (and only those: a misspelling with no
+ * suggestion is never a card), noted with the sentence it came from.
+ */
+export async function addToReview(
+  words: Pick<WordRepository, "card" | "saveCard">,
+  input: { readonly text: string; readonly reference?: string; readonly summary: WritingSummary },
+  now: number,
+): Promise<Pick<SavedWriting, "reviewed" | "newCards">> {
+  const reviewed: string[] = [];
+  const newCards: Record<string, string> = {};
+  const done = new Set<string>();
+  for (const m of input.summary.practice) {
+    const id = writingCardId(m.right);
+    // colour and color share a card: both are in the deck.
+    if (done.has(id)) {
+      reviewed.push(m.right.toLowerCase());
+      continue;
+    }
+    done.add(id);
+    const existing = await words.card(id);
+    const next = applyAnswer(existing, id, MISS_QUALITY, now);
+    if (!next) continue;
+    // The note is the sentence it came from, with the word spelled right (review may speak it).
+    const context = input.reference ? sentenceWith(input.reference, m.right).slice(0, CONTEXT_MAX) : correctedSentence(input.text, m.wrong, m.right);
+    const own = id.startsWith("x-");
+    await words.saveCard({ ...next, ...(own ? { word: m.right.toLowerCase() } : {}), ...(context ? { context } : {}) });
+    if (!existing) newCards[m.wrong.toLowerCase()] = id;
+    reviewed.push(m.right.toLowerCase());
+  }
+  return { reviewed, newCards };
 }
 
 /**
@@ -79,23 +122,9 @@ export function useSaveWriting() {
         accuracy: summary.accuracy,
         stars: summary.stars,
         at: now,
-        missed: summary.practice.map((m) => ({ wrong: m.wrong, right: m.right, type: m.type })),
+        missed: summary.missed.map((m) => ({ wrong: m.wrong, right: m.right, type: m.type })),
       });
-      let reviewed = 0;
-      const newCards: Record<string, string> = {};
-      for (const m of summary.practice) {
-        if (!m.right || m.right.includes(" ") || m.type === "capital") continue;
-        const id = writingCardId(m.right);
-        const existing = await repos.words.card(id);
-        const next = applyAnswer(existing, id, MISS_QUALITY, now);
-        if (!next) continue;
-        // The note is the sentence it came from, with the word spelled right (review may speak it).
-        const context = input.reference ? sentenceWith(input.reference, m.right).slice(0, CONTEXT_MAX) : correctedSentence(input.text, m.wrong, m.right);
-        const own = id.startsWith("x-");
-        await repos.words.saveCard({ ...next, ...(own ? { word: m.right.toLowerCase() } : {}), ...(context ? { context } : {}) });
-        if (!existing) newCards[m.wrong.toLowerCase()] = id;
-        reviewed += 1;
-      }
+      const { reviewed, newCards } = await addToReview(repos.words, input, now);
       await repos.activity.log("writing", input.seconds, summary.xp);
       await checkAchievements();
       const before = levelInfo(xpBefore).level;

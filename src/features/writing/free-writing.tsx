@@ -143,7 +143,7 @@ export function FreeWriting({ level }: { level: CefrLevel }) {
         mistakes: summary.mistakes,
         accuracy: summary.accuracy,
         stars: summary.stars,
-        missed: summary.practice.map((m) => ({ wrong: m.wrong, right: m.right, type: m.type })),
+        missed: summary.missed.map((m) => ({ wrong: m.wrong, right: m.right, type: m.type })),
       })
       .catch(() => undefined);
   };

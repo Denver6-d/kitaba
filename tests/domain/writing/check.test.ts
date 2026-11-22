@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { checkText, isMistake, type Speller } from "@/domain/writing/check";
+import { checkText, isMistake, twoSlipSuggestion, vowelOrDoubleSlips, type Speller } from "@/domain/writing/check";
+import { bankWords } from "@/features/writing/bank";
 import { tokenize } from "@/domain/writing/tokenize";
 import { realSpeller } from "../../helpers/speller";
 
@@ -86,6 +87,29 @@ describe("checkText: known misspellings", () => {
 
   it("checks each part of a hyphenated word", () => {
     expect(mistakes("It is a well-knwon rule and a twenty-one day trip.")).toEqual([["well-knwon", "well-known", expect.any(String)]]);
+  });
+
+  it.each([
+    ["prestegeous", "prestigious"],
+    ["sepperate", "separate"],
+    ["definately", "definitely"],
+    ["ocasionaly", "occasionally"],
+    ["seperate", "separate"],
+    ["existance", "existence"],
+    ["independant", "independent"],
+    ["wierd", "weird"],
+  ])("suggests the common word for %s, even two vowel or double-letter slips away", (wrong, right) => {
+    expect(issuesOf(`I think it is ${wrong} here.`, { bank: bankWords }).map((i) => [i.word, i.suggestion])).toEqual([[wrong, right]]);
+  });
+
+  it("corrects every word of a paragraph with one- and two-slip mistakes (regression: prestegeous had no suggestion)", () => {
+    const text = "Real discpline is prestegeous, and knowlege grows when you endevor every day.";
+    expect(mistakes(text, { bank: bankWords }).map(([w, s]) => [w, s])).toEqual([
+      ["discpline", "discipline"],
+      ["prestegeous", "prestigious"],
+      ["knowlege", "knowledge"],
+      ["endevor", "endeavor"],
+    ]);
   });
 
   it("names p/b and v/f confusions", () => {
@@ -186,5 +210,30 @@ describe("checkText: British and American spelling", () => {
 
   it("counts words, names and numbers aside", () => {
     expect(checkText("I have 2 cats and one dog.", { speller }).words).toBe(6);
+  });
+});
+
+describe("two-slip suggestions", () => {
+  it("lists one vowel or double-letter slip at a time", () => {
+    const slips = vowelOrDoubleSlips("sepet");
+    expect(slips).toContain("sapet"); // vowel swapped
+    expect(slips).toContain("seppet"); // consonant doubled
+    expect(vowelOrDoubleSlips("sepped")).toContain("seped"); // consonant undoubled
+    expect(slips).not.toContain("sepet");
+  });
+
+  it("returns the one word two slips away, preferring a bank word, and nothing when it cannot choose", () => {
+    const words = new Set(["prestigious", "separate", "suppurate"]);
+    const isWord = (w: string) => words.has(w);
+    expect(twoSlipSuggestion("prestegeous", isWord)).toBe("prestigious");
+    expect(twoSlipSuggestion("sepperate", isWord)).toBeNull(); // separate or suppurate
+    expect(twoSlipSuggestion("sepperate", isWord, new Set(["separate"]))).toBe("separate");
+  });
+
+  it("leaves short words, capitalised words and words with other letters alone", () => {
+    const isWord = () => true;
+    expect(twoSlipSuggestion("abcde", isWord)).toBeNull();
+    expect(twoSlipSuggestion("Prestegeous", isWord)).toBeNull();
+    expect(twoSlipSuggestion("don'tt", isWord)).toBeNull();
   });
 });

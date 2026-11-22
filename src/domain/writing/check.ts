@@ -154,8 +154,53 @@ function bestSuggestion(word: string, speller: Speller, cache: Map<string, strin
       bestScore = r.score;
     }
   }
+  // nspell only looks one edit away, so two vowel or double-letter slips (prestegeous, sepperate) get nothing or a
+  // far-fetched word (desperate). Then a word exactly two such slips away is the likelier one.
+  if (bestScore > 1) {
+    const slip = twoSlipSuggestion(key, (w) => speller.correct(w), bank);
+    if (slip !== null) best = slip;
+  }
   cache.set(key, best);
   return best;
+}
+
+const SLIP_VOWELS = ["a", "e", "i", "o", "u"];
+/** Below this length two slips can reach too many real words to pick one with confidence. */
+const MIN_SLIP_LENGTH = 6;
+
+/** Spellings one vowel or double-letter slip from `w`: a vowel swapped for another, a consonant doubled or undoubled. */
+export function vowelOrDoubleSlips(w: string): string[] {
+  const out = new Set<string>();
+  for (let i = 0; i < w.length; i += 1) {
+    const c = w[i] ?? "";
+    if (SLIP_VOWELS.includes(c)) {
+      for (const v of SLIP_VOWELS) if (v !== c) out.add(w.slice(0, i) + v + w.slice(i + 1));
+    } else if (/[a-z]/.test(c)) {
+      if (w[i + 1] === c) out.add(w.slice(0, i) + w.slice(i + 1));
+      else if (w[i - 1] !== c) out.add(w.slice(0, i + 1) + c + w.slice(i + 1));
+    }
+  }
+  out.delete(w);
+  return [...out];
+}
+
+/**
+ * The one real word two vowel or double-letter slips away (prestegeous → prestigious, sepperate → separate),
+ * or null when there is none or more than one (a bank word wins over the others). Lower case only, so a
+ * misspelling is never turned into a name.
+ */
+export function twoSlipSuggestion(word: string, isWord: (w: string) => boolean, bank: ReadonlySet<string> = new Set()): string | null {
+  if (word.length < MIN_SLIP_LENGTH || !/^[a-z]+$/.test(word)) return null;
+  const found = new Set<string>();
+  for (const one of vowelOrDoubleSlips(word)) {
+    for (const two of vowelOrDoubleSlips(one)) {
+      if (two !== word && charDistance(word, two) === 2 && isWord(two)) found.add(two);
+    }
+  }
+  const all = [...found];
+  const inBank = all.filter((w) => bank.has(w));
+  const pool = inBank.length > 0 ? inBank : all;
+  return pool.length === 1 ? (pool[0] ?? null) : null;
 }
 
 /** Proper nouns a learner writes often and misspells often: flagged even in mid-sentence. */

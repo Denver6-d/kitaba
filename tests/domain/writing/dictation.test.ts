@@ -114,6 +114,43 @@ describe("summarizeWriting", () => {
     expect(s.xp).toBe(17 + 10);
   });
 
+  it("never lists a misspelling as a word to practise: no suggestion means unmatched (regression: prestegeous)", () => {
+    const s = summarizeWriting(12, [
+      { wrong: "discpline", right: "discipline", type: "other" },
+      { wrong: "prestegeous", right: null, type: "other" },
+      { wrong: "knowlege", right: "knowledge", type: "silent" },
+      { wrong: "endevor", right: "endeavor", type: "vowel" },
+      { wrong: "Prestegeous", right: null, type: "other" },
+    ]);
+    expect(s.practice.map((p) => p.right)).toEqual(["discipline", "knowledge", "endeavor"]);
+    expect(s.unmatched.map((m) => m.wrong)).toEqual(["prestegeous"]);
+    expect(s.missed).toHaveLength(4);
+    expect(s.mistakes).toBe(5);
+  });
+
+  it("keeps capitals and split words out of the words to practise (they are not review cards)", () => {
+    const s = summarizeWriting(10, [
+      { wrong: "i", right: "I", type: "capital" },
+      { wrong: "alot", right: "a lot", type: "split" },
+      { wrong: "dont", right: "don't", type: "apostrophe" },
+      { wrong: "seperate", right: "separate", type: "vowel" },
+      { wrong: "Seperate", right: "Separate", type: "vowel" },
+    ]);
+    expect(s.practice.map((p) => p.right)).toEqual(["don't", "separate"]);
+    expect(s.missed.map((m) => m.right)).toEqual(["I", "a lot", "don't", "separate"]);
+    expect(s.unmatched).toEqual([]);
+  });
+
+  it("does not merge a misspelling without a suggestion with a right spelling that looks the same", () => {
+    const s = summarizeWriting(10, [
+      { wrong: "padel", right: null, type: "other" },
+      { wrong: "padle", right: "padel", type: "order" },
+    ]);
+    expect(s.missed).toHaveLength(2);
+    expect(s.practice.map((p) => p.right)).toEqual(["padel"]);
+    expect(s.unmatched.map((m) => m.wrong)).toEqual(["padel"]);
+  });
+
   it("gives no stars to a text that is too short, and caps XP", () => {
     expect(summarizeWriting(2, []).stars).toBe(0);
     expect(summarizeWriting(500, []).xp).toBe(60 + 15);

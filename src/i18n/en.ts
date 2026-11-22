@@ -203,6 +203,8 @@ export const en: Dictionary = {
     mistakesLabel: "Mistakes",
     byType: "Kinds of mistakes",
     practise: "Words to practise",
+    unmatched: "No suggestion found",
+    unmatchedBody: "We could not find the right spelling for these, so they were not added to your review. If one is a name or a correct word, add it to your dictionary.",
     toReview: (n: number) => (n === 0 ? "" : n === 1 ? "1 word was added to your review." : `${n} words were added to your review.`),
     great: "Excellent spelling!",
     good: "Good work!",
