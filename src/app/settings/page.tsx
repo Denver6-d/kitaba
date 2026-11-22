@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import Link from "next/link";
-import { ClipboardCheck, Download, Upload, Trash2 } from "lucide-react";
+import { ClipboardCheck, Download, FileSpreadsheet, Upload, Trash2 } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { useSettings } from "@/lib/settings-store";
 import { TEXT_SCALES } from "@/lib/settings";
@@ -10,6 +10,8 @@ import { canVibrate } from "@/lib/haptics";
 import { useHydrated } from "@/lib/use-hydrated";
 import { downloadJson, exportFilename } from "@/lib/download";
 import { parseExportFile } from "@/repositories/export";
+import { CSV_TABLES, type CsvTableName } from "@/features/export/progress-csv";
+import { csvLabels, downloadProgressCsv } from "@/features/export/download-progress-csv";
 import { useRepos } from "@/repositories/provider";
 import { Page } from "@/components/page";
 import { Segmented } from "@/components/segmented";
@@ -28,13 +30,25 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function SettingsPage() {
-  const { t, pct } = useI18n();
+  const { t, pct, lang } = useI18n();
   const [s, update] = useSettings();
   const hydrated = useHydrated();
   const repos = useRepos();
   const fileRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<"merge" | "replace">("merge");
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  const [csvBusy, setCsvBusy] = useState<CsvTableName | null>(null);
+
+  const onCsv = async (name: CsvTableName) => {
+    setCsvBusy(name);
+    try {
+      await downloadProgressCsv(repos, name, csvLabels(t, lang));
+    } catch {
+      setMessage({ kind: "error", text: t.settings.csv.failed });
+    } finally {
+      setCsvBusy(null);
+    }
+  };
 
   const onImport = async (file: File) => {
     try {
@@ -118,6 +132,18 @@ export default function SettingsPage() {
               <Download className="size-4" aria-hidden="true" />
               {t.settings.export}
             </Button>
+          </div>
+          <div className="space-y-3 rounded-xl border border-line p-4">
+            <h3 className="font-medium">{t.settings.csv.title}</h3>
+            <p className="text-sm text-fg-2">{t.settings.csv.intro}</p>
+            <div className="flex flex-wrap gap-3">
+              {CSV_TABLES.map((name) => (
+                <Button key={name} variant="outline" className="h-10 gap-2" disabled={csvBusy !== null} aria-busy={csvBusy === name} onClick={() => void onCsv(name)}>
+                  <FileSpreadsheet className="size-4" aria-hidden="true" />
+                  {t.settings.csv.buttons[name]}
+                </Button>
+              ))}
+            </div>
           </div>
           <div className="space-y-3 rounded-xl border border-line p-4">
             <Segmented

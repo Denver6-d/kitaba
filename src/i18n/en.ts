@@ -407,6 +407,18 @@ export const en: Dictionary = {
     data: "My data",
     dataIntro: "Your progress is stored only in this browser (IndexedDB) unless you turn on sync with an account.",
     export: "Export my data (JSON)",
+    csv: {
+      title: "Tables for spreadsheets (CSV)",
+      intro: "For reading in Excel or Google Sheets, one file per table. These files cannot be imported; for a backup, use the JSON file.",
+      buttons: { words: "Words table (CSV)", games: "Games table (CSV)", writings: "Writing table (CSV)" },
+      headers: {
+        words: ["Word", "Category", "Level", "Times wrong", "Correct in a row", "Mastery", "Interval (days)", "Last review", "Next review", "Sentence"],
+        games: ["Date", "Game", "Stage", "Words", "Correct", "Accuracy %", "Points", "Best streak", "Duration (seconds)", "Words missed"],
+        writings: ["Date", "Type", "Level", "Words", "Mistakes", "Accuracy %", "Stars", "Corrections", "Text"],
+      },
+      mixedMode: "Mixed (boss stage or daily challenge)",
+      failed: "Could not create the file. Please try again.",
+    },
     import: "Import a file",
     importMerge: "Merge with my current data",
     importReplace: "Replace my current data",
